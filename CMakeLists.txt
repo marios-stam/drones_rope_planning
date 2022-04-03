@@ -104,6 +104,7 @@ file(GLOB ompl_example_2d_headers
 
 
 
+
 add_library(${PROJECT_NAME}_library 
   STATIC 
   ${ompl_example_2d_sources} ${ompl_example_2d_headers}
@@ -130,8 +131,8 @@ add_executable(
 )
 
 add_executable(
-  ${PROJECT_NAME}_fcl
-  src/fcl_checker.cpp
+  ${PROJECT_NAME}_fcl_mesh
+  src/fcl_mesh.cpp
 )
 
 
@@ -150,7 +151,7 @@ target_link_libraries(${PROJECT_NAME}_node
 #   ${OMPL_LIBRARIES}
 )
 
-target_link_libraries(${PROJECT_NAME}_fcl
+target_link_libraries(${PROJECT_NAME}_fcl_mesh
    ${PROJECT_NAME}_library
   ${catkin_LIBRARIES}
   boost_serialization

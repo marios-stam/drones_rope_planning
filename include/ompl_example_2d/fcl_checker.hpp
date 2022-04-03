@@ -36,38 +36,4 @@ namespace fcl_checking
 
     private:
     };
-
-    class fcl_mesh
-    {
-    public:
-        /*!
-         * Constructor.
-         * @param nodeHandle the ROS node handle.
-         */
-        fcl_mesh();
-
-        /*!
-         * Destructor.
-         */
-        virtual ~fcl_mesh();
-
-        void load_stl(std::string filename);
-
-        void create_collision_object(void);
-
-        void create_mesh(void);
-
-        void set_transform(float pos[], float quat[]);
-
-        void update_mesh(const std::vector<fcl::Vector3<float>> &new_verts);
-
-    private:
-        std::vector<stlloader::Vertex> get_unique_vertices(void);
-
-        stlloader::Mesh stl_mesh;
-
-        fcl::BVHModel<fcl::OBBRSS<float>> *mesh;
-
-        fcl::CollisionObject<float> *collision_object;
-    };
 }

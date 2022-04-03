@@ -1,4 +1,4 @@
-#include "../include/ompl_example_2d/fcl_checker.hpp"
+#include "../include/ompl_example_2d/fcl_mesh.hpp"
 
 int get_index_of_vert(std::vector<stlloader::Vertex> &verts, stlloader::Vertex &vert)
 {
