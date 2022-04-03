@@ -24,4 +24,10 @@
   <depend>moveit_ros_move_group</depend>
   <depend>trajectory_msgs</depend>
   <depend>ompl</depend>
+  <depend>octomap_msgs</depend>
+  <depend>octomap_ros</depend>
+  <depend>pcl_conversions</depend>
+  <depend>pcl_ros</depend>
+
+  <depend>fcl</depend>
 </package>

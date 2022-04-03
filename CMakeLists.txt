@@ -18,6 +18,13 @@ find_package(catkin REQUIRED COMPONENTS
     std_srvs
     message_generation
     ompl
+    octomap_msgs
+    
+    octomap_ros
+    pcl_conversions
+    pcl_ros
+    roscpp
+    std_msgs
 )
 
 ## System dependencies are found with CMake's conventions
@@ -25,6 +32,8 @@ find_package(Boost REQUIRED COMPONENTS system serialization)
 find_package(Eigen3 REQUIRED)
 
 find_package(ompl)
+find_package(octomap REQUIRED)
+find_package(fcl REQUIRED)
 
 #  add_service_files(
 #    FILES
@@ -57,6 +66,10 @@ catkin_package(
 #            moveit_ros_planning_interface
 #            moveit_ros_move_group
 	    trajectory_msgs 
+      octomap_msgs 
+      octomap_ros 
+      pcl_conversions 
+      pcl_ros roscpp 
 #  DEPENDS system_lib
 )
 
@@ -71,7 +84,14 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
   ${Boost_INCLUDE_DIRS}
   ${Eigen_INCLUDE_DIRS}
+  
+  ${PCL_INCLUDE_DIRS}
+  ${OCTOMAP_INCLUDE_DIRS}
+  ${cl_INCLUDE_DIRS}
+
 )
+
+# link_libraries(${OCTOMAP_LIBRARIES} ${fcl_LIBRARY_DIRS} ${OMPL_LIBRARY_DIRS})
 
 ## Declare a cpp library
 file(GLOB ompl_example_2d_sources
@@ -82,11 +102,23 @@ file(GLOB ompl_example_2d_headers
     include/ompl_example_2d/*.hpp
 )
 
-add_library(${PROJECT_NAME}_library STATIC ${ompl_example_2d_sources} ${ompl_example_2d_headers}
+
+
+add_library(${PROJECT_NAME}_library 
+  STATIC 
+  ${ompl_example_2d_sources} ${ompl_example_2d_headers}
+
 )
 
 target_link_libraries(${PROJECT_NAME}_library
    ${catkin_LIBRARIES}
+   ${catkin_LIBRARIES}
+   ompl
+   boost_serialization
+   ${PCL_LIBRARIES}
+   ${OCTOMAP_LIBRARIES}
+   ${fcl_LIBRARIES}
+  #  fcl
 )
  
 # add_dependencies(${PROJECT_NAME}_library ompl_example_2d_generate_messages_cpp ${catkin_EXPORTED_TARGETS})
@@ -97,6 +129,12 @@ add_executable(
   src/ompl_example_2d_node.cpp
 )
 
+add_executable(
+  ${PROJECT_NAME}_fcl
+  src/fcl_checker.cpp
+)
+
+
 add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 # add_dependencies(${PROJECT_NAME} ompl_example_2d_generate_messages_cpp ${catkin_EXPORTED_TARGETS})
 target_link_libraries(${PROJECT_NAME}_node
@@ -104,10 +142,25 @@ target_link_libraries(${PROJECT_NAME}_node
   ${catkin_LIBRARIES}
   ompl
   boost_serialization
+  ${PCL_LIBRARIES}
+  ${OCTOMAP_LIBRARIES}
+  ${fcl_LIBRARIES}
+  fcl
   # try to comment line above and uncomment line below if problems with linking to ompl library
 #   ${OMPL_LIBRARIES}
 )
 
+target_link_libraries(${PROJECT_NAME}_fcl
+   ${PROJECT_NAME}_library
+  ${catkin_LIBRARIES}
+  boost_serialization
+  ${PCL_LIBRARIES}
+  ${OCTOMAP_LIBRARIES}
+  ${fcl_LIBRARIES}
+  fcl
+  # try to comment line above and uncomment line below if problems with linking to ompl library
+#   ${OMPL_LIBRARIES}
+)
 ## Declare a cpp executable
 # add_executable(
 #   ${PROJECT_NAME}_trajectory_tending

@@ -35,7 +35,8 @@ namespace ompl_rope_planning
 
     planner::planner(void)
     {
-        // Quadcopter = std::shared_ptr<fcl::CollisionGeometry>(new fcl::Box(0.3, 0.3, 0.1));
+        std::shared_ptr<fcl::CollisionGeometry<double>> Quadcopter(new fcl::Box<double>(0.3, 0.3, 1.));
+
         // fcl::OcTree *tree = new fcl::OcTree(std::shared_ptr<const octomap::OcTree>(new octomap::OcTree(0.1)));
         // tree_obj = std::shared_ptr<fcl::CollisionGeometry>(tree);
 
