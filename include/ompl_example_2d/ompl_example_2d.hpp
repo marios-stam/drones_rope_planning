@@ -80,6 +80,8 @@ namespace ompl_rope_planning
 
         void setStartGoal(void);
 
+        ompl::base::ScopedStatePtr setGoal(void);
+
     private:
         // construct the state space we are planning in
         ompl::base::StateSpacePtr space;
@@ -96,9 +98,6 @@ namespace ompl_rope_planning
         ompl::geometric::PathGeometric *path_smooth = NULL;
 
         bool replan_flag = false;
-
-        ompl::base::ScopedStatePtr start_state;
-        ompl::base::ScopedStatePtr goal_state;
 
         // std::shared_ptr<fcl::CollisionGeometry> Quadcopter;
 

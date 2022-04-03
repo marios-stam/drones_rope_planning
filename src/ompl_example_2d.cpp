@@ -41,43 +41,21 @@ namespace ompl_rope_planning
 
         space = ob::StateSpacePtr(new ob::RealVectorStateSpace(6));
 
-        // set the bounds for the R^3 part of SE(3)
-        ob::RealVectorBounds bounds(3);
         printf("Setting bounds\n");
-        // set the bounds
         setBounds();
 
         // construct an instance of  space information from this state space
         si = ob::SpaceInformationPtr(new ob::SpaceInformation(space));
 
-        // create RealVector start_state
-        ob::ScopedState<ob::RealVectorStateSpace> start_state(space);
-        ob::ScopedState<ob::RealVectorStateSpace> goal_state(space);
-        printf("Setting start and goal\n");
-        // setStartGoal();
-        start_state[0] = 0.0;
-        start_state[1] = 0.0;
-        start_state[2] = 0.0;
-        start_state[3] = 0.0;
-        start_state[4] = 0.0;
-        start_state[5] = 0.0;
-
-        goal_state[0] = 5;
-        goal_state[1] = 5;
-        goal_state[2] = 5;
-        goal_state[3] = 5;
-        goal_state[4] = 5;
-        goal_state[5] = 5;
-
-        printf("Setting validity checker\n");
+        printf("Setting validity checker...\n");
         // set state validity checking for this space
         si->setStateValidityChecker(std::bind(&planner::isStateValid, this, std::placeholders::_1));
 
         // create a problem instance
         pdef = ob::ProblemDefinitionPtr(new ob::ProblemDefinition(si));
 
-        // set the start and goal states
-        pdef->setStartAndGoalStates(start_state, goal_state);
+        printf("Setting start and goal\n");
+        planner::setStartGoal();
 
         // set Optimizattion objective
         // pdef->setOptimizationObjective(planner::getPathLengthObjWithCostToGo(si));
@@ -106,6 +84,29 @@ namespace ompl_rope_planning
         bounds.setHigh(5, 11.0);
 
         space->as<ob::RealVectorStateSpace>()->setBounds(bounds);
+    }
+
+    void planner::setStartGoal()
+    {
+        // create RealVector start_state
+        ob::ScopedState<> start_state(planner::space);
+        ob::ScopedState<> goal_state(planner::space);
+
+        start_state->as<ob::RealVectorStateSpace::StateType>()->values[0] = 0.0;
+        start_state->as<ob::RealVectorStateSpace::StateType>()->values[1] = 0.0;
+        start_state->as<ob::RealVectorStateSpace::StateType>()->values[2] = 0.0;
+        start_state->as<ob::RealVectorStateSpace::StateType>()->values[3] = 0.0;
+        start_state->as<ob::RealVectorStateSpace::StateType>()->values[4] = 0.0;
+        start_state->as<ob::RealVectorStateSpace::StateType>()->values[5] = 0.0;
+
+        goal_state->as<ob::RealVectorStateSpace::StateType>()->values[0] = 5;
+        goal_state->as<ob::RealVectorStateSpace::StateType>()->values[1] = 5;
+        goal_state->as<ob::RealVectorStateSpace::StateType>()->values[2] = 5;
+        goal_state->as<ob::RealVectorStateSpace::StateType>()->values[3] = 5;
+        goal_state->as<ob::RealVectorStateSpace::StateType>()->values[4] = 5;
+        goal_state->as<ob::RealVectorStateSpace::StateType>()->values[5] = 5;
+
+        pdef->setStartAndGoalStates(start_state, goal_state);
     }
 
     void planner::plan()
@@ -137,28 +138,10 @@ namespace ompl_rope_planning
             std::cout << "Found solution:" << std::endl;
             ob::PathPtr path = pdef->getSolutionPath();
             og::PathGeometric *pth = pdef->getSolutionPath()->as<og::PathGeometric>();
-            // pth->printAsMatrix(std::cout);
+            pth->printAsMatrix(std::cout);
         }
         else
             std::cout << "No solution found" << std::endl;
-    }
-
-    void planner::setStartGoal()
-    {
-        // set start and goal
-        (*start_state)[0] = 0.0;
-        (*start_state)[1] = 0.0;
-        (*start_state)[2] = 0.0;
-        (*start_state)[3] = 0.0;
-        (*start_state)[4] = 0.0;
-        (*start_state)[5] = 0.0;
-
-        (*goal_state)[0] = 5;
-        (*goal_state)[1] = 5;
-        (*goal_state)[2] = 5;
-        (*goal_state)[3] = 5;
-        (*goal_state)[4] = 5;
-        (*goal_state)[5] = 5;
     }
 
     bool planner::isStateValid(const ob::State *state_check)
@@ -189,10 +172,3 @@ namespace ompl_rope_planning
     }
 
 }
-
-// int main(int /*argc*/, char ** /*argv*/)
-// {
-//     std::cout << "OMPL version: " << OMPL_VERSION << std::endl;
-
-//     return 0;
-// }

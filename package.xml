@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>ompl_example_2d</name>
+  <name>drones_rope_planning</name>
   <version>0.0.1</version>
   <description>OMPL 2D example.</description>
   <maintainer email="dominik.belter@put.poznan.pl">Dominik Belter</maintainer>
