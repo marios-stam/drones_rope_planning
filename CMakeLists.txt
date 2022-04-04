@@ -96,11 +96,20 @@ include_directories(
 ## Declare a cpp library
 file(GLOB ompl_example_2d_sources
     src/ompl_example_2d.cpp
+    src/fcl_mesh.cpp
+    src/fcl_checker.cpp
+    src/stlloader.cpp
+
 )
 
 file(GLOB ompl_example_2d_headers
-    include/ompl_example_2d/*.hpp
-)
+    include/ompl_example_2d/ompl_example_2d.hpp
+    include/ompl_example_2d/fcl_mesh.hpp
+    include/ompl_example_2d/fcl_checker.hpp
+    
+    include/ompl_example_2d/stlloader.hpp
+
+) 
 
 
 
@@ -130,11 +139,15 @@ add_executable(
   src/ompl_example_2d_node.cpp
 )
 
-add_executable(
-  ${PROJECT_NAME}_fcl_mesh
-  src/fcl_mesh.cpp
-)
+# add_executable(
+#   ${PROJECT_NAME}_fcl_mesh
+#   src/fcl_mesh.cpp
+# )
 
+# add_executable(
+#   ${PROJECT_NAME}_fcl_checker
+#   src/fcl_checker.cpp
+# )
 
 add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 # add_dependencies(${PROJECT_NAME} ompl_example_2d_generate_messages_cpp ${catkin_EXPORTED_TARGETS})
@@ -151,17 +164,28 @@ target_link_libraries(${PROJECT_NAME}_node
 #   ${OMPL_LIBRARIES}
 )
 
-target_link_libraries(${PROJECT_NAME}_fcl_mesh
-   ${PROJECT_NAME}_library
-  ${catkin_LIBRARIES}
-  boost_serialization
-  ${PCL_LIBRARIES}
-  ${OCTOMAP_LIBRARIES}
-  ${fcl_LIBRARIES}
-  fcl
-  # try to comment line above and uncomment line below if problems with linking to ompl library
-#   ${OMPL_LIBRARIES}
-)
+# target_link_libraries(${PROJECT_NAME}_fcl_mesh
+#    ${PROJECT_NAME}_library
+#   ${catkin_LIBRARIES}
+#   boost_serialization
+#   ${PCL_LIBRARIES}
+#   ${OCTOMAP_LIBRARIES}
+#   ${fcl_LIBRARIES}
+#   fcl
+#   # try to comment line above and uncomment line below if problems with linking to ompl library
+# #   ${OMPL_LIBRARIES}
+# )
+
+# target_link_libraries(${PROJECT_NAME}_fcl_checker
+#    ${PROJECT_NAME}_library
+#   ${catkin_LIBRARIES}
+#   boost_serialization
+#   ${PCL_LIBRARIES}
+#   ${OCTOMAP_LIBRARIES}
+#   ${fcl_LIBRARIES}
+#   fcl
+# )
+
 ## Declare a cpp executable
 # add_executable(
 #   ${PROJECT_NAME}_trajectory_tending

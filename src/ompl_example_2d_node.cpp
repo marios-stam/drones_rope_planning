@@ -6,7 +6,9 @@
  *   Institute: Instute of Robotics and Machine Intelligence, Poznan University of Technology
  */
 
+#include "../include/ompl_example_2d/fcl_checker.hpp"
 #include "../include/ompl_example_2d/ompl_example_2d.hpp"
+
 #include <ros/ros.h>
 
 #include <geometry_msgs/PoseStamped.h>
@@ -24,9 +26,28 @@ int main(int argc, char **argv)
     // create node handler
     ros::NodeHandle nodeHandle("~");
 
-    ompl_rope_planning::planner planner_object;
+    // ompl_rope_planning::planner planner_object;
+    // planner_object.plan();
 
-    planner_object.plan();
+    // create fcl_checker object
+    printf("Hello World mlkia\n");
+
+    fcl_checking::checker checker;
+    checker.loadEnvironment("/home/marios/thesis_ws/src/drones_rope_planning/resources/env-scene.stl");
+    checker.loadRobot("/home/marios/thesis_ws/src/drones_rope_planning/resources/robot-scene-triangle.stl");
+
+    printf("Checking collision\n");
+    checker.check_collision();
+
+    float pos[3] = {0, 2, 0};
+    float q[4] = {0, 0, 0, 1};
+    printf("Setting robot transform\n");
+
+    checker.setRobotTransform(pos, q);
+    std::cout << "pos: " << pos[0] << " " << pos[1] << " " << pos[2] << std::endl;
+    std::cout << "q: " << q[0] << " " << q[1] << " " << q[2] << " " << q[3] << std::endl;
+
+    checker.check_collision();
 
     return 0;
 }

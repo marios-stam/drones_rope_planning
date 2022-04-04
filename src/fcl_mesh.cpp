@@ -14,15 +14,14 @@ int get_index_of_vert(std::vector<stlloader::Vertex> &verts, stlloader::Vertex &
 
 namespace fcl_checking
 {
-    fcl_mesh::fcl_mesh() { printf("FCL mesh called\n"); }
+    fcl_mesh::fcl_mesh() {}
 
-    fcl_mesh::~fcl_mesh() { printf("FCL mesh destructor called\n"); }
+    fcl_mesh::~fcl_mesh() {}
 
     void fcl_mesh::load_stl(std::string filename)
     {
         printf("Loading STL file: %s\n", filename.c_str());
-        const char *filename2 = "/home/marios/thesis_ws/src/drones_rope_planning/resources/env-scene.stl";
-        stlloader::parse_file(filename2, fcl_mesh::stl_mesh);
+        stlloader::parse_file(filename.c_str(), fcl_mesh::stl_mesh);
 
         std::vector<stlloader::Vertex> uniq_verts = get_unique_vertices();
 
@@ -83,7 +82,7 @@ namespace fcl_checking
 
         std::vector<stlloader::Vertex> unique_vertices;
         // get unique vertices
-        std::cout << "Vertices: " << vertices.size() << std::endl;
+        // std::cout << "Vertices: " << vertices.size() << std::endl;
         std::sort(vertices.begin(), vertices.end(), stlloader::vertices_smaller);
 
         for (int i = 0; i < vertices.size(); ++i)
@@ -94,7 +93,7 @@ namespace fcl_checking
             }
         }
 
-        std::cout << "Unique vertices: " << unique_vertices.size() << std::endl;
+        // std::cout << "Unique vertices: " << unique_vertices.size() << std::endl;
         return unique_vertices;
     }
 
@@ -102,19 +101,19 @@ namespace fcl_checking
     {
         // create collision object
         collision_object = new fcl::CollisionObject<float>(std::shared_ptr<fcl::CollisionGeometry<float>>(mesh));
+        collision_object->setIdentityTransform();
     }
 
     void fcl_mesh::set_transform(float pos[], float quat[])
     {
 
         // set transform
-        fcl::Vector3<float> trans;
-        trans.data()[0] = pos[0];
-        trans.data()[1] = pos[2];
-        trans.data()[3] = pos[3];
+        fcl::Vector3f translation(pos[0], pos[1], pos[2]);
 
         fcl::Quaternion<float> q = fcl::Quaternion<float>(quat[0], quat[1], quat[2], quat[3]);
-        collision_object->setTransform(q, trans);
+        collision_object->setQuatRotation(q);
+
+        collision_object->setTranslation(translation);
     }
 
     void fcl_mesh::update_mesh(const std::vector<fcl::Vector3<float>> &new_verts)
@@ -125,12 +124,12 @@ namespace fcl_checking
     }
 }
 
-int main(int argc, char **argv)
-{
-    printf("Hello World\n");
+// int main(int argc, char **argv)
+// {
+//     printf("Hello World\n");
 
-    fcl_checking::fcl_mesh fcl_mesh_object;
-    fcl_mesh_object.load_stl("/home/marios/thesis_ws/src/drones_rope_planning/resources/env-scene.stl");
+//     fcl_checking::fcl_mesh fcl_mesh_object;
+//     fcl_mesh_object.load_stl("/home/marios/thesis_ws/src/drones_rope_planning/resources/env-scene.stl");
 
-    return 0;
-}
+//     return 0;
+// }

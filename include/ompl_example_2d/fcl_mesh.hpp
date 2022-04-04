@@ -1,4 +1,5 @@
-#pragma once
+#ifndef FCL_MESH_HPP
+#define FCL_MESH_HPP
 
 #include "fcl/geometry/bvh/BVH_model-inl.h"
 #include "fcl/geometry/bvh/BVH_model.h"
@@ -36,13 +37,15 @@ namespace fcl_checking
 
         void update_mesh(const std::vector<fcl::Vector3<float>> &new_verts);
 
+        fcl::CollisionObject<float> *collision_object;
+
     private:
         std::vector<stlloader::Vertex> get_unique_vertices(void);
 
         stlloader::Mesh stl_mesh;
 
         fcl::BVHModel<fcl::OBBRSS<float>> *mesh;
-
-        fcl::CollisionObject<float> *collision_object;
     };
 }
+
+#endif // FCL_MESH_HPP
