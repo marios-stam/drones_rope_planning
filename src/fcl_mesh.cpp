@@ -20,7 +20,6 @@ namespace fcl_checking
 
     void fcl_mesh::load_stl(std::string filename)
     {
-        printf("Loading STL file: %s\n", filename.c_str());
         stlloader::parse_file(filename.c_str(), fcl_mesh::stl_mesh);
 
         std::vector<stlloader::Vertex> uniq_verts = get_unique_vertices();

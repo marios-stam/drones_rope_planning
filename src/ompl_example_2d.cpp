@@ -8,16 +8,6 @@
 
 #include "../include/ompl_example_2d/ompl_example_2d.hpp"
 
-// Boost
-#include <boost/bind.hpp>
-#include <boost/thread/recursive_mutex.hpp>
-
-// STL
-#include <limits>
-#include <math.h>
-#include <string>
-#include <thread>
-
 using namespace std;
 using namespace ros;
 
@@ -35,11 +25,6 @@ namespace ompl_rope_planning
 
     planner::planner(void)
     {
-        std::shared_ptr<fcl::CollisionGeometry<double>> Quadcopter(new fcl::Box<double>(0.3, 0.3, 1.));
-
-        // fcl::OcTree *tree = new fcl::OcTree(std::shared_ptr<const octomap::OcTree>(new octomap::OcTree(0.1)));
-        // tree_obj = std::shared_ptr<fcl::CollisionGeometry>(tree);
-
         space = ob::StateSpacePtr(new ob::RealVectorStateSpace(6));
 
         printf("Setting bounds\n");
@@ -157,18 +142,6 @@ namespace ompl_rope_planning
         const auto drones_dis = state->values[4];
         const auto drones_angle = state->values[5];
 
-        // fcl::CollisionObject treeObj((tree_obj));
-        // fcl::CollisionObject aircraftObject(Quadcopter);
-
-        // // check validity of state defined by pos & rot
-        // fcl::Vec3f translation(pos->values[0], pos->values[1], pos->values[2]);
-        // fcl::Quaternion3f rotation(rot->w, rot->x, rot->y, rot->z);
-        // aircraftObject.setTransform(rotation, translation);
-        // fcl::CollisionRequest requestType(1, false, 1, false);
-        // fcl::CollisionResult collisionResult;
-        // fcl::collide(&aircraftObject, &treeObj, requestType, collisionResult);
-
-        // return (!collisionResult.isCollision());
         return true;
     }
 
