@@ -131,8 +131,15 @@ namespace ompl_rope_planning
             // and inquire about the found path
             std::cout << "Found solution :" << std::endl;
 
+            std::cout << "Simplifying path...\n";
+            // pdef->simplifySolution(plan->getSolutionPath());
+
+            std::cout << "Interpolating path...\n";
+
             ob::PathPtr path = pdef->getSolutionPath();
             og::PathGeometric *pth = pdef->getSolutionPath()->as<og::PathGeometric>();
+            pth->interpolate(30);
+
             pth->printAsMatrix(std::cout);
             // save path to file
             std::ofstream myfile;

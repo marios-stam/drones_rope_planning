@@ -36,6 +36,7 @@ namespace fcl_checking
     bool checker::check_collision()
     {
 
+        result.clear();
         fcl::collide(environment_mesh.collision_object, robot_mesh.collision_object, request, result);
 
         return result.isCollision();

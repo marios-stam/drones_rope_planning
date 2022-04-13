@@ -97,7 +97,7 @@ if __name__ == "__main__":
     # transform()
 
     # robot marker initialization
-    mesh = "package://drones_rope_planning/resources/collada/custom_triangle_robot.dae"
+    mesh = "package://drones_rope_planning/resources/custom_triangle_robot.dae"
     rb = MeshMarker(id=0, mesh_path=mesh)
 
     robPub = rospy.Publisher('rb_robot',  Marker, queue_size=10)
@@ -112,17 +112,8 @@ if __name__ == "__main__":
     envPub = rospy.Publisher('rb_environment',  Marker, queue_size=10)
 
     # path
-    try:
-        path_file = "/home/marios/thesis_ws/src/drones_rope_planning/resources/paths/path.txt"
-        data = np.loadtxt(path_file)
-    except Exception as e:
-        print("Error:", e)
-        print("Trying crazyswarm/path.txt...")
-        try:
-            data = np.loadtxt('crazyswarm/path.txt')
-        except Exception as e:
-            print("No path file found")
-            exit(0)
+    path_file = "/home/marios/thesis_ws/src/drones_rope_planning/resources/paths/path.txt"
+    data = np.loadtxt(path_file)
 
     path = getPath(data)
     trajPub = rospy.Publisher('rigiBodyPath',  Path, queue_size=10)

@@ -73,7 +73,7 @@ namespace ompl_rope_planning
         ompl::geometric::PathGeometric *path_smooth = NULL;
 
         fcl_checking::checker checker;
-        
+
         int dim;
 
         bool isStateValid(const ompl::base::State *state_check);

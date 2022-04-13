@@ -26,8 +26,9 @@ int main(int argc, char **argv)
     // create node handler
     ros::NodeHandle nodeHandle("~");
 
-    std::string robot = "/home/marios/thesis_ws/src/drones_rope_planning/resources/env-scene-ltu-experiment.stl";
-    std::string env = "/home/marios/thesis_ws/src/drones_rope_planning/resources/custom_triangle_robot.stl";
+    // std::string robot = "/home/marios/thesis_ws/src/drone_path_planning/resources/stl/robot-scene-triangle.stl";
+    std::string env = "/home/marios/thesis_ws/src/drone_path_planning/resources/stl/env-scene-ltu-experiment.stl";
+    std::string robot = "/home/marios/thesis_ws/src/drones_rope_planning/resources/stl/custom_triangle_robot.stl";
 
     ompl_rope_planning::planner planner(robot, env);
 
@@ -39,5 +40,40 @@ int main(int argc, char **argv)
     printf("Planning...\n");
     planner.plan();
 
+    // create fcl checker
+    // fcl_checking::checker checker(env, robot);
+    // bool collision;
+
+    // float pos[3] = {0, 4, 0};
+    // float yaw = 0;
+
+    // tf2::Quaternion q;
+    // q = q.normalize();
+    // int counter = 0, collisions_counter = 0;
+
+    // float min[3] = {-2.2, 2.8, 0.5};
+    // float max[3] = {2.2, 5.0, 2.5};
+    // while (counter++ < 100)
+    // {
+    //     // scan keyboard
+    //     std::cout << "Enter coordinates:" << std::endl;
+    //     std::cin >> pos[0];
+    //     std::cin >> pos[1];
+    //     std::cin >> pos[2];
+
+    //     q.setRPY(0, 0, yaw);
+    //     q = q.normalize();
+    //     float quat[4] = {q.x(), q.y(), q.z(), q.w()};
+
+    //     checker.setRobotTransform(pos, quat);
+    //     collision = checker.check_collision();
+    //     if (collision)
+    //     {
+    //         collisions_counter++;
+    //         std::cout << "Collision: " << collision << std::endl;
+    //         std::cout << "x: " << pos[0] << " y: " << pos[1] << " z: " << pos[2] << std::endl;
+    //     }
+    // }
+    // std::cout << "Collisions: " << collisions_counter << std::endl;
     return 0;
 }
