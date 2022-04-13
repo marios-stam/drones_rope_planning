@@ -23,6 +23,7 @@ namespace fcl_checking
          */
         checker();
 
+        checker(std::string environment_filename, std::string robot_filename);
         /*!
          * Destructor.
          */

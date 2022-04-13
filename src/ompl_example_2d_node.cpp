@@ -26,28 +26,18 @@ int main(int argc, char **argv)
     // create node handler
     ros::NodeHandle nodeHandle("~");
 
-    // ompl_rope_planning::planner planner_object;
-    // planner_object.plan();
+    std::string robot = "/home/marios/thesis_ws/src/drones_rope_planning/resources/env-scene-ltu-experiment.stl";
+    std::string env = "/home/marios/thesis_ws/src/drones_rope_planning/resources/custom_triangle_robot.stl";
 
-    // create fcl_checker object
-    printf("Hello World mlkia\n");
+    ompl_rope_planning::planner planner(robot, env);
 
-    fcl_checking::checker checker;
-    checker.loadEnvironment("/home/marios/thesis_ws/src/drones_rope_planning/resources/env-scene.stl");
-    checker.loadRobot("/home/marios/thesis_ws/src/drones_rope_planning/resources/robot-scene-triangle.stl");
+    printf("Setting start and goal\n");
+    float start[6] = {0, 3, 1, 0.0, 0.0, 0.0};
+    float goal[6] = {0, 5, 1, 0.0, 0.0, 0.0};
+    planner.setStartGoal(start, goal);
 
-    printf("Checking collision\n");
-    checker.check_collision();
-
-    float pos[3] = {0, 2, 0};
-    float q[4] = {0, 0, 0, 1};
-    printf("Setting robot transform\n");
-
-    checker.setRobotTransform(pos, q);
-    std::cout << "pos: " << pos[0] << " " << pos[1] << " " << pos[2] << std::endl;
-    std::cout << "q: " << q[0] << " " << q[1] << " " << q[2] << " " << q[3] << std::endl;
-
-    checker.check_collision();
+    printf("Planning...\n");
+    planner.plan();
 
     return 0;
 }

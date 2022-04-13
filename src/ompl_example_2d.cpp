@@ -16,16 +16,15 @@ namespace og = ompl::geometric;
 
 namespace ompl_rope_planning
 {
-    void planner::init_start(void)
-    {
-        if (!set_start)
-            std::cout << "Initialized" << std::endl;
-        set_start = true;
-    }
 
-    planner::planner(void)
+    planner::planner(std::string robot_filename, std::string environment_filename)
     {
-        space = ob::StateSpacePtr(new ob::RealVectorStateSpace(6));
+        checker = fcl_checking::checker();
+        checker.loadEnvironment(environment_filename);
+        checker.loadRobot(robot_filename);
+
+        dim = 4;
+        space = ob::StateSpacePtr(new ob::RealVectorStateSpace(dim));
 
         printf("Setting bounds\n");
         setBounds();
@@ -40,9 +39,6 @@ namespace ompl_rope_planning
         // create a problem instance
         pdef = ob::ProblemDefinitionPtr(new ob::ProblemDefinition(si));
 
-        printf("Setting start and goal\n");
-        planner::setStartGoal();
-
         // set Optimizattion objective
         // pdef->setOptimizationObjective(planner::getPathLengthObjWithCostToGo(si));
 
@@ -54,43 +50,43 @@ namespace ompl_rope_planning
 
     void planner::setBounds()
     {
-        ob::RealVectorBounds bounds(6);
-        bounds.setLow(0, -1.0);
-        bounds.setLow(1, -1.0);
-        bounds.setLow(2, -1.0);
-        bounds.setLow(3, -1.0);
-        bounds.setLow(4, -1.0);
-        bounds.setLow(5, -1.0);
+        ob::RealVectorBounds bounds(dim);
+        bounds.setLow(0, -2.2);
+        bounds.setLow(1, 2.8);
+        bounds.setLow(2, 0.5);
+        bounds.setLow(3, -3.14);
+        // bounds.setLow(4, 0);
+        // bounds.setLow(5, 0);
 
-        bounds.setHigh(0, 11.0);
-        bounds.setHigh(1, 11.0);
-        bounds.setHigh(2, 11.0);
-        bounds.setHigh(3, 11.0);
-        bounds.setHigh(4, 11.0);
-        bounds.setHigh(5, 11.0);
+        bounds.setHigh(0, 2.2);
+        bounds.setHigh(1, 5.0);
+        bounds.setHigh(2, 2.5);
+        bounds.setHigh(3, 3.14);
+        // bounds.setHigh(4, 0);
+        // bounds.setHigh(5, 0);
 
         space->as<ob::RealVectorStateSpace>()->setBounds(bounds);
     }
 
-    void planner::setStartGoal()
+    void planner::setStartGoal(float start[6], float goal[6])
     {
         // create RealVector start_state
         ob::ScopedState<> start_state(planner::space);
         ob::ScopedState<> goal_state(planner::space);
 
-        start_state->as<ob::RealVectorStateSpace::StateType>()->values[0] = 0.0;
-        start_state->as<ob::RealVectorStateSpace::StateType>()->values[1] = 0.0;
-        start_state->as<ob::RealVectorStateSpace::StateType>()->values[2] = 0.0;
-        start_state->as<ob::RealVectorStateSpace::StateType>()->values[3] = 0.0;
-        start_state->as<ob::RealVectorStateSpace::StateType>()->values[4] = 0.0;
-        start_state->as<ob::RealVectorStateSpace::StateType>()->values[5] = 0.0;
+        start_state->as<ob::RealVectorStateSpace::StateType>()->values[0] = start[0];
+        start_state->as<ob::RealVectorStateSpace::StateType>()->values[1] = start[1];
+        start_state->as<ob::RealVectorStateSpace::StateType>()->values[2] = start[2];
+        start_state->as<ob::RealVectorStateSpace::StateType>()->values[3] = start[3];
+        // start_state->as<ob::RealVectorStateSpace::StateType>()->values[4] = start[4];
+        // start_state->as<ob::RealVectorStateSpace::StateType>()->values[5] = start[5];
 
-        goal_state->as<ob::RealVectorStateSpace::StateType>()->values[0] = 5;
-        goal_state->as<ob::RealVectorStateSpace::StateType>()->values[1] = 5;
-        goal_state->as<ob::RealVectorStateSpace::StateType>()->values[2] = 5;
-        goal_state->as<ob::RealVectorStateSpace::StateType>()->values[3] = 5;
-        goal_state->as<ob::RealVectorStateSpace::StateType>()->values[4] = 5;
-        goal_state->as<ob::RealVectorStateSpace::StateType>()->values[5] = 5;
+        goal_state->as<ob::RealVectorStateSpace::StateType>()->values[0] = goal[0];
+        goal_state->as<ob::RealVectorStateSpace::StateType>()->values[1] = goal[1];
+        goal_state->as<ob::RealVectorStateSpace::StateType>()->values[2] = goal[2];
+        goal_state->as<ob::RealVectorStateSpace::StateType>()->values[3] = goal[3];
+        // goal_state->as<ob::RealVectorStateSpace::StateType>()->values[4] = goal[4];
+        // goal_state->as<ob::RealVectorStateSpace::StateType>()->values[5] = goal[5];
 
         pdef->setStartAndGoalStates(start_state, goal_state);
     }
@@ -100,12 +96,18 @@ namespace ompl_rope_planning
 
         // create a planner for the defined space
         // ob::PlannerPtr plan(new og::InformedRRTstar(si));
-        ob::PlannerPtr plan(new og::RRT(si));
+        // ob::PlannerPtr plan(new og::RRT(si));
+
+        auto plan = std::make_shared<og::RRT>(si);
+        printf("Setting  range...\n");
+        plan->setRange(1.645338);
 
         // set the problem we are trying to solve for the planner
+        printf("Setting  problem definition...\n");
         plan->setProblemDefinition(pdef);
 
         // perform setup steps for the planner
+        printf("Setting  planner up...\n");
         plan->setup();
 
         // print the settings for this space
@@ -114,17 +116,29 @@ namespace ompl_rope_planning
         // print the problem settings
         pdef->print(std::cout);
 
+        // create termination condition
+        ob::PlannerTerminationCondition ptc(ob::timedPlannerTerminationCondition(10.0));
         // attempt to solve the problem within one second of planning time
-        ob::PlannerStatus solved = plan->solve(2);
+        auto t0 = std::chrono::high_resolution_clock::now();
+        ob::PlannerStatus solved = plan->solve(ptc);
+        std::cout << std::endl;
+        auto dt = std::chrono::high_resolution_clock::now() - t0;
+        std::cout << "Planning time: " << std::chrono::duration_cast<std::chrono::milliseconds>(dt).count() << " ms" << std::endl;
 
         if (solved)
         {
             // get the goal representation from the problem definition (not the same as the goal state)
             // and inquire about the found path
-            std::cout << "Found solution:" << std::endl;
+            std::cout << "Found solution :" << std::endl;
+
             ob::PathPtr path = pdef->getSolutionPath();
             og::PathGeometric *pth = pdef->getSolutionPath()->as<og::PathGeometric>();
             pth->printAsMatrix(std::cout);
+            // save path to file
+            std::ofstream myfile;
+            myfile.open("/home/marios/thesis_ws/src/drones_rope_planning/resources/paths/path.txt");
+            pth->printAsMatrix(myfile);
+            myfile.close();
         }
         else
             std::cout << "No solution found" << std::endl;
@@ -132,6 +146,9 @@ namespace ompl_rope_planning
 
     bool planner::isStateValid(const ob::State *state_check)
     {
+        static int counter = 0;
+        auto t0 = ros::Time::now();
+
         const ob::RealVectorStateSpace::StateType *state = state_check->as<ob::RealVectorStateSpace::StateType>();
 
         const auto x = state->values[0];
@@ -139,10 +156,32 @@ namespace ompl_rope_planning
         const auto z = state->values[2];
 
         const auto yaw = state->values[3];
-        const auto drones_dis = state->values[4];
-        const auto drones_angle = state->values[5];
+        // const auto drones_dis = state->values[4];
+        // const auto drones_angle = state->values[5];
 
-        return true;
+        float pos[3] = {x, y, z};
+
+        tf2::Quaternion q;
+
+        q.setRPY(0, 0, yaw);
+        // q = q.normalize();
+
+        float quat[4] = {q.x(), q.y(), q.z(), q.w()};
+        checker.setRobotTransform(pos, quat);
+
+        bool result = !checker.check_collision();
+
+        auto dt = ros::Time::now() - t0;
+
+        counter++;
+        if (counter % 5000 == 0)
+        {
+            // printf("x: %f, y: %f, z: %f, yaw: %f --> result: %d \n", x, y, z, yaw, result);
+            std::cout << "\r"
+                      << "Checking state: " << counter << " in " << dt.toSec() * 1000 << " msec";
+        }
+
+        return result;
     }
 
 }

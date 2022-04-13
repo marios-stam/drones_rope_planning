@@ -3,12 +3,12 @@
 
 namespace fcl_checking
 {
-    checker::checker()
+    checker::checker() {}
+
+    checker::checker(std::string environment_filename, std::string robot_filename)
     {
-        // setEnvironment();
-        // setRobotTransform();
-        // check_collision();
-        // update_robot();
+        loadEnvironment(environment_filename);
+        loadRobot(robot_filename);
     }
 
     checker::~checker() {}

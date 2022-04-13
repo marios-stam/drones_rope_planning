@@ -9,6 +9,9 @@
 #include <octomap_msgs/conversions.h>
 #include <octomap_ros/conversions.h>
 
+// import tf transforms
+#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
+
 #include <Eigen/Core>
 #include <Eigen/Geometry>
 #include <geometry_msgs/PoseStamped.h>
@@ -42,14 +45,12 @@ namespace ompl_rope_planning
          * Constructor.
          * @param nodeHandle the ROS node handle.
          */
-        planner();
+        planner(std::string robot_filename, std::string environment_filename);
 
         /*!
          * Destructor.
          */
         virtual ~planner();
-
-        void init_start(void);
 
         void setBounds(void);
 
@@ -57,9 +58,7 @@ namespace ompl_rope_planning
 
         void replan(void);
 
-        void setStartGoal(void);
-
-        ompl::base::ScopedStatePtr setGoal(void);
+        void setStartGoal(float start[6], float goal[6]);
 
     private:
         // construct the state space we are planning in
@@ -71,19 +70,11 @@ namespace ompl_rope_planning
         // create a problem instance
         ompl::base::ProblemDefinitionPtr pdef;
 
-        // goal state
-        double prev_goal[3];
-
         ompl::geometric::PathGeometric *path_smooth = NULL;
 
-        bool replan_flag = false;
-
-        // std::shared_ptr<fcl::CollisionGeometry> tree_obj;
-
-        // Flag for initialization
-        bool set_start = false;
-
         fcl_checking::checker checker;
+        
+        int dim;
 
         bool isStateValid(const ompl::base::State *state_check);
     };

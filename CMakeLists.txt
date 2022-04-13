@@ -73,6 +73,13 @@ catkin_package(
 #  DEPENDS system_lib
 )
 
+install(PROGRAMS
+  scripts/path_vis.py
+
+  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+
+
 ###########
 ## Build ##
 ###########

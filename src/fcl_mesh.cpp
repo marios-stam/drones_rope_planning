@@ -109,10 +109,11 @@ namespace fcl_checking
         // set transform
         fcl::Vector3f translation(pos[0], pos[1], pos[2]);
 
-        fcl::Quaternion<float> q = fcl::Quaternion<float>(quat[0], quat[1], quat[2], quat[3]);
-        collision_object->setQuatRotation(q);
+        // fc::Quaternion expects w, x, y, z
+        fcl::Quaternion<float> q = fcl::Quaternion<float>(quat[3], quat[0], quat[1], quat[2]);
 
         collision_object->setTranslation(translation);
+        collision_object->setQuatRotation(q);
     }
 
     void fcl_mesh::update_mesh(const std::vector<fcl::Vector3<float>> &new_verts)
@@ -122,13 +123,3 @@ namespace fcl_checking
         mesh->endUpdateModel();
     }
 }
-
-// int main(int argc, char **argv)
-// {
-//     printf("Hello World\n");
-
-//     fcl_checking::fcl_mesh fcl_mesh_object;
-//     fcl_mesh_object.load_stl("/home/marios/thesis_ws/src/drones_rope_planning/resources/env-scene.stl");
-
-//     return 0;
-// }
