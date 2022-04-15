@@ -9,6 +9,8 @@
 #include "../include/ompl_example_2d/fcl_checker.hpp"
 #include "../include/ompl_example_2d/ompl_example_2d.hpp"
 
+#include "../include/catenaries/catenary.hpp"
+
 #include <ros/ros.h>
 
 #include <geometry_msgs/PoseStamped.h>
@@ -26,54 +28,46 @@ int main(int argc, char **argv)
     // create node handler
     ros::NodeHandle nodeHandle("~");
 
-    // std::string robot = "/home/marios/thesis_ws/src/drone_path_planning/resources/stl/robot-scene-triangle.stl";
-    std::string env = "/home/marios/thesis_ws/src/drone_path_planning/resources/stl/env-scene-ltu-experiment.stl";
-    std::string robot = "/home/marios/thesis_ws/src/drones_rope_planning/resources/stl/custom_triangle_robot.stl";
+    // // std::string robot = "/home/marios/thesis_ws/src/drone_path_planning/resources/stl/robot-scene-triangle.stl";
+    // std::string env = "/home/marios/thesis_ws/src/drone_path_planning/resources/stl/env-scene-ltu-experiment.stl";
+    // std::string robot = "/home/marios/thesis_ws/src/drones_rope_planning/resources/stl/custom_triangle_robot.stl";
 
-    ompl_rope_planning::planner planner(robot, env);
+    // ompl_rope_planning::planner planner(robot, env);
 
-    printf("Setting start and goal\n");
-    float start[6] = {0, 3, 1, 0.0, 0.0, 0.0};
-    float goal[6] = {0, 5, 1, 0.0, 0.0, 0.0};
-    planner.setStartGoal(start, goal);
+    // printf("Setting start and goal\n");
+    // float start[6] = {0, 3, 1, 0.0, 0.0, 0.0};
+    // float goal[6] = {0, 5, 1, 0.0, 0.0, 0.0};
+    // planner.setStartGoal(start, goal);
 
-    printf("Planning...\n");
-    planner.plan();
+    // printf("Planning...\n");
+    // planner.plan();
 
-    // create fcl checker
-    // fcl_checking::checker checker(env, robot);
-    // bool collision;
+    Eigen::Vector3f start_point(1, 1, 0);
+    Eigen::Vector3f end_point(2, 2, 0);
+    Eigen::Vector3f lowest_point;
+    float L = 3.5;
+    // calculate time taken
+    float time = 0;
+    int times = 1000;
+    for (int i = 0; i < times; i++)
+    {
+        auto start = std::chrono::high_resolution_clock::now();
+        lowest_point = catenaries::lowest_point_optimized(start_point, end_point, L);
+        auto end = std::chrono::high_resolution_clock::now();
+        auto diff = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+        time += diff.count();
+    }
 
-    // float pos[3] = {0, 4, 0};
-    // float yaw = 0;
+    std::cout << "Time taken by function: " << time / times << " microseconds." << std::endl;
 
-    // tf2::Quaternion q;
-    // q = q.normalize();
-    // int counter = 0, collisions_counter = 0;
+    std::cout << "lowest point: " << lowest_point.transpose() << std::endl;
 
-    // float min[3] = {-2.2, 2.8, 0.5};
-    // float max[3] = {2.2, 5.0, 2.5};
-    // while (counter++ < 100)
-    // {
-    //     // scan keyboard
-    //     std::cout << "Enter coordinates:" << std::endl;
-    //     std::cin >> pos[0];
-    //     std::cin >> pos[1];
-    //     std::cin >> pos[2];
+    start_point = Eigen::Vector3f(4, 8, 0.5);
+    end_point = Eigen::Vector3f(5, 7, 0.7);
+    L = 3.5;
+    lowest_point = catenaries::lowest_point_optimized(start_point, end_point, L);
 
-    //     q.setRPY(0, 0, yaw);
-    //     q = q.normalize();
-    //     float quat[4] = {q.x(), q.y(), q.z(), q.w()};
+    std::cout << "lowest point: " << lowest_point.transpose() << std::endl;
 
-    //     checker.setRobotTransform(pos, quat);
-    //     collision = checker.check_collision();
-    //     if (collision)
-    //     {
-    //         collisions_counter++;
-    //         std::cout << "Collision: " << collision << std::endl;
-    //         std::cout << "x: " << pos[0] << " y: " << pos[1] << " z: " << pos[2] << std::endl;
-    //     }
-    // }
-    // std::cout << "Collisions: " << collisions_counter << std::endl;
     return 0;
 }

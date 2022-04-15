@@ -106,13 +106,10 @@ namespace fcl_checking
     void fcl_mesh::set_transform(float pos[], float quat[])
     {
 
-        // set transform
-        fcl::Vector3f translation(pos[0], pos[1], pos[2]);
-
         // fc::Quaternion expects w, x, y, z
         fcl::Quaternion<float> q = fcl::Quaternion<float>(quat[3], quat[0], quat[1], quat[2]);
 
-        collision_object->setTranslation(translation);
+        collision_object->setTranslation(fcl::Vector3f(pos[0], pos[1], pos[2]));
         collision_object->setQuatRotation(q);
     }
 

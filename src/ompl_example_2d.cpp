@@ -100,7 +100,7 @@ namespace ompl_rope_planning
 
         auto plan = std::make_shared<og::RRT>(si);
         printf("Setting  range...\n");
-        plan->setRange(1.645338);
+        plan->setRange(2.0);
 
         // set the problem we are trying to solve for the planner
         printf("Setting  problem definition...\n");
@@ -138,6 +138,10 @@ namespace ompl_rope_planning
 
             ob::PathPtr path = pdef->getSolutionPath();
             og::PathGeometric *pth = pdef->getSolutionPath()->as<og::PathGeometric>();
+
+            og::PathSimplifier path_simplifier(si, pdef->getGoal());
+            path_simplifier.simplify(*pth, 3.0);
+
             pth->interpolate(30);
 
             pth->printAsMatrix(std::cout);
@@ -154,38 +158,40 @@ namespace ompl_rope_planning
     bool planner::isStateValid(const ob::State *state_check)
     {
         static int counter = 0;
-        auto t0 = ros::Time::now();
+        // auto t0 = ros::Time::now();
 
         const ob::RealVectorStateSpace::StateType *state = state_check->as<ob::RealVectorStateSpace::StateType>();
 
-        const auto x = state->values[0];
-        const auto y = state->values[1];
-        const auto z = state->values[2];
-
-        const auto yaw = state->values[3];
         // const auto drones_dis = state->values[4];
         // const auto drones_angle = state->values[5];
 
-        float pos[3] = {x, y, z};
+        float pos[3];
+        pos[0] = state->values[0];
+        pos[1] = state->values[1];
+        pos[2] = state->values[2];
+
+        const auto yaw = state->values[3];
 
         tf2::Quaternion q;
 
         q.setRPY(0, 0, yaw);
-        // q = q.normalize();
+        q = q.normalize();
 
         float quat[4] = {q.x(), q.y(), q.z(), q.w()};
         checker.setRobotTransform(pos, quat);
 
         bool result = !checker.check_collision();
 
-        auto dt = ros::Time::now() - t0;
+        // auto dt = ros::Time::now() - t0;
 
         counter++;
-        if (counter % 5000 == 0)
+        if (counter % 100 == 0)
         {
             // printf("x: %f, y: %f, z: %f, yaw: %f --> result: %d \n", x, y, z, yaw, result);
+            // std::cout << "\r"
+            //   << "Checking state: " << counter << " in " << dt.toSec() * 1000 << " msec";
             std::cout << "\r"
-                      << "Checking state: " << counter << " in " << dt.toSec() * 1000 << " msec";
+                      << "Checking state: " << counter << " msec";
         }
 
         return result;

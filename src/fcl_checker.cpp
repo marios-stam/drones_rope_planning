@@ -35,7 +35,6 @@ namespace fcl_checking
 
     bool checker::check_collision()
     {
-
         result.clear();
         fcl::collide(environment_mesh.collision_object, robot_mesh.collision_object, request, result);
 
@@ -43,20 +42,3 @@ namespace fcl_checking
     }
 
 }
-
-// int main(int argc, char **argv)
-// {
-//     printf("Hello World mlkia\n");
-
-//     fcl_checking::checker checker;
-//     checker.loadEnvironment("/home/marios/thesis_ws/src/drones_rope_planning/resources/env-scene.stl");
-//     checker.loadRobot("/home/marios/thesis_ws/src/drones_rope_planning/resources/robot-scene-triangle.stl");
-
-//     checker.check_collision();
-//     float pos[3] = {0, 0, 0};
-//     float q[4] = {0, 0, 0, 1};
-//     checker.setRobotTransform(pos, q);
-//     checker.check_collision();
-
-//     return 0;
-// }
