@@ -34,6 +34,7 @@
 #include <ompl/geometric/planners/rrt/RRTConnect.h>
 
 // Custom classes
+#include "../custom_mesh.hpp"
 #include "fcl_checker.hpp"
 
 namespace ompl_rope_planning
@@ -73,6 +74,8 @@ namespace ompl_rope_planning
         ompl::geometric::PathGeometric *path_smooth = NULL;
 
         fcl_checking::checker checker;
+        
+        custom_mesh::CustomMesh robot_mesh ;
 
         int dim;
 

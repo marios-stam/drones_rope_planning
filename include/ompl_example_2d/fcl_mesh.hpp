@@ -33,9 +33,13 @@ namespace fcl_checking
 
         void create_mesh(void);
 
+        void create_mesh(Eigen::MatrixXf verts, Eigen::MatrixXf tris);
+
         void set_transform(float pos[], float quat[]);
 
-        void update_mesh(const std::vector<fcl::Vector3<float>> &new_verts);
+        void update_mesh(const std::vector<fcl::Vector3<float>> new_verts);
+
+        void update_mesh(const Eigen::MatrixXf new_verts);
 
         fcl::CollisionObject<float> *collision_object;
 

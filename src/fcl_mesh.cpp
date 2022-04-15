@@ -113,10 +113,49 @@ namespace fcl_checking
         collision_object->setQuatRotation(q);
     }
 
-    void fcl_mesh::update_mesh(const std::vector<fcl::Vector3<float>> &new_verts)
+    void fcl_mesh::create_mesh(Eigen::MatrixXf verts, Eigen::MatrixXf tris)
+    {
+        // transform Eigen matrix to fcl matrix
+        std::vector<fcl::Vector3<float>> fcl_vertices;
+        std::vector<fcl::Triangle> fcl_tris;
+
+        for (int i = 0; i < verts.rows(); ++i)
+        {
+            fcl::Vector3<float> fcl_vert(verts(i, 0), verts(i, 1), verts(i, 2));
+            fcl_vertices.push_back(fcl_vert);
+        }
+
+        for (int i = 0; i < tris.rows(); ++i)
+        {
+            fcl::Triangle fcl_tri(tris(i, 0), tris(i, 1), tris(i, 2));
+            fcl_tris.push_back(fcl_tri);
+        }
+
+        mesh = new fcl::BVHModel<fcl::OBBRSS<float>>();
+
+        mesh->beginModel(fcl_tris.size(), fcl_vertices.size());
+        mesh->addSubModel(fcl_vertices, fcl_tris);
+        mesh->endModel();
+    }
+
+    void fcl_mesh::update_mesh(const std::vector<fcl::Vector3<float>> new_verts)
     {
         mesh->beginUpdateModel();
         mesh->updateSubModel(new_verts);
+        mesh->endUpdateModel();
+    }
+
+    void fcl_mesh::update_mesh(const Eigen::MatrixXf new_verts)
+    {
+        std::vector<fcl::Vector3<float>> fcl_vertices;
+        for (int i = 0; i < new_verts.rows(); ++i)
+        {
+            fcl::Vector3<float> fcl_vert(new_verts(i, 0), new_verts(i, 1), new_verts(i, 2));
+            fcl_vertices.push_back(fcl_vert);
+        }
+
+        mesh->beginUpdateModel();
+        mesh->updateSubModel(fcl_vertices);
         mesh->endUpdateModel();
     }
 }

@@ -110,6 +110,7 @@ file(GLOB ompl_example_2d_sources
     src/catenaries/catenary.cpp
     src/catenaries/math_utils.cpp
 
+    src/custom_mesh.cpp
 )
 
 file(GLOB ompl_example_2d_headers
@@ -121,7 +122,8 @@ file(GLOB ompl_example_2d_headers
 
     include/catenaries/catenary.hpp
     include/catenaries/math_utils.hpp
-
+    
+    include/custom_mesh.hpp
 ) 
 
 
