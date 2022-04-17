@@ -1,5 +1,6 @@
 #pragma once
 #include "../include/ompl_example_2d/fcl_checker.hpp"
+#include "../include/custom_mesh.hpp"
 
 namespace fcl_checking
 {
@@ -39,6 +40,14 @@ namespace fcl_checking
         fcl::collide(environment_mesh.collision_object, robot_mesh.collision_object, request, result);
 
         return result.isCollision();
+    }
+
+    void checker::setRobotMesh(fcl_mesh mesh) { robot_mesh = mesh; }
+
+    void checker::update_robot(fcl_checking::fcl_mesh rb_mesh)
+    {
+        robot_mesh = rb_mesh;
+        robot_mesh.create_collision_object();
     }
 
 }

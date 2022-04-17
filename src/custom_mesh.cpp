@@ -4,6 +4,9 @@
 #include "../include/catenaries/catenary.hpp"
 #include "../include/ompl_example_2d/fcl_mesh.hpp"
 
+// include ros
+#include "ros/ros.h"
+
 namespace custom_mesh
 {
     using namespace Eigen;
@@ -25,7 +28,7 @@ namespace custom_mesh
 
         create_3D_V_fcl_mesh(V_2D.p0, V_2D.p1, V_2D.lower, V_2D.upper);
 
-        m.update_mesh(verts);
+        m.create_mesh(verts, tris);
     }
 
     void CustomMesh::get_V_2D_points(float drones_distance, float theta)
@@ -34,12 +37,13 @@ namespace custom_mesh
         This function generated a 3D rigid trinagle body suitable for path planning of the drone swarm
         theta : represents the angle that is formed between the line connecting the drones and the horizontal plane
         */
-
         drones_formation_2_triangle_points(drones_distance, theta);
+
         V_3D.p0 = Vector3f(V_2D.p0(0), V_2D.p0(1), 0);
         V_3D.p1 = Vector3f(V_2D.p1(0), V_2D.p1(1), 0);
 
         Vector3f lower3D = catenaries::lowest_point_optimized(V_3D.p0, V_3D.p1, L);
+
         Vector2f lower2D = Vector2f(lower3D(0), lower3D(2));
 
         // add safety distances
@@ -107,8 +111,27 @@ namespace custom_mesh
             return;
         }
 
+        static float tot_time = 0;
+        static int count = 0;
+
         get_V_2D_points(drones_distance, theta);
 
         get_V_3D_points(V_2D.p0, V_2D.p1, V_2D.lower, V_2D.upper);
+
+        auto t0 = ros::Time::now();
+
+        // m.create_mesh(verts, tris);
+        m.update_mesh(verts);
+
+        auto dt = ros::Time::now() - t0;
+        tot_time += dt.toSec() * 1000;
+        count++;
+        if (count % 100 == 0)
+        {
+            printf("\n");
+            ROS_INFO("CustomMesh::update_mesh() : %f msec", tot_time / count);
+        }
     }
+
+    fcl_checking::fcl_mesh CustomMesh::get_fcl_mesh() { return m; }
 };

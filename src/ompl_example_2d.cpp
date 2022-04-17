@@ -17,13 +17,17 @@ namespace og = ompl::geometric;
 namespace ompl_rope_planning
 {
 
-    planner::planner(std::string robot_filename, std::string environment_filename)
+    planner::planner(std::string robot_filename, std::string environment_filename, float rope_length)
     {
         checker = fcl_checking::checker();
         checker.loadEnvironment(environment_filename);
-        checker.loadRobot(robot_filename);
+        // checker.loadRobot(robot_filename);
 
-        dim = 4;
+        L = 3;
+        custom_robot_mesh = new custom_mesh::CustomMesh(L);
+        checker.setRobotMesh(custom_robot_mesh->get_fcl_mesh());
+
+        dim = 6;
         space = ob::StateSpacePtr(new ob::RealVectorStateSpace(dim));
 
         printf("Setting bounds\n");
@@ -51,19 +55,26 @@ namespace ompl_rope_planning
     void planner::setBounds()
     {
         ob::RealVectorBounds bounds(dim);
-        bounds.setLow(0, -2.2);
-        bounds.setLow(1, 2.8);
-        bounds.setLow(2, 0.5);
-        bounds.setLow(3, -3.14);
-        // bounds.setLow(4, 0);
-        // bounds.setLow(5, 0);
 
-        bounds.setHigh(0, 2.2);
-        bounds.setHigh(1, 5.0);
-        bounds.setHigh(2, 2.5);
-        bounds.setHigh(3, 3.14);
-        // bounds.setHigh(4, 0);
-        // bounds.setHigh(5, 0);
+        float drones_angle = M_PI / 3;
+
+        // Lower bounds
+        bounds.setLow(0, -2.2);  // x
+        bounds.setLow(1, 2.8);   // y
+        bounds.setLow(2, 0.5);   // z
+        bounds.setLow(3, -M_PI); // yaw
+
+        bounds.setLow(4, 0.2);           // drones_distance
+        bounds.setLow(5, -drones_angle); // drones_angle
+
+        // Higher Bounds
+        bounds.setHigh(0, 2.2);  // x
+        bounds.setHigh(1, 5.0);  // y
+        bounds.setHigh(2, 2.5);  // z
+        bounds.setHigh(3, M_PI); // yaw
+
+        bounds.setHigh(4, L - 0.2);      // drones_distance
+        bounds.setHigh(5, drones_angle); // drones_angle
 
         space->as<ob::RealVectorStateSpace>()->setBounds(bounds);
     }
@@ -78,15 +89,15 @@ namespace ompl_rope_planning
         start_state->as<ob::RealVectorStateSpace::StateType>()->values[1] = start[1];
         start_state->as<ob::RealVectorStateSpace::StateType>()->values[2] = start[2];
         start_state->as<ob::RealVectorStateSpace::StateType>()->values[3] = start[3];
-        // start_state->as<ob::RealVectorStateSpace::StateType>()->values[4] = start[4];
-        // start_state->as<ob::RealVectorStateSpace::StateType>()->values[5] = start[5];
+        start_state->as<ob::RealVectorStateSpace::StateType>()->values[4] = start[4];
+        start_state->as<ob::RealVectorStateSpace::StateType>()->values[5] = start[5];
 
         goal_state->as<ob::RealVectorStateSpace::StateType>()->values[0] = goal[0];
         goal_state->as<ob::RealVectorStateSpace::StateType>()->values[1] = goal[1];
         goal_state->as<ob::RealVectorStateSpace::StateType>()->values[2] = goal[2];
         goal_state->as<ob::RealVectorStateSpace::StateType>()->values[3] = goal[3];
-        // goal_state->as<ob::RealVectorStateSpace::StateType>()->values[4] = goal[4];
-        // goal_state->as<ob::RealVectorStateSpace::StateType>()->values[5] = goal[5];
+        goal_state->as<ob::RealVectorStateSpace::StateType>()->values[4] = goal[4];
+        goal_state->as<ob::RealVectorStateSpace::StateType>()->values[5] = goal[5];
 
         pdef->setStartAndGoalStates(start_state, goal_state);
     }
@@ -158,8 +169,7 @@ namespace ompl_rope_planning
     bool planner::isStateValid(const ob::State *state_check)
     {
         static int counter = 0;
-        // auto t0 = ros::Time::now();
-
+        static float total_time = 0;
         const ob::RealVectorStateSpace::StateType *state = state_check->as<ob::RealVectorStateSpace::StateType>();
 
         // const auto drones_dis = state->values[4];
@@ -172,6 +182,16 @@ namespace ompl_rope_planning
 
         const auto yaw = state->values[3];
 
+        const float drones_dis = state->values[4];
+        const float drones_angle = state->values[5];
+
+        auto t0 = ros::Time::now();
+        custom_robot_mesh->update_mesh(drones_dis, drones_angle);
+        auto dt = ros::Time::now() - t0;
+
+        checker.update_robot(custom_robot_mesh->get_fcl_mesh());
+
+        // apply yaw rotation
         tf2::Quaternion q;
 
         q.setRPY(0, 0, yaw);
@@ -180,18 +200,19 @@ namespace ompl_rope_planning
         float quat[4] = {q.x(), q.y(), q.z(), q.w()};
         checker.setRobotTransform(pos, quat);
 
+        // check colllision
         bool result = !checker.check_collision();
 
-        // auto dt = ros::Time::now() - t0;
-
+        total_time += dt.toSec() * 1000; // sum msecs
         counter++;
-        if (counter % 100 == 0)
+        if ((counter % 100) == 0)
         {
             // printf("x: %f, y: %f, z: %f, yaw: %f --> result: %d \n", x, y, z, yaw, result);
-            // std::cout << "\r"
-            //   << "Checking state: " << counter << " in " << dt.toSec() * 1000 << " msec";
             std::cout << "\r"
-                      << "Checking state: " << counter << " msec";
+                      << "Checking state: " << counter << " avrg time: " << total_time / counter << " msec";
+
+            // std::cout << "\r"
+            //   << "Checking state: " << counter << " msec";
         }
 
         return result;

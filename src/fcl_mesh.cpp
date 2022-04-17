@@ -1,4 +1,5 @@
 #include "../include/ompl_example_2d/fcl_mesh.hpp"
+#include "ros/ros.h"
 
 int get_index_of_vert(std::vector<stlloader::Vertex> &verts, stlloader::Vertex &vert)
 {
@@ -109,7 +110,10 @@ namespace fcl_checking
         // fc::Quaternion expects w, x, y, z
         fcl::Quaternion<float> q = fcl::Quaternion<float>(quat[3], quat[0], quat[1], quat[2]);
 
+        // printf("set_transform: %f %f %f %f\n", pos[0], pos[1], pos[2], quat[3]);
         collision_object->setTranslation(fcl::Vector3f(pos[0], pos[1], pos[2]));
+        // printf("setting rotation\n");
+
         collision_object->setQuatRotation(q);
     }
 
@@ -133,9 +137,11 @@ namespace fcl_checking
 
         mesh = new fcl::BVHModel<fcl::OBBRSS<float>>();
 
+        auto t0 = ros::Time::now();
         mesh->beginModel(fcl_tris.size(), fcl_vertices.size());
         mesh->addSubModel(fcl_vertices, fcl_tris);
         mesh->endModel();
+        auto dt = ros::Time::now() - t0;
     }
 
     void fcl_mesh::update_mesh(const std::vector<fcl::Vector3<float>> new_verts)
@@ -143,6 +149,8 @@ namespace fcl_checking
         mesh->beginUpdateModel();
         mesh->updateSubModel(new_verts);
         mesh->endUpdateModel();
+
+        create_collision_object();
     }
 
     void fcl_mesh::update_mesh(const Eigen::MatrixXf new_verts)
@@ -154,8 +162,14 @@ namespace fcl_checking
             fcl_vertices.push_back(fcl_vert);
         }
 
+        bool refit = true; // if true -> doesn't rebuild the whole BVH tree
+
+        // top-down way (slow but more compact)
+        // bottom-up way (fast but less compact)
+        bool bottom_up = false;
+
         mesh->beginUpdateModel();
         mesh->updateSubModel(fcl_vertices);
-        mesh->endUpdateModel();
+        mesh->endUpdateModel(refit, bottom_up);
     }
 }

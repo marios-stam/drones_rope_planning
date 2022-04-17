@@ -46,7 +46,7 @@ namespace ompl_rope_planning
          * Constructor.
          * @param nodeHandle the ROS node handle.
          */
-        planner(std::string robot_filename, std::string environment_filename);
+        planner(std::string robot_filename, std::string environment_filename, float rope_length);
 
         /*!
          * Destructor.
@@ -61,7 +61,12 @@ namespace ompl_rope_planning
 
         void setStartGoal(float start[6], float goal[6]);
 
+        bool isStateValid(const ompl::base::State *state_check);
+
     private:
+        // rope_length
+        float L;
+
         // construct the state space we are planning in
         ompl::base::StateSpacePtr space;
 
@@ -74,12 +79,10 @@ namespace ompl_rope_planning
         ompl::geometric::PathGeometric *path_smooth = NULL;
 
         fcl_checking::checker checker;
-        
-        custom_mesh::CustomMesh robot_mesh ;
+
+        custom_mesh::CustomMesh *custom_robot_mesh;
 
         int dim;
-
-        bool isStateValid(const ompl::base::State *state_check);
     };
 
 }

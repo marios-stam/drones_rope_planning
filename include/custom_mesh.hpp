@@ -44,6 +44,8 @@ namespace custom_mesh
 
         void update_mesh(float drones_distance, float theta);
 
+        fcl_checking::fcl_mesh get_fcl_mesh();
+
     private:
         float L;
 

@@ -27,8 +27,8 @@ namespace catenaries
                 denum = cosh(Ai) - r;
                 A_i = A_i - num / denum;
                 counter = counter + 1;
-                A = Ai;
             }
+            A = Ai;
         }
         else
         {
