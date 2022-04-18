@@ -120,18 +120,18 @@ namespace custom_mesh
 
         auto t0 = ros::Time::now();
 
-        m.create_mesh(verts, tris);
-        // m.update_mesh(verts);
+        // m.create_mesh(verts, tris);
+        m.update_mesh(verts);
 
         auto dt = ros::Time::now() - t0;
         tot_time += dt.toSec() * 1000;
         count++;
-        if (count % 100 == 0)
+        if (count % 1000 == 0)
         {
             printf("\n");
             ROS_INFO("CustomMesh::update_mesh() : %f msec", tot_time / count);
         }
     }
 
-    fcl_checking::fcl_mesh CustomMesh::get_fcl_mesh() { return m; }
+    fcl_checking::fcl_mesh *CustomMesh::get_fcl_mesh() { return &m; }
 };

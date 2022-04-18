@@ -168,8 +168,14 @@ namespace fcl_checking
         // bottom-up way (fast but less compact)
         bool bottom_up = true;
 
-        mesh->beginUpdateModel();
-        mesh->updateSubModel(fcl_vertices);
-        mesh->endUpdateModel(refit, bottom_up);
+        // mesh->beginUpdateModel();
+        // mesh->updateSubModel(fcl_vertices);
+        // mesh->endUpdateModel(refit, bottom_up);
+
+        mesh->beginReplaceModel();
+        mesh->replaceSubModel(fcl_vertices);
+        mesh->endReplaceModel(refit, bottom_up);
     }
+
+    fcl::BVHModel<BVH_TYPE> *fcl_mesh::get_fcl_mesh(void) { return mesh; }
 }

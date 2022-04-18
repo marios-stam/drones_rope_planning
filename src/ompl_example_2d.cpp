@@ -166,8 +166,14 @@ namespace ompl_rope_planning
             std::cout << "No solution found" << std::endl;
     }
 
+    std::ostream &operator<<(std::ostream &os, const fcl::BVHBuildState &obj)
+    {
+        os << static_cast<std::underlying_type<fcl::BVHBuildState>::type>(obj);
+        return os;
+    }
     bool planner::isStateValid(const ob::State *state_check)
     {
+        // printf("========================================================\n");
         static int counter = 0;
         static float total_time = 0;
         const ob::RealVectorStateSpace::StateType *state = state_check->as<ob::RealVectorStateSpace::StateType>();
@@ -189,7 +195,13 @@ namespace ompl_rope_planning
         custom_robot_mesh->update_mesh(drones_dis, drones_angle);
         auto dt = ros::Time::now() - t0;
 
+        // printf("Updated mesh --> ");
+        // std::cout << "mesh.state -->" << custom_robot_mesh->get_fcl_mesh()->get_fcl_mesh()->build_state << std::endl;
+
         checker.update_robot(custom_robot_mesh->get_fcl_mesh());
+
+        // printf("Updated robot --> ");
+        // std::cout << "mesh.state:" << custom_robot_mesh->get_fcl_mesh()->get_fcl_mesh()->build_state << std::endl;
 
         // apply yaw rotation
         tf2::Quaternion q;
@@ -200,12 +212,15 @@ namespace ompl_rope_planning
         float quat[4] = {q.x(), q.y(), q.z(), q.w()};
         checker.setRobotTransform(pos, quat);
 
+        // printf("Set tobot transform --> ");
+        // std::cout << "mesh.state:" << custom_robot_mesh->get_fcl_mesh()->get_fcl_mesh()->build_state << std::endl;
+
         // check colllision
         bool result = !checker.check_collision();
 
         total_time += dt.toSec() * 1000; // sum msecs
         counter++;
-        if ((counter % 100) == 0)
+        if ((counter % 1000) == 0)
         {
             // printf("x: %f, y: %f, z: %f, yaw: %f --> result: %d \n", x, y, z, yaw, result);
             std::cout << "\r"

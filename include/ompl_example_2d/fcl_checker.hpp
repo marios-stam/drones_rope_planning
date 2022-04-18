@@ -39,12 +39,12 @@ namespace fcl_checking
 
         bool check_collision(void);
 
-        void update_robot(fcl_checking::fcl_mesh rb_mesh);
+        void update_robot(fcl_checking::fcl_mesh *rb_mesh);
 
-        void setRobotMesh(fcl_mesh mesh);
+        void setRobotMesh(fcl_mesh *mesh);
 
     private:
-        fcl_mesh robot_mesh;
+        fcl_mesh *robot_mesh;
 
         fcl_mesh environment_mesh;
 

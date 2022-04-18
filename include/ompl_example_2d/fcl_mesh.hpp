@@ -47,6 +47,8 @@ namespace fcl_checking
 
         fcl::CollisionObject<float> *collision_object;
 
+        fcl::BVHModel<BVH_TYPE> *get_fcl_mesh(void);
+
     private:
         std::vector<stlloader::Vertex> get_unique_vertices(void);
 
