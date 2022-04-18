@@ -46,7 +46,7 @@ namespace fcl_checking
         // }
 
         // create bvh model
-        mesh = new fcl::BVHModel<fcl::OBBRSS<float>>();
+        mesh = new fcl::BVHModel<BVH_TYPE>();
         std::vector<fcl::Vector3<float>> fcl_vertices;
         std::vector<fcl::Triangle> fcl_tris;
 
@@ -135,7 +135,7 @@ namespace fcl_checking
             fcl_tris.push_back(fcl_tri);
         }
 
-        mesh = new fcl::BVHModel<fcl::OBBRSS<float>>();
+        mesh = new fcl::BVHModel<BVH_TYPE>();
 
         auto t0 = ros::Time::now();
         mesh->beginModel(fcl_tris.size(), fcl_vertices.size());
@@ -166,7 +166,7 @@ namespace fcl_checking
 
         // top-down way (slow but more compact)
         // bottom-up way (fast but less compact)
-        bool bottom_up = false;
+        bool bottom_up = true;
 
         mesh->beginUpdateModel();
         mesh->updateSubModel(fcl_vertices);

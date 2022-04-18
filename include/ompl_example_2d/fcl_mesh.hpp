@@ -11,6 +11,10 @@
 #define STLLOADER_IMPLEMENTATION
 #include "stlloader.hpp"
 
+// #define BVH_TYPE fcl::kIOS<float>
+// #define BVH_TYPE fcl::RSS<float>
+#define BVH_TYPE fcl::KDOP<float, 16>
+
 namespace fcl_checking
 {
     class fcl_mesh
@@ -48,7 +52,7 @@ namespace fcl_checking
 
         stlloader::Mesh stl_mesh;
 
-        fcl::BVHModel<fcl::OBBRSS<float>> *mesh;
+        fcl::BVHModel<BVH_TYPE> *mesh;
     };
 }
 

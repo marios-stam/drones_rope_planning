@@ -120,8 +120,8 @@ namespace custom_mesh
 
         auto t0 = ros::Time::now();
 
-        // m.create_mesh(verts, tris);
-        m.update_mesh(verts);
+        m.create_mesh(verts, tris);
+        // m.update_mesh(verts);
 
         auto dt = ros::Time::now() - t0;
         tot_time += dt.toSec() * 1000;

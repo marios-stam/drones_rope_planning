@@ -39,13 +39,13 @@ int main(int argc, char **argv)
 
     ompl_rope_planning::planner planner(robot, env, L);
 
-    // printf("Setting start and goal\n");
-    // float start[6] = {0, 3, 1, 0.0, L * 0.5, 0.0};
-    // float goal[6] = {0, 5, 1, 0.0, L * 0.5, 0.0};
-    // planner.setStartGoal(start, goal);
+    printf("Setting start and goal\n");
+    float start[6] = {0, 3, 1, 0.0, L * 0.5, 0.0};
+    float goal[6] = {0, 5, 1, 0.0, L * 0.5, 0.0};
+    planner.setStartGoal(start, goal);
 
-    // printf("Planning...\n");
-    // planner.plan();
+    printf("Planning...\n");
+    planner.plan();
     /*
     //=======================================================================================================================
     // Eigen::Vector3f start_point(1, 1, 0);
@@ -90,48 +90,48 @@ int main(int argc, char **argv)
     // catenaries::getCatenaryCurve2D_optimized_for_lowest_cat_point(P1, P2, L);
     */
 
-    auto space = new ob::RealVectorStateSpace(6);
-    ob::State *abstractState = space->allocState();
+    // auto space = new ob::RealVectorStateSpace(6);
+    // ob::State *abstractState = space->allocState();
 
-    float pos[3] = {0, 0, 0};
-    float yaw = 0;
-    float drones_distance = 0.5;
-    float drones_angle = 0;
+    // float pos[3] = {0, 0, 0};
+    // float yaw = 0;
+    // float drones_distance = 0.5;
+    // float drones_angle = 0;
 
-    abstractState->as<ob::RealVectorStateSpace::StateType>()->values[0] = pos[0];
-    abstractState->as<ob::RealVectorStateSpace::StateType>()->values[1] = pos[1];
-    abstractState->as<ob::RealVectorStateSpace::StateType>()->values[2] = pos[2];
-    abstractState->as<ob::RealVectorStateSpace::StateType>()->values[3] = yaw;
-    abstractState->as<ob::RealVectorStateSpace::StateType>()->values[4] = drones_distance;
-    abstractState->as<ob::RealVectorStateSpace::StateType>()->values[5] = drones_angle;
+    // abstractState->as<ob::RealVectorStateSpace::StateType>()->values[0] = pos[0];
+    // abstractState->as<ob::RealVectorStateSpace::StateType>()->values[1] = pos[1];
+    // abstractState->as<ob::RealVectorStateSpace::StateType>()->values[2] = pos[2];
+    // abstractState->as<ob::RealVectorStateSpace::StateType>()->values[3] = yaw;
+    // abstractState->as<ob::RealVectorStateSpace::StateType>()->values[4] = drones_distance;
+    // abstractState->as<ob::RealVectorStateSpace::StateType>()->values[5] = drones_angle;
 
-    // calculate time taken
+    // // calculate time taken
 
-    bool result = planner.isStateValid(abstractState);
-    printf("\nresult: %d\n", result);
+    // bool result = planner.isStateValid(abstractState);
+    // printf("\nresult: %d\n", result);
 
-    printf("==================================================================================================\n");
+    // printf("==================================================================================================\n");
 
-    pos[0] = 0;
-    pos[1] = 4;
-    pos[2] = 0;
-    yaw = 0;
-    drones_distance = 0.5;
-    drones_angle = 0;
+    // pos[0] = 0;
+    // pos[1] = 4;
+    // pos[2] = 0;
+    // yaw = 0;
+    // drones_distance = 0.5;
+    // drones_angle = 0;
 
-    abstractState->as<ob::RealVectorStateSpace::StateType>()->values[0] = pos[0];
-    abstractState->as<ob::RealVectorStateSpace::StateType>()->values[1] = pos[1];
-    abstractState->as<ob::RealVectorStateSpace::StateType>()->values[2] = pos[2];
-    abstractState->as<ob::RealVectorStateSpace::StateType>()->values[3] = yaw;
-    abstractState->as<ob::RealVectorStateSpace::StateType>()->values[4] = drones_distance;
-    abstractState->as<ob::RealVectorStateSpace::StateType>()->values[5] = drones_angle;
+    // abstractState->as<ob::RealVectorStateSpace::StateType>()->values[0] = pos[0];
+    // abstractState->as<ob::RealVectorStateSpace::StateType>()->values[1] = pos[1];
+    // abstractState->as<ob::RealVectorStateSpace::StateType>()->values[2] = pos[2];
+    // abstractState->as<ob::RealVectorStateSpace::StateType>()->values[3] = yaw;
+    // abstractState->as<ob::RealVectorStateSpace::StateType>()->values[4] = drones_distance;
+    // abstractState->as<ob::RealVectorStateSpace::StateType>()->values[5] = drones_angle;
 
-    // calculate time taken
+    // // calculate time taken
 
-    for (int i = 0; i < 1000; i++)
-    {
-        result = planner.isStateValid(abstractState);
-    }
+    // for (int i = 0; i < 1000; i++)
+    // {
+    //     result = planner.isStateValid(abstractState);
+    // }
 
     printf("Done!\n");
     return 0;
