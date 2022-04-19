@@ -1,11 +1,3 @@
-/*
- * controllerUR_node.cpp
- *
- *  Created on: Jun 3, 2017
- *      Author: Dominik Belter
- *   Institute: Instute of Robotics and Machine Intelligence, Poznan University of Technology
- */
-
 #include "../include/ompl_example_2d/ompl_example_2d.hpp"
 
 using namespace std;
@@ -16,14 +8,62 @@ namespace og = ompl::geometric;
 
 namespace ompl_rope_planning
 {
-
-    planner::planner(std::string robot_filename, std::string environment_filename, float rope_length)
+    ProblemParams getProblemParams(ros::NodeHandle &nh)
     {
-        checker = fcl_checking::checker();
-        checker.loadEnvironment(environment_filename);
-        // checker.loadRobot(robot_filename);
+        ProblemParams pdef;
+        ros::param::get("/planning/timeout", pdef.timeout);
+        ros::param::get("/planning/rope_length", pdef.L);
+        ros::param::get("/planning/env_mesh", pdef.env_filename);
 
-        L = 3;
+        ros::param::get("/planning/start", pdef.start_pos);
+        ros::param::get("/planning/goal", pdef.goal_pos);
+
+        XmlRpc::XmlRpcValue bounds;
+        ros::param::get("/planning/bounds", bounds);
+        // nh.getParam("/planning/bounds", pdef.bounds);
+        XmlRpc::XmlRpcValue low_bounds = bounds["low"];
+        XmlRpc::XmlRpcValue high_bounds = bounds["high"];
+
+        pdef.bounds["low"][0] = low_bounds[0];
+        pdef.bounds["low"][1] = low_bounds[1];
+        pdef.bounds["low"][2] = low_bounds[2];
+        pdef.bounds["low"][3] = low_bounds[3];
+        pdef.bounds["low"][4] = low_bounds[4];
+        pdef.bounds["low"][5] = low_bounds[5];
+
+        pdef.bounds["high"][0] = high_bounds[0];
+        pdef.bounds["high"][1] = high_bounds[1];
+        pdef.bounds["high"][2] = high_bounds[2];
+        pdef.bounds["high"][3] = high_bounds[3];
+        pdef.bounds["high"][4] = high_bounds[4];
+        pdef.bounds["high"][5] = high_bounds[5];
+
+        ros::param::get("/planning/planner_algorithm", pdef.planner_algorithm);
+
+        ros::param::get("/planning/val_check_resolution", pdef.val_check_resolution);
+        ros::param::get("/planning/range", pdef.range);
+
+        return pdef;
+    }
+
+    planner::planner(ProblemParams prob_prms)
+    {
+        // setting problem parameters
+        prob_params = prob_prms;
+
+        checker = fcl_checking::checker();
+        try
+        {
+            std::string env_mesh = "/home/marios/thesis_ws/src/drones_rope_planning/resources/stl/" + prob_params.env_filename + ".stl";
+            checker.loadEnvironment(env_mesh);
+        }
+        catch (std::exception &e)
+        {
+            std::string env_mesh = "/home/marios/thesis_ws/src/drone_path_planning/resources/stl/" + prob_params.env_filename + ".stl";
+            checker.loadEnvironment(env_mesh);
+        }
+
+        L = prob_params.L;
         custom_robot_mesh = new custom_mesh::CustomMesh(L);
         checker.setRobotMesh(custom_robot_mesh->get_fcl_mesh());
 
@@ -39,6 +79,7 @@ namespace ompl_rope_planning
         printf("Setting validity checker...\n");
         // set state validity checking for this space
         si->setStateValidityChecker(std::bind(&planner::isStateValid, this, std::placeholders::_1));
+        si->setStateValidityCheckingResolution(0.04);
 
         // create a problem instance
         pdef = ob::ProblemDefinitionPtr(new ob::ProblemDefinition(si));
@@ -59,22 +100,20 @@ namespace ompl_rope_planning
         float drones_angle = M_PI / 3;
 
         // Lower bounds
-        bounds.setLow(0, -2.2);  // x
-        bounds.setLow(1, 2.8);   // y
-        bounds.setLow(2, 0.5);   // z
-        bounds.setLow(3, -M_PI); // yaw
-
-        bounds.setLow(4, 0.2);           // drones_distance
-        bounds.setLow(5, -drones_angle); // drones_angle
+        bounds.setLow(0, prob_params.bounds.at("low")[0]); // x
+        bounds.setLow(1, prob_params.bounds.at("low")[1]); // y
+        bounds.setLow(2, prob_params.bounds.at("low")[2]); // z
+        bounds.setLow(3, prob_params.bounds.at("low")[3]); // yaw
+        bounds.setLow(4, prob_params.bounds.at("low")[4]); // drones_distance
+        bounds.setLow(5, prob_params.bounds.at("low")[5]); // drones_angle
 
         // Higher Bounds
-        bounds.setHigh(0, 2.2);  // x
-        bounds.setHigh(1, 5.0);  // y
-        bounds.setHigh(2, 2.5);  // z
-        bounds.setHigh(3, M_PI); // yaw
-
-        bounds.setHigh(4, L - 0.2);      // drones_distance
-        bounds.setHigh(5, drones_angle); // drones_angle
+        bounds.setHigh(0, prob_params.bounds.at("high")[0]); // x
+        bounds.setHigh(1, prob_params.bounds.at("high")[1]); // y
+        bounds.setHigh(2, prob_params.bounds.at("high")[2]); // z
+        bounds.setHigh(3, prob_params.bounds.at("high")[3]); // yaw
+        bounds.setHigh(4, prob_params.bounds.at("high")[4]); // drones_distance
+        bounds.setHigh(5, prob_params.bounds.at("high")[5]); // drones_angle
 
         space->as<ob::RealVectorStateSpace>()->setBounds(bounds);
     }
@@ -111,7 +150,7 @@ namespace ompl_rope_planning
 
         auto plan = std::make_shared<og::RRT>(si);
         printf("Setting  range...\n");
-        plan->setRange(2.0);
+        plan->setRange(prob_params.range);
 
         // set the problem we are trying to solve for the planner
         printf("Setting  problem definition...\n");
@@ -128,7 +167,7 @@ namespace ompl_rope_planning
         pdef->print(std::cout);
 
         // create termination condition
-        ob::PlannerTerminationCondition ptc(ob::timedPlannerTerminationCondition(10.0));
+        ob::PlannerTerminationCondition ptc(ob::timedPlannerTerminationCondition(prob_params.timeout));
         // attempt to solve the problem within one second of planning time
         auto t0 = std::chrono::high_resolution_clock::now();
         ob::PlannerStatus solved = plan->solve(ptc);
@@ -142,20 +181,16 @@ namespace ompl_rope_planning
             // and inquire about the found path
             std::cout << "Found solution :" << std::endl;
 
-            std::cout << "Simplifying path...\n";
-            // pdef->simplifySolution(plan->getSolutionPath());
-
-            std::cout << "Interpolating path...\n";
-
             ob::PathPtr path = pdef->getSolutionPath();
             og::PathGeometric *pth = pdef->getSolutionPath()->as<og::PathGeometric>();
 
             og::PathSimplifier path_simplifier(si, pdef->getGoal());
+            std::cout << "Simplifying path...\n";
             path_simplifier.simplify(*pth, 3.0);
 
+            std::cout << "Interpolating path...\n";
             pth->interpolate(30);
 
-            pth->printAsMatrix(std::cout);
             // save path to file
             std::ofstream myfile;
             myfile.open("/home/marios/thesis_ws/src/drones_rope_planning/resources/paths/path.txt");
@@ -176,10 +211,12 @@ namespace ompl_rope_planning
         // printf("========================================================\n");
         static int counter = 0;
         static float total_time = 0;
+        static float total_time_2 = 0;
         const ob::RealVectorStateSpace::StateType *state = state_check->as<ob::RealVectorStateSpace::StateType>();
 
         // const auto drones_dis = state->values[4];
         // const auto drones_angle = state->values[5];
+        auto t0 = ros::Time::now();
 
         float pos[3];
         pos[0] = state->values[0];
@@ -191,17 +228,9 @@ namespace ompl_rope_planning
         const float drones_dis = state->values[4];
         const float drones_angle = state->values[5];
 
-        auto t0 = ros::Time::now();
         custom_robot_mesh->update_mesh(drones_dis, drones_angle);
-        auto dt = ros::Time::now() - t0;
-
-        // printf("Updated mesh --> ");
-        // std::cout << "mesh.state -->" << custom_robot_mesh->get_fcl_mesh()->get_fcl_mesh()->build_state << std::endl;
 
         checker.update_robot(custom_robot_mesh->get_fcl_mesh());
-
-        // printf("Updated robot --> ");
-        // std::cout << "mesh.state:" << custom_robot_mesh->get_fcl_mesh()->get_fcl_mesh()->build_state << std::endl;
 
         // apply yaw rotation
         tf2::Quaternion q;
@@ -212,19 +241,23 @@ namespace ompl_rope_planning
         float quat[4] = {q.x(), q.y(), q.z(), q.w()};
         checker.setRobotTransform(pos, quat);
 
-        // printf("Set tobot transform --> ");
-        // std::cout << "mesh.state:" << custom_robot_mesh->get_fcl_mesh()->get_fcl_mesh()->build_state << std::endl;
+        auto t0_2 = ros::Time::now();
 
         // check colllision
         bool result = !checker.check_collision();
 
-        total_time += dt.toSec() * 1000; // sum msecs
+        auto dt2 = ros::Time::now() - t0_2;
+
+        auto dt = ros::Time::now() - t0;
+
+        total_time += dt.toSec() * 1000;    // sum msecs
+        total_time_2 += dt2.toSec() * 1000; // sum msecs
+
         counter++;
-        if ((counter % 1000) == 0)
+        if ((counter % 10000) == 0)
         {
-            // printf("x: %f, y: %f, z: %f, yaw: %f --> result: %d \n", x, y, z, yaw, result);
-            std::cout << "\r"
-                      << "Checking state: " << counter << " avrg time: " << total_time / counter << " msec";
+            std::cout << "Collision checking() : " << total_time_2 / counter << " msecs" << std::endl;
+            std::cout << "Checking state: " << counter << " avrg time: " << total_time / counter << " msec";
 
             // std::cout << "\r"
             //   << "Checking state: " << counter << " msec";

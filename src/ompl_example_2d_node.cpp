@@ -12,8 +12,6 @@
 #include "../include/catenaries/catenary.hpp"
 #include "../include/custom_mesh.hpp"
 
-#include <ros/ros.h>
-
 #include <geometry_msgs/PoseStamped.h>
 #include <nav_msgs/OccupancyGrid.h>
 #include <nav_msgs/Path.h>
@@ -29,110 +27,53 @@ int main(int argc, char **argv)
     // create node handler
     ros::NodeHandle nodeHandle("~");
 
+    // get problem definition
+    ompl_rope_planning::ProblemParams prob_params = ompl_rope_planning::getProblemParams(nodeHandle);
+    {
+        std::cout << "==================== PROBLEM DEFINITION ====================" << std::endl;
+        std::cout << "timeout: " << prob_params.timeout << std::endl;
+        std::cout << "L: " << prob_params.L << std::endl;
+
+        std::cout << "env_filename: " << prob_params.env_filename << std::endl;
+
+        std::cout << "val_check_resolution: " << prob_params.val_check_resolution << std::endl;
+
+        std::cout << "range: " << prob_params.range << std::endl;
+
+        std::cout << "prob_params.start_pos: " << prob_params.start_pos.at("x") << " " << prob_params.start_pos.at("y") << " "
+                  << prob_params.start_pos.at("z") << std::endl;
+        std::cout << "prob_params.goal_pos: " << prob_params.goal_pos.at("x") << " " << prob_params.goal_pos.at("y") << " "
+                  << prob_params.goal_pos.at("z") << std::endl;
+
+        std::cout << "prob_params.bounds.low: " << prob_params.bounds.at("low")[0] << " " << prob_params.bounds.at("low")[1] << " "
+                  << prob_params.bounds.at("low")[2] << " " << prob_params.bounds.at("low")[3] << " " << prob_params.bounds.at("low")[4] << " "
+                  << prob_params.bounds.at("low")[5] << std::endl;
+
+        std::cout << "prob_params.bounds.high: " << prob_params.bounds.at("high")[0] << " " << prob_params.bounds.at("high")[1] << " "
+                  << prob_params.bounds.at("high")[2] << " " << prob_params.bounds.at("high")[3] << " " << prob_params.bounds.at("high")[4] << " "
+                  << prob_params.bounds.at("high")[5] << std::endl;
+
+        std::cout << "prob_params.planner_algorithm: " << prob_params.planner_algorithm << std::endl;
+    }
+
     //=======================================================================================================================
 
-    // std::string robot = "/home/marios/thesis_ws/src/drone_path_planning/resources/stl/robot-scene-triangle.stl";
-    std::string env = "/home/marios/thesis_ws/src/drones_rope_planning/resources/stl/env-scene-ltu-experiment.stl";
-    std::string robot = "/home/marios/thesis_ws/src/drones_rope_planning/resources/stl/custom_triangle_robot.stl";
-
-    float L = 3;
-
-    ompl_rope_planning::planner planner(robot, env, L);
+    ompl_rope_planning::planner planner(prob_params);
 
     printf("Setting start and goal\n");
-    float start[6] = {0, 3, 1, 0.0, L * 0.5, 0.0};
-    float goal[6] = {0, 5, 1, 0.0, L * 0.5, 0.0};
+
+    // set start state
+    float start[6] = {prob_params.start_pos.at("x"), prob_params.start_pos.at("y"), prob_params.start_pos.at("z"), 0.0, prob_params.L * 0.5, 0.0};
+    float goal[6] = {prob_params.goal_pos.at("x"), prob_params.goal_pos.at("y"), prob_params.goal_pos.at("z"), 0.0, prob_params.L * 0.5, 0.0};
     planner.setStartGoal(start, goal);
 
     printf("Planning...\n");
     planner.plan();
-    /*
-    //=======================================================================================================================
-    // Eigen::Vector3f start_point(1, 1, 0);
-    // Eigen::Vector3f end_point(2, 2, 0);
-    // Eigen::Vector3f lowest_point;
-    // float L = 3.5;
-    // // calculate time taken
-    // float time = 0;
-    // int times = 1000;
-    // for (int i = 0; i < times; i++)
-    // {
-    //     auto start = std::chrono::high_resolution_clock::now();
-    //     lowest_point = catenaries::lowest_point_optimized(start_point, end_point, L);
-    //     auto end = std::chrono::high_resolution_clock::now();
-    //     auto diff = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
-    //     time += diff.count();
-    // }
-
-    // std::cout << "Time taken by function: " << time / times << " microseconds." << std::endl;
-
-    // std::cout << "lowest point: " << lowest_point.transpose() << std::endl;
-
-    // start_point = Eigen::Vector3f(4, 8, 0.5);
-    // end_point = Eigen::Vector3f(5, 7, 0.7);
-    // L = 3.5;
-    // lowest_point = catenaries::lowest_point_optimized(start_point, end_point, L);
-
-    // std::cout << "lowest point: " << lowest_point.transpose() << std::endl;
-    //=======================================================================================================================
-
-    // float L = 3.5;
-    // custom_mesh::CustomMesh mesh(L);
-    // mesh.update_mesh(2, 0);
-
-    // mesh.update_mesh(2.5, 0);
-    //=======================================================================================================================
-
-    // Eigen::Vector2f P1(0, 0);
-    // Eigen::Vector2f P2(2.295827, 0);
-    // float L = 3.0;
-
-    // catenaries::getCatenaryCurve2D_optimized_for_lowest_cat_point(P1, P2, L);
-    */
-
-    // auto space = new ob::RealVectorStateSpace(6);
-    // ob::State *abstractState = space->allocState();
-
-    // float pos[3] = {0, 0, 0};
-    // float yaw = 0;
-    // float drones_distance = 0.5;
-    // float drones_angle = 0;
-
-    // abstractState->as<ob::RealVectorStateSpace::StateType>()->values[0] = pos[0];
-    // abstractState->as<ob::RealVectorStateSpace::StateType>()->values[1] = pos[1];
-    // abstractState->as<ob::RealVectorStateSpace::StateType>()->values[2] = pos[2];
-    // abstractState->as<ob::RealVectorStateSpace::StateType>()->values[3] = yaw;
-    // abstractState->as<ob::RealVectorStateSpace::StateType>()->values[4] = drones_distance;
-    // abstractState->as<ob::RealVectorStateSpace::StateType>()->values[5] = drones_angle;
-
-    // // calculate time taken
-
-    // bool result = planner.isStateValid(abstractState);
-    // printf("\nresult: %d\n", result);
-
-    // printf("==================================================================================================\n");
-
-    // pos[0] = 0;
-    // pos[1] = 4;
-    // pos[2] = 0;
-    // yaw = 0;
-    // drones_distance = 0.5;
-    // drones_angle = 0;
-
-    // abstractState->as<ob::RealVectorStateSpace::StateType>()->values[0] = pos[0];
-    // abstractState->as<ob::RealVectorStateSpace::StateType>()->values[1] = pos[1];
-    // abstractState->as<ob::RealVectorStateSpace::StateType>()->values[2] = pos[2];
-    // abstractState->as<ob::RealVectorStateSpace::StateType>()->values[3] = yaw;
-    // abstractState->as<ob::RealVectorStateSpace::StateType>()->values[4] = drones_distance;
-    // abstractState->as<ob::RealVectorStateSpace::StateType>()->values[5] = drones_angle;
-
-    // // calculate time taken
-
-    // for (int i = 0; i < 1000; i++)
-    // {
-    //     result = planner.isStateValid(abstractState);
-    // }
 
     printf("Done!\n");
+
+    // exit ros node
+    ros::shutdown();
+
     return 0;
 }

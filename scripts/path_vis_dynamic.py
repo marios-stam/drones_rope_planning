@@ -402,7 +402,9 @@ def main():
     finished_planning_pub = rospy.Publisher("/finished_planning", String, queue_size=10)
 
     robot_mesh = "custom_triangle_robot"
-    env_mesh = "env-scene-ltu-experiment"
+    # load ros parameter
+
+    env_mesh = rospy.get_param("/planning/env_mesh")
     rb, robPub, env, envPub = load_meshes(robot_mesh, env_mesh)
 
     data = load_saved_path(filename='path.txt')

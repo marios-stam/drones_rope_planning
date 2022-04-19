@@ -16,10 +16,12 @@ namespace fcl_checking
 
     void checker::loadEnvironment(std::string filename)
     {
+        printf("Loading environment from file: %s\n", filename.c_str());
         environment_mesh.load_stl(filename);
         float pos[3] = {0, 0, 0};
         float q[4] = {0, 0, 0, 1};
         environment_mesh.create_collision_object();
+        printf("Loaded environment from file!\n");
     }
 
     void checker::loadRobot(std::string filename)
@@ -38,6 +40,10 @@ namespace fcl_checking
     bool checker::check_collision()
     {
         result.clear();
+
+        request.gjk_solver_type = fcl::GST_LIBCCD;
+        // request.gjk_solver_type = fcl::GST_INDEP;
+
         fcl::collide(environment_mesh.collision_object, robot_mesh->collision_object, request, result);
 
         return result.isCollision();

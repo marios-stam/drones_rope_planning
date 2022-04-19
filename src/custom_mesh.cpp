@@ -112,11 +112,16 @@ namespace custom_mesh
         }
 
         static float tot_time = 0;
+        static float tot_time2 = 0;
+
         static int count = 0;
 
+        auto t0_2 = ros::Time::now();
         get_V_2D_points(drones_distance, theta);
 
         get_V_3D_points(V_2D.p0, V_2D.p1, V_2D.lower, V_2D.upper);
+
+        auto dt_2 = ros::Time::now() - t0_2;
 
         auto t0 = ros::Time::now();
 
@@ -124,12 +129,15 @@ namespace custom_mesh
         m.update_mesh(verts);
 
         auto dt = ros::Time::now() - t0;
+
         tot_time += dt.toSec() * 1000;
+        tot_time2 += dt_2.toSec() * 1000;
         count++;
-        if (count % 1000 == 0)
+        if (count % 10000 == 0)
         {
             printf("\n");
-            ROS_INFO("CustomMesh::update_mesh() : %f msec", tot_time / count);
+            printf("fcl_mesh::update_mesh() : %f msec \n", tot_time / count);
+            printf("state to V3D points     : %f msec \n", tot_time2 / count);
         }
     }
 

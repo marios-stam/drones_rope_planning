@@ -19,6 +19,7 @@
 #include <nav_msgs/OccupancyGrid.h>
 #include <nav_msgs/Path.h>
 #include <ompl/config.h>
+#include <ompl/geometric/PathSimplifier.h>
 #include <ompl/geometric/SimpleSetup.h>
 #include <ompl/geometric/planners/rrt/InformedRRTstar.h>
 #include <ompl/geometric/planners/rrt/RRT.h>
@@ -39,6 +40,31 @@
 
 namespace ompl_rope_planning
 {
+    struct Bound
+    {
+        float arr[6];
+    };
+
+    struct ProblemParams
+    {
+        float timeout;
+        float L;
+
+        std::string robot_filename;
+        std::string env_filename;
+
+        float val_check_resolution;
+        float range;
+
+        std::map<std::string, double> start_pos, goal_pos;
+
+        std::map<std::string, std::array<double, 6>> bounds;
+
+        std::string planner_algorithm;
+    };
+
+    ProblemParams getProblemParams(ros::NodeHandle &nh);
+
     class planner
     {
     public:
@@ -46,7 +72,7 @@ namespace ompl_rope_planning
          * Constructor.
          * @param nodeHandle the ROS node handle.
          */
-        planner(std::string robot_filename, std::string environment_filename, float rope_length);
+        planner(ProblemParams prob_prms);
 
         /*!
          * Destructor.
@@ -83,6 +109,8 @@ namespace ompl_rope_planning
         custom_mesh::CustomMesh *custom_robot_mesh;
 
         int dim;
+
+        ProblemParams prob_params;
     };
 
 }
