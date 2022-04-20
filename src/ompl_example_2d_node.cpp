@@ -54,6 +54,7 @@ int main(int argc, char **argv)
                   << prob_params.bounds.at("high")[5] << std::endl;
 
         std::cout << "prob_params.planner_algorithm: " << prob_params.planner_algorithm << std::endl;
+        std::cout << "============================================================" << std::endl;
     }
 
     //=======================================================================================================================

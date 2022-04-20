@@ -59,6 +59,7 @@ namespace ompl_rope_planning
         }
         catch (std::exception &e)
         {
+            std::cout << "Using environment mesh from drones_path_planning" << std::endl;
             std::string env_mesh = "/home/marios/thesis_ws/src/drone_path_planning/resources/stl/" + prob_params.env_filename + ".stl";
             checker.loadEnvironment(env_mesh);
         }
@@ -79,7 +80,7 @@ namespace ompl_rope_planning
         printf("Setting validity checker...\n");
         // set state validity checking for this space
         si->setStateValidityChecker(std::bind(&planner::isStateValid, this, std::placeholders::_1));
-        si->setStateValidityCheckingResolution(0.04);
+        si->setStateValidityCheckingResolution(prob_params.val_check_resolution);
 
         // create a problem instance
         pdef = ob::ProblemDefinitionPtr(new ob::ProblemDefinition(si));
@@ -161,35 +162,41 @@ namespace ompl_rope_planning
         plan->setup();
 
         // print the settings for this space
+        printf("\n ========================== SPACE SETTINGS: ==========================\n");
         si->printSettings(std::cout);
 
         // print the problem settings
+        printf("\n ========================== PROBLEM SETTINGS: ==========================\n");
         pdef->print(std::cout);
 
         // create termination condition
         ob::PlannerTerminationCondition ptc(ob::timedPlannerTerminationCondition(prob_params.timeout));
-        // attempt to solve the problem within one second of planning time
+
         auto t0 = std::chrono::high_resolution_clock::now();
+
         ob::PlannerStatus solved = plan->solve(ptc);
         std::cout << std::endl;
+
         auto dt = std::chrono::high_resolution_clock::now() - t0;
         std::cout << "Planning time: " << std::chrono::duration_cast<std::chrono::milliseconds>(dt).count() << " ms" << std::endl;
 
-        if (solved)
+        if (solved.EXACT_SOLUTION)
         {
+            std::cout << "Found exact solution!" << std::endl;
             // get the goal representation from the problem definition (not the same as the goal state)
             // and inquire about the found path
-            std::cout << "Found solution :" << std::endl;
 
             ob::PathPtr path = pdef->getSolutionPath();
             og::PathGeometric *pth = pdef->getSolutionPath()->as<og::PathGeometric>();
 
             og::PathSimplifier path_simplifier(si, pdef->getGoal());
             std::cout << "Simplifying path...\n";
-            path_simplifier.simplify(*pth, 3.0);
+            path_simplifier.simplify(*pth, 40.0);
 
             std::cout << "Interpolating path...\n";
             pth->interpolate(30);
+
+            pth->printAsMatrix(std::cout);
 
             // save path to file
             std::ofstream myfile;
@@ -197,15 +204,22 @@ namespace ompl_rope_planning
             pth->printAsMatrix(myfile);
             myfile.close();
         }
+        else if (solved.APPROXIMATE_SOLUTION)
+        {
+            std::cout << "Found approximate solution!" << std::endl;
+        }
         else
-            std::cout << "No solution found" << std::endl;
+        {
+            std::cout << "Did not find a solution!" << std::endl;
+        }
     }
 
-    std::ostream &operator<<(std::ostream &os, const fcl::BVHBuildState &obj)
-    {
-        os << static_cast<std::underlying_type<fcl::BVHBuildState>::type>(obj);
-        return os;
-    }
+    // std::ostream &operator<<(std::ostream &os, const fcl::BVHBuildState &obj)
+    // {
+    //     os << static_cast<std::underlying_type<fcl::BVHBuildState>::type>(obj);
+    //     return os;
+    // }
+
     bool planner::isStateValid(const ob::State *state_check)
     {
         // printf("========================================================\n");
@@ -214,8 +228,6 @@ namespace ompl_rope_planning
         static float total_time_2 = 0;
         const ob::RealVectorStateSpace::StateType *state = state_check->as<ob::RealVectorStateSpace::StateType>();
 
-        // const auto drones_dis = state->values[4];
-        // const auto drones_angle = state->values[5];
         auto t0 = ros::Time::now();
 
         float pos[3];
@@ -265,5 +277,4 @@ namespace ompl_rope_planning
 
         return result;
     }
-
 }

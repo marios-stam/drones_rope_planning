@@ -21,7 +21,6 @@ namespace fcl_checking
         float pos[3] = {0, 0, 0};
         float q[4] = {0, 0, 0, 1};
         environment_mesh.create_collision_object();
-        printf("Loaded environment from file!\n");
     }
 
     void checker::loadRobot(std::string filename)
