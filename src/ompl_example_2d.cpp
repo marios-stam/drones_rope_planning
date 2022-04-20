@@ -65,6 +65,7 @@ namespace ompl_rope_planning
         }
 
         L = prob_params.L;
+
         custom_robot_mesh = new custom_mesh::CustomMesh(L);
         checker.setRobotMesh(custom_robot_mesh->get_fcl_mesh());
 
@@ -151,7 +152,8 @@ namespace ompl_rope_planning
 
         auto plan = std::make_shared<og::RRT>(si);
         printf("Setting  range...\n");
-        plan->setRange(prob_params.range);
+        // plan->setRange(prob_params.range);
+        plan->setRange(1.86);
 
         // set the problem we are trying to solve for the planner
         printf("Setting  problem definition...\n");
@@ -189,9 +191,13 @@ namespace ompl_rope_planning
             ob::PathPtr path = pdef->getSolutionPath();
             og::PathGeometric *pth = pdef->getSolutionPath()->as<og::PathGeometric>();
 
-            og::PathSimplifier path_simplifier(si, pdef->getGoal());
-            std::cout << "Simplifying path...\n";
-            path_simplifier.simplify(*pth, 40.0);
+            pth->printAsMatrix(std::cout);
+
+            // og::PathSimplifier path_simplifier(si, pdef->getGoal());
+            // std::cout << "Simplifying path...\n";
+            // path_simplifier.simplify(*pth, 40.0);
+
+            // pth->printAsMatrix(std::cout);
 
             std::cout << "Interpolating path...\n";
             pth->interpolate(30);
