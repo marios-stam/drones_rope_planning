@@ -32,10 +32,11 @@ int main(int argc, char **argv)
     //=======================================================================================================================
 
     // std::string robot = "/home/marios/thesis_ws/src/drone_path_planning/resources/stl/robot-scene-triangle.stl";
-    std::string env = "/home/marios/thesis_ws/src/drones_rope_planning/resources/stl/env-scene-ltu-experiment.stl";
+    // std::string env = "/home/marios/thesis_ws/src/drones_rope_planning/resources/stl/env-scene-ltu-experiment.stl";
+    std::string env = "/home/marios/thesis_ws/src/drone_path_planning/resources/stl/env-scene-ltu-experiment-hole-inclined.stl";
     std::string robot = "/home/marios/thesis_ws/src/drones_rope_planning/resources/stl/custom_triangle_robot.stl";
 
-    float L = 3;
+    float L = 1.5;
 
     ompl_rope_planning::planner planner(robot, env, L);
 

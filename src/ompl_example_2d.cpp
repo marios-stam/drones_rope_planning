@@ -23,7 +23,7 @@ namespace ompl_rope_planning
         checker.loadEnvironment(environment_filename);
         // checker.loadRobot(robot_filename);
 
-        L = 3;
+        L = rope_length;
         custom_robot_mesh = new custom_mesh::CustomMesh(L);
         checker.setRobotMesh(custom_robot_mesh->get_fcl_mesh());
 
@@ -151,7 +151,7 @@ namespace ompl_rope_planning
             og::PathGeometric *pth = pdef->getSolutionPath()->as<og::PathGeometric>();
 
             og::PathSimplifier path_simplifier(si, pdef->getGoal());
-            path_simplifier.simplify(*pth, 3.0);
+            path_simplifier.simplify(*pth, 10.0);
 
             pth->interpolate(30);
 
