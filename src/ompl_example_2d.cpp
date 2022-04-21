@@ -16,14 +16,89 @@ namespace og = ompl::geometric;
 
 namespace ompl_rope_planning
 {
+    ProblemParams getProblemParams(ros::NodeHandle &nh)
+    {
+        ProblemParams pdef;
+        ros::param::get("/planning/timeout", pdef.timeout);
+        ros::param::get("/planning/rope_length", pdef.L);
+        ros::param::get("/planning/env_mesh", pdef.env_filename);
+        printf("Environment filename: %s\n", pdef.env_filename.c_str());
+        ros::param::get("/planning/start", pdef.start_pos);
+        ros::param::get("/planning/goal", pdef.goal_pos);
 
-    planner::planner(std::string robot_filename, std::string environment_filename, float rope_length)
+        XmlRpc::XmlRpcValue bounds;
+        ros::param::get("/planning/bounds", bounds);
+        // nh.getParam("/planning/bounds", pdef.bounds);
+        XmlRpc::XmlRpcValue low_bounds = bounds["low"];
+        XmlRpc::XmlRpcValue high_bounds = bounds["high"];
+
+        pdef.bounds["low"][0] = low_bounds[0];
+        pdef.bounds["low"][1] = low_bounds[1];
+        pdef.bounds["low"][2] = low_bounds[2];
+        pdef.bounds["low"][3] = ((double)low_bounds[3]) * M_PI / 180.0; // convert to radians
+        pdef.bounds["low"][4] = ((double)low_bounds[4]) * pdef.L;
+        pdef.bounds["low"][5] = ((double)low_bounds[5]) * M_PI / 180.0; // convert to radians
+
+        pdef.bounds["high"][0] = high_bounds[0];
+        pdef.bounds["high"][1] = high_bounds[1];
+        pdef.bounds["high"][2] = high_bounds[2];
+        pdef.bounds["high"][3] = ((double)high_bounds[3]) * M_PI / 180.0; // convert to radians
+        pdef.bounds["high"][4] = ((double)high_bounds[4]) * pdef.L;
+        pdef.bounds["high"][5] = ((double)high_bounds[5]) * M_PI / 180.0; // convert to radians
+
+        ros::param::get("/planning/planner_algorithm", pdef.planner_algorithm);
+
+        ros::param::get("/planning/val_check_resolution", pdef.val_check_resolution);
+        ros::param::get("/planning/range", pdef.range);
+
+        return pdef;
+    }
+
+    void printProblemParams(ProblemParams params)
+    {
+        printf("\n\n");
+        printf("===================== PROBLEM PARAMETERS: =====================\n");
+        printf("\tTimeout: %f\n", params.timeout);
+        printf("\tRope length: %f\n", params.L);
+        printf("\tEnvironment filename: %s\n", params.env_filename.c_str());
+        printf("\tStart position: %f, %f, %f, \n", params.start_pos["x"], params.start_pos["y"], params.start_pos["z"]);
+        printf("\tGoal position: %f, %f, %f, \n", params.goal_pos["x"], params.goal_pos["y"], params.goal_pos["z"]);
+        printf("\tBounds:\n");
+        printf("\t\tlow: %f, %f, %f, %f, %f, %f\n", params.bounds["low"][0], params.bounds["low"][1], params.bounds["low"][2],
+               params.bounds["low"][3], params.bounds["low"][4], params.bounds["low"][5]);
+        printf("\t\thigh: %f, %f, %f, %f, %f, %f\n", params.bounds["high"][0], params.bounds["high"][1], params.bounds["high"][2],
+               params.bounds["high"][3], params.bounds["high"][4], params.bounds["high"][5]);
+
+        printf("\tPlanner algorithm: %s\n", params.planner_algorithm.c_str());
+        printf("\tValidity check resolution: %f\n", params.val_check_resolution);
+        printf("\tRange: %f\n", params.range);
+        printf("===============================================================\n");
+
+        printf("\n\n");
+    }
+
+    planner::planner(ProblemParams prob_prms)
     {
         checker = fcl_checking::checker();
-        checker.loadEnvironment(environment_filename);
+
+        prob_params = prob_prms;
+        printProblemParams(prob_params);
+        try
+        {
+            std::string env_mesh = "/home/marios/thesis_ws/src/drones_rope_planning/resources/stl/" + prob_params.env_filename + ".stl";
+            checker.loadEnvironment(env_mesh);
+        }
+        catch (std::exception &e)
+        {
+            std::cout << "Using environment mesh from drones_path_planning" << std::endl;
+            std::string env_mesh = "/home/marios/thesis_ws/src/drone_path_planning/resources/stl/" + prob_params.env_filename + ".stl";
+            checker.loadEnvironment(env_mesh);
+        }
+
         // checker.loadRobot(robot_filename);
 
-        L = rope_length;
+        L = prob_params.L;
+
         custom_robot_mesh = new custom_mesh::CustomMesh(L);
         checker.setRobotMesh(custom_robot_mesh->get_fcl_mesh());
 
@@ -39,6 +114,7 @@ namespace ompl_rope_planning
         printf("Setting validity checker...\n");
         // set state validity checking for this space
         si->setStateValidityChecker(std::bind(&planner::isStateValid, this, std::placeholders::_1));
+        si->setStateValidityCheckingResolution(prob_params.val_check_resolution);
 
         // create a problem instance
         pdef = ob::ProblemDefinitionPtr(new ob::ProblemDefinition(si));
@@ -59,22 +135,26 @@ namespace ompl_rope_planning
         float drones_angle = M_PI / 3;
 
         // Lower bounds
-        bounds.setLow(0, -2.2);  // x
-        bounds.setLow(1, 2.8);   // y
-        bounds.setLow(2, 0.5);   // z
-        bounds.setLow(3, -M_PI); // yaw
+        double lower[6] = {prob_params.bounds["low"][0], prob_params.bounds["low"][1], prob_params.bounds["low"][2],
+                           prob_params.bounds["low"][3], prob_params.bounds["low"][4], prob_params.bounds["low"][5]};
 
-        bounds.setLow(4, 0.2);           // drones_distance
-        bounds.setLow(5, -drones_angle); // drones_angle
+        double upper[6] = {prob_params.bounds["high"][0], prob_params.bounds["high"][1], prob_params.bounds["high"][2],
+                           prob_params.bounds["high"][3], prob_params.bounds["high"][4], prob_params.bounds["high"][5]};
 
-        // Higher Bounds
-        bounds.setHigh(0, 2.2);  // x
-        bounds.setHigh(1, 5.0);  // y
-        bounds.setHigh(2, 2.5);  // z
-        bounds.setHigh(3, M_PI); // yaw
+        bounds.setLow(0, lower[0]);
+        bounds.setLow(1, lower[1]);
+        bounds.setLow(2, lower[2]);
+        bounds.setLow(3, lower[3]);
+        bounds.setLow(4, lower[4]);
+        bounds.setLow(5, lower[5]);
 
-        bounds.setHigh(4, L - 0.2);      // drones_distance
-        bounds.setHigh(5, drones_angle); // drones_angle
+        // Upper bounds
+        bounds.setHigh(0, upper[0]);
+        bounds.setHigh(1, upper[1]);
+        bounds.setHigh(2, upper[2]);
+        bounds.setHigh(3, upper[3]);
+        bounds.setHigh(4, upper[4]);
+        bounds.setHigh(5, upper[5]);
 
         space->as<ob::RealVectorStateSpace>()->setBounds(bounds);
     }
@@ -111,7 +191,7 @@ namespace ompl_rope_planning
 
         auto plan = std::make_shared<og::RRT>(si);
         printf("Setting  range...\n");
-        plan->setRange(2.0);
+        plan->setRange(prob_params.range);
 
         // set the problem we are trying to solve for the planner
         printf("Setting  problem definition...\n");
@@ -232,5 +312,4 @@ namespace ompl_rope_planning
 
         return result;
     }
-
 }
