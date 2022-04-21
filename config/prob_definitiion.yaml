@@ -1,13 +1,13 @@
 visualization: True #TODO:icluse this option in launch file
-rope_length: 1.5
+rope_length: 1.4
 
 calculate_new_path: True
 timeout: 120
 
 # env_mesh: "env-scene-ltu-experiment-hole-inclined"
 # env_mesh: "env-scene-ltu-experiment-corridor-narrow-easy"
-# env_mesh: "env-scene-ltu-experiment-hole-inclined"
-env_mesh: "env-scene-ltu-experiment-tunnel2"
+env_mesh: "env-scene-ltu-experiment-hole-inclined"
+# env_mesh: "env-scene-ltu-experiment-tunnel2"
 # env_mesh: "env-scene-ltu-experiment-small-hole"
 # env_mesh: "env-scene-ltu-experiment-hole-wide"
 
