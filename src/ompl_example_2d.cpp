@@ -286,9 +286,6 @@ namespace ompl_rope_planning
         static float total_time = 0;
         const ob::RealVectorStateSpace::StateType *state = state_check->as<ob::RealVectorStateSpace::StateType>();
 
-        // const auto drones_dis = state->values[4];
-        // const auto drones_angle = state->values[5];
-
         float pos[3];
         pos[0] = state->values[0];
         pos[1] = state->values[1];
@@ -303,13 +300,7 @@ namespace ompl_rope_planning
         custom_robot_mesh->update_mesh(drones_dis, drones_angle);
         auto dt = ros::Time::now() - t0;
 
-        // printf("Updated mesh --> ");
-        // std::cout << "mesh.state -->" << custom_robot_mesh->get_fcl_mesh()->get_fcl_mesh()->build_state << std::endl;
-
         checker.update_robot(custom_robot_mesh->get_fcl_mesh());
-
-        // printf("Updated robot --> ");
-        // std::cout << "mesh.state:" << custom_robot_mesh->get_fcl_mesh()->get_fcl_mesh()->build_state << std::endl;
 
         // apply yaw rotation
         tf2::Quaternion q;
@@ -320,22 +311,18 @@ namespace ompl_rope_planning
         float quat[4] = {q.x(), q.y(), q.z(), q.w()};
         checker.setRobotTransform(pos, quat);
 
-        // printf("Set tobot transform --> ");
-        // std::cout << "mesh.state:" << custom_robot_mesh->get_fcl_mesh()->get_fcl_mesh()->build_state << std::endl;
-
         // check colllision
         bool result = !checker.check_collision();
 
         total_time += dt.toSec() * 1000; // sum msecs
         counter++;
-        if ((counter % 1000) == 0)
-        {
-            // printf("x: %f, y: %f, z: %f, yaw: %f --> result: %d \n", x, y, z, yaw, result);
-            std::cout << "\r"
-                      << "Checking state: " << counter << " avrg time: " << total_time / counter << " msec";
 
-            // std::cout << "\r"
-            //   << "Checking state: " << counter << " msec";
+        if ((counter % 5000) == 0)
+        {
+            std::cout << "\r";
+
+            std::cout << "State Validation: " << counter << " calls " << total_time / 1000 << " secs, " << total_time / counter << " msecs/call, "
+                      << counter * 1000.0 / total_time << " calls/sec" << std::flush;
         }
 
         return result;

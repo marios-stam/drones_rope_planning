@@ -113,7 +113,6 @@ namespace custom_mesh
         }
 
         static float tot_time = 0;
-        static int count = 0;
 
         get_V_2D_points(drones_distance, theta);
 
@@ -126,12 +125,6 @@ namespace custom_mesh
 
         auto dt = ros::Time::now() - t0;
         tot_time += dt.toSec() * 1000;
-        count++;
-        if (count % 1000 == 0)
-        {
-            // printf("\n");
-            // ROS_INFO("CustomMesh::update_mesh() : %f msec", tot_time / count);
-        }
     }
 
     fcl_checking::fcl_mesh *CustomMesh::get_fcl_mesh() { return &m; }

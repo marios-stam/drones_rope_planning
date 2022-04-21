@@ -16,6 +16,8 @@ namespace fcl_checking
 
     void checker::loadEnvironment(std::string filename)
     {
+        // Load the environment
+        printf("Loading environment from %s\n", filename.c_str());
         environment_mesh.load_stl(filename);
         float pos[3] = {0, 0, 0};
         float q[4] = {0, 0, 0, 1};
