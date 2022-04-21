@@ -1,5 +1,10 @@
 <?xml version="1.0"?>
 <launch>
+
+	<group ns="planning" >
+		<rosparam command="load" file="$(find drone_path_planning)/config/prob_definitiion.yaml" />
+	</group>
+	
   	<node name="rviz" pkg="rviz" type="rviz" args="-d $(find drones_rope_planning)/launch/test.rviz" output="log"/>
 
     <include file="$(find drone_path_planning)/launch/dronesVisual.launch">

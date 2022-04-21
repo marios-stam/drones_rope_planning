@@ -51,13 +51,17 @@ namespace ompl_rope_planning
         ros::param::get("/planning/val_check_resolution", pdef.val_check_resolution);
         ros::param::get("/planning/range", pdef.range);
 
+        ros::param::get("/planning/simplify_path", pdef.simplify_path);
+
+        ros::param::get("/planning/path_interpolation_points", pdef.path_interpolation_points);
+
         return pdef;
     }
 
     void printProblemParams(ProblemParams params)
     {
         printf("\n\n");
-        printf("===================== PROBLEM PARAMETERS: =====================\n");
+        printf("=================================== PROBLEM PARAMETERS: ===================================\n");
         printf("\tTimeout: %f\n", params.timeout);
         printf("\tRope length: %f\n", params.L);
         printf("\tEnvironment filename: %s\n", params.env_filename.c_str());
@@ -72,7 +76,10 @@ namespace ompl_rope_planning
         printf("\tPlanner algorithm: %s\n", params.planner_algorithm.c_str());
         printf("\tValidity check resolution: %f\n", params.val_check_resolution);
         printf("\tRange: %f\n", params.range);
-        printf("===============================================================\n");
+
+        printf("\tSimplify path: %d\n", params.simplify_path);
+        printf("\tPath interpolation points: %d\n", params.path_interpolation_points);
+        printf("===========================================================================================\n");
 
         printf("\n\n");
     }
@@ -202,10 +209,14 @@ namespace ompl_rope_planning
         plan->setup();
 
         // print the settings for this space
+        printf("============================ OMPL SPACE SETTINGS: ============================\n");
         si->printSettings(std::cout);
+        // printf("===============================================================================\n");
 
         // print the problem settings
+        printf("============================ OMPL PROBLEM SETTINGS: ============================\n");
         pdef->print(std::cout);
+        printf("================================================================================\n");
 
         // create termination condition
         ob::PlannerTerminationCondition ptc(ob::timedPlannerTerminationCondition(10.0));
@@ -222,20 +233,28 @@ namespace ompl_rope_planning
             // and inquire about the found path
             std::cout << "Found solution :" << std::endl;
 
-            std::cout << "Simplifying path...\n";
-            // pdef->simplifySolution(plan->getSolutionPath());
-
-            std::cout << "Interpolating path...\n";
-
             ob::PathPtr path = pdef->getSolutionPath();
             og::PathGeometric *pth = pdef->getSolutionPath()->as<og::PathGeometric>();
 
-            og::PathSimplifier path_simplifier(si, pdef->getGoal());
-            path_simplifier.simplify(*pth, 10.0);
+            if (prob_params.simplify_path)
+            {
+                std::cout << "Simplifying path...\n";
+                og::PathSimplifier path_simplifier(si, pdef->getGoal());
+                path_simplifier.simplify(*pth, 10.0);
+            }
 
-            pth->interpolate(30);
+            if (prob_params.path_interpolation_points > 0)
+            {
+                std::cout << "Interpolating path...\n";
+                // og::PathGeometric::InterpolationType interp_type = og::PathGeometric::CSPLINE;
+                // pth->interpolate(interp_type);
 
+                pth->interpolate(prob_params.path_interpolation_points);
+            }
+
+            std::cout << "Finale path :" << std::endl;
             pth->printAsMatrix(std::cout);
+
             // save path to file
             std::ofstream myfile;
             myfile.open("/home/marios/thesis_ws/src/drones_rope_planning/resources/paths/path.txt");

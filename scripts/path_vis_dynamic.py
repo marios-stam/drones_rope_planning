@@ -270,7 +270,6 @@ def get_planner_from_parameters(start: list = None):
     rb = MeshMarker(id=0, mesh_path=mesh)
     robPub = rospy.Publisher('rb_robot',  Marker, queue_size=10)
 
-    env_mesh = "env-scene-ltu-experiment-hole-inclined"
     # Environment marker initialization
     mesh = "package://drone_path_planning/resources/collada/{}.dae".format(
         env_mesh)
@@ -383,7 +382,7 @@ def load_meshes(robot_mesh, env_mesh):
     robPub = rospy.Publisher('rb_robot',  Marker, queue_size=10)
 
     # Environment marker initialization
-    mesh = "package://drone_path_planning/resources/collada/{}.dae".format(env_mesh)
+    mesh = "package://drones_rope_planning/resources/collada/{}.dae".format(env_mesh)
     env = MeshMarker(id=1, mesh_path=mesh)
     env.color.r, env.color.g, env.color.b = 1, 0, 0
     env.updatePose([0, 0, 0], [0, 0, 0, 1])
@@ -403,7 +402,9 @@ def main():
     finished_planning_pub = rospy.Publisher("/finished_planning", String, queue_size=10)
 
     robot_mesh = "custom_triangle_robot"
-    env_mesh = "env-scene-ltu-experiment-hole-inclined"
+    # load ros parameter
+
+    env_mesh = rospy.get_param("/planning/env_mesh")
     rb, robPub, env, envPub = load_meshes(robot_mesh, env_mesh)
 
     data = load_saved_path(filename='path.txt')
