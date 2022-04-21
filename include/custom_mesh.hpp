@@ -26,7 +26,7 @@ namespace custom_mesh
     class CustomMesh
     {
     public:
-        CustomMesh(float L);
+        CustomMesh(float rope_length, float safe_drones_dist, float safe_lowest_point_dist);
 
         ~CustomMesh();
 

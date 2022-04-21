@@ -11,11 +11,12 @@ namespace custom_mesh
 {
     using namespace Eigen;
 
-    CustomMesh::CustomMesh(float rope_length)
+    CustomMesh::CustomMesh(float rope_length, float safe_drones_dist, float safe_lowest_point_dist)
     {
+
         L = rope_length;
-        safe_drones_distance = 0.1;
-        safe_lowest_point_distance = 0.2;
+        safe_drones_distance = safe_drones_dist;
+        safe_lowest_point_distance = safe_lowest_point_dist;
         is_created = false;
         get_tris();
     }
@@ -128,8 +129,8 @@ namespace custom_mesh
         count++;
         if (count % 1000 == 0)
         {
-            printf("\n");
-            ROS_INFO("CustomMesh::update_mesh() : %f msec", tot_time / count);
+            // printf("\n");
+            // ROS_INFO("CustomMesh::update_mesh() : %f msec", tot_time / count);
         }
     }
 

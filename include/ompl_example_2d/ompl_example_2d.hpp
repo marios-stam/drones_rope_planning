@@ -60,9 +60,13 @@ namespace ompl_rope_planning
         std::map<std::string, std::array<double, 6>> bounds;
 
         std::string planner_algorithm;
-        
+
         bool simplify_path;
         int path_interpolation_points;
+
+        // safety distances
+        float safety_drones_distance;
+        float safety_lowest_point;
     };
 
     ProblemParams getProblemParams(ros::NodeHandle &nh);

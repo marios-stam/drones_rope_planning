@@ -55,6 +55,10 @@ namespace ompl_rope_planning
 
         ros::param::get("/planning/path_interpolation_points", pdef.path_interpolation_points);
 
+        // safety distances
+        ros::param::get("/planning/safety_distances/drones", pdef.safety_drones_distance);
+        ros::param::get("/planning/safety_distances/lowest_point", pdef.safety_lowest_point);
+
         return pdef;
     }
 
@@ -79,6 +83,11 @@ namespace ompl_rope_planning
 
         printf("\tSimplify path: %d\n", params.simplify_path);
         printf("\tPath interpolation points: %d\n", params.path_interpolation_points);
+
+        printf("\tSafety distances:\n");
+        printf("\t\tDrones: %f\n", params.safety_drones_distance);
+        printf("\t\tLowest point: %f\n", params.safety_lowest_point);
+
         printf("===========================================================================================\n");
 
         printf("\n\n");
@@ -106,7 +115,7 @@ namespace ompl_rope_planning
 
         L = prob_params.L;
 
-        custom_robot_mesh = new custom_mesh::CustomMesh(L);
+        custom_robot_mesh = new custom_mesh::CustomMesh(L, prob_params.safety_drones_distance, prob_params.safety_lowest_point);
         checker.setRobotMesh(custom_robot_mesh->get_fcl_mesh());
 
         dim = 6;
@@ -219,7 +228,7 @@ namespace ompl_rope_planning
         printf("================================================================================\n");
 
         // create termination condition
-        ob::PlannerTerminationCondition ptc(ob::timedPlannerTerminationCondition(10.0));
+        ob::PlannerTerminationCondition ptc(ob::timedPlannerTerminationCondition(prob_params.timeout));
         // attempt to solve the problem within one second of planning time
         auto t0 = std::chrono::high_resolution_clock::now();
         ob::PlannerStatus solved = plan->solve(ptc);
