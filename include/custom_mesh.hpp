@@ -1,6 +1,8 @@
 #pragma once
 
+// custom classes
 #include "ompl_example_2d/fcl_mesh.hpp"
+#include "ompl_example_2d/problem_params.hpp"
 
 namespace custom_mesh
 {
@@ -26,7 +28,7 @@ namespace custom_mesh
     class CustomMesh
     {
     public:
-        CustomMesh(float rope_length, float safe_drones_dist, float safe_lowest_point_dist);
+        CustomMesh(float rope_length, problem_params::SafetyOffsets safety_offsets);
 
         ~CustomMesh();
 
@@ -49,7 +51,8 @@ namespace custom_mesh
     private:
         float L;
 
-        float safe_drones_distance;
+        float safe_drones_horiz_offset;
+        float safe_drones_vert_offset;
 
         float safe_lowest_point_distance;
 

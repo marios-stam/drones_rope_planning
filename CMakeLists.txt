@@ -112,6 +112,8 @@ file(GLOB ompl_example_2d_sources
     src/catenaries/math_utils.cpp
 
     src/custom_mesh.cpp
+    src/problem_params.cpp
+
 )
 
 file(GLOB ompl_example_2d_headers
@@ -120,6 +122,7 @@ file(GLOB ompl_example_2d_headers
     include/ompl_example_2d/fcl_checker.hpp
     
     include/ompl_example_2d/stlloader.hpp
+    include/ompl_example_2d/problem_params.hpp
 
     include/catenaries/catenary.hpp
     include/catenaries/math_utils.hpp

@@ -1,0 +1,49 @@
+visualization: True #TODO:icluse this option in launch file
+rope_length: 1.5
+
+calculate_new_path: True
+timeout: 120
+
+# env_mesh: "env-scene-ltu-experiment-hole-inclined"
+# env_mesh: "env-scene-ltu-experiment-corridor-narrow-easy"
+# env_mesh: "env-scene-ltu-experiment-hole-inclined"
+env_mesh: "env-scene-ltu-experiment-tunnel2"
+# env_mesh: "env-scene-ltu-experiment-small-hole"
+# env_mesh: "env-scene-ltu-experiment-hole-wide"
+
+#Planning
+val_check_resolution: 0.03
+range: 1.8
+use_mesh_improvement: True
+use_dynamic_goal: False
+
+#values:None, ob.PathLengthOptimizationObjective,balanced,obstacle_clearance
+optimal_objective: { class: "None", threshold: 3 }
+
+safety_distances: {
+    #horizontal and vertical distance offset for drones
+    drones_offsets: { horizontal: 0.05, vertical: 0.05 },
+
+    #horizontal and vertical distance offset for lowest point of catenary
+    lowest_point: 0.05,
+  }
+
+# start and goal
+start: { x: +0.0, y: 2.0, z: 0.75 }
+goal: { x: +0.5, y: 5.25, z: 0.75 }
+
+# Bounds of states
+# All ANGLES are in DEGREES
+bounds: {
+    #x, y , z, yaw , drones_distance(% of L) , drones_angle
+    low: [-1.5, 0.5, 0.3, -180.0, 0.1, -60.0],
+    high: [1.5, 6.0, 2.0, 180.0, 0.95, 60.0],
+  }
+
+#planner algorithm
+# planner_algorithm: "og.RRTstar"
+# planner_algorithm: "og.RRTConnect"
+planner_algorithm: "og.RRT"
+
+simplify_path: True
+path_interpolation_points: 30

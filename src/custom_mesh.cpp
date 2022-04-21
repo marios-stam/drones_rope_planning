@@ -11,12 +11,15 @@ namespace custom_mesh
 {
     using namespace Eigen;
 
-    CustomMesh::CustomMesh(float rope_length, float safe_drones_dist, float safe_lowest_point_dist)
+    CustomMesh::CustomMesh(float rope_length, problem_params::SafetyOffsets safety_offsets)
     {
-
         L = rope_length;
-        safe_drones_distance = safe_drones_dist;
-        safe_lowest_point_distance = safe_lowest_point_dist;
+
+        safe_drones_horiz_offset = safety_offsets.drones_horizontal;
+        safe_drones_vert_offset = safety_offsets.drones_vertical;
+
+        safe_lowest_point_distance = safety_offsets.lowest_point;
+
         is_created = false;
         get_tris();
     }
@@ -49,8 +52,11 @@ namespace custom_mesh
 
         // add safety distances
         // WARNING !!! : maybe signs are wrong
-        V_2D.p0(0) += safe_drones_distance;
-        V_2D.p1(0) -= safe_drones_distance;
+        V_2D.p0(0) += safe_drones_horiz_offset;
+        V_2D.p1(0) -= safe_drones_horiz_offset;
+
+        V_2D.p0(1) += safe_drones_vert_offset;
+        V_2D.p1(1) += safe_drones_vert_offset;
 
         V_2D.upper = Vector2f(lower2D(0), lower2D(1) + safe_lowest_point_distance);
         V_2D.lower = Vector2f(lower2D(0), lower2D(1) - safe_lowest_point_distance);

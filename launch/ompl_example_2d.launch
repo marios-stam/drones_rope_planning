@@ -2,7 +2,7 @@
 <launch>
 
     <group ns="planning" >
-		<rosparam command="load" file="$(find drone_path_planning)/config/prob_definitiion.yaml" />
+		<rosparam command="load" file="$(find drones_rope_planning)/config/prob_definitiion.yaml" />
 	</group>
     
     <node pkg="drones_rope_planning" name="drones_rope_planning_node" type="drones_rope_planning_node" output="screen" />

@@ -36,40 +36,10 @@
 // Custom classes
 #include "../custom_mesh.hpp"
 #include "fcl_checker.hpp"
+#include "problem_params.hpp"
 
 namespace ompl_rope_planning
 {
-    struct Bound
-    {
-        float arr[6];
-    };
-
-    struct ProblemParams
-    {
-        float timeout;
-        float L;
-
-        std::string robot_filename;
-        std::string env_filename;
-
-        float val_check_resolution;
-        float range;
-
-        std::map<std::string, double> start_pos, goal_pos;
-
-        std::map<std::string, std::array<double, 6>> bounds;
-
-        std::string planner_algorithm;
-
-        bool simplify_path;
-        int path_interpolation_points;
-
-        // safety distances
-        float safety_drones_distance;
-        float safety_lowest_point;
-    };
-
-    ProblemParams getProblemParams(ros::NodeHandle &nh);
 
     class planner
     {
@@ -78,7 +48,7 @@ namespace ompl_rope_planning
          * Constructor.
          * @param nodeHandle the ROS node handle.
          */
-        planner(ProblemParams prob_prms);
+        planner(problem_params::ProblemParams prob_prms);
 
         /*!
          * Destructor.
@@ -116,7 +86,7 @@ namespace ompl_rope_planning
 
         int dim;
 
-        ProblemParams prob_params;
+        problem_params::ProblemParams prob_params;
     };
 
 }

@@ -32,7 +32,7 @@ int main(int argc, char **argv)
     //=======================================================================================================================
 
     // get problem parameters
-    ompl_rope_planning::ProblemParams prob_prms = ompl_rope_planning::getProblemParams(nodeHandle);
+    problem_params::ProblemParams prob_prms = problem_params::getProblemParams(nodeHandle);
     ompl_rope_planning::planner planner(prob_prms);
 
     printf("Setting start and goal\n");
