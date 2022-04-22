@@ -20,9 +20,22 @@
 #include <nav_msgs/Path.h>
 #include <ompl/config.h>
 #include <ompl/geometric/SimpleSetup.h>
+// planners
+#include <ompl/geometric/planners/est/EST.h>
+// KPIECE
+#include <ompl/geometric/planners/kpiece/BKPIECE1.h>
+#include <ompl/geometric/planners/kpiece/KPIECE1.h>
+#include <ompl/geometric/planners/kpiece/LBKPIECE1.h>
+
+// RRT
 #include <ompl/geometric/planners/rrt/InformedRRTstar.h>
+#include <ompl/geometric/planners/rrt/LazyRRT.h>
 #include <ompl/geometric/planners/rrt/RRT.h>
+#include <ompl/geometric/planners/rrt/RRTConnect.h>
 #include <ompl/geometric/planners/rrt/RRTstar.h>
+
+// Propabilistic
+#include <ompl/geometric/planners/prm/PRM.h>
 
 // ROS
 #include <geometry_msgs/PoseStamped.h>
@@ -31,12 +44,16 @@
 #include <ros/ros.h>
 
 #include <ompl/base/spaces/RealVectorStateSpace.h>
-#include <ompl/geometric/planners/rrt/RRTConnect.h>
+// include optimization objectives
+#include <ompl/base/objectives/PathLengthOptimizationObjective.h>
 
 // Custom classes
 #include "../custom_mesh.hpp"
 #include "fcl_checker.hpp"
 #include "problem_params.hpp"
+
+namespace ob = ompl::base;
+namespace og = ompl::geometric;
 
 namespace ompl_rope_planning
 {
@@ -87,6 +104,8 @@ namespace ompl_rope_planning
         int dim;
 
         problem_params::ProblemParams prob_params;
+
+        ob::PlannerPtr getPlanner(std::string, float range);
     };
 
 }

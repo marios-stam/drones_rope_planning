@@ -42,11 +42,16 @@ namespace problem_params
 
         ros::param::get("/planning/path_interpolation_points", pdef.path_interpolation_points);
 
+        ros::param::get("/planning/use_dynamic_goal", pdef.use_dynamic_goal);
+        ros::param::get("/planning/use_ground_collision_check", pdef.use_ground_collision_check);
+
         // safety distances
         ros::param::get("/planning/safety_distances/drones_offsets/horizontal", pdef.safety_offsets.drones_horizontal);
         ros::param::get("/planning/safety_distances/drones_offsets/vertical", pdef.safety_offsets.drones_vertical);
 
         ros::param::get("/planning/safety_distances/lowest_point", pdef.safety_offsets.lowest_point);
+
+        ros::param::get("/planning/thickness", pdef.thickness);
 
         return pdef;
     }
@@ -73,7 +78,10 @@ namespace problem_params
         printf("\tSimplify path: %d\n", params.simplify_path);
         printf("\tPath interpolation points: %d\n", params.path_interpolation_points);
 
-        printf("\tSafety distances:\n");
+        printf("\tUse dynamic goal: %d\n", params.use_dynamic_goal);
+        printf("\tUse ground collision check: %d\n", params.use_ground_collision_check);
+
+        printf("\n\tSafety distances:\n");
         printf("\t\tDrones:\n");
 
         printf("\t\t\tHorizontal: %f\n", params.safety_offsets.drones_horizontal);
@@ -81,6 +89,7 @@ namespace problem_params
 
         printf("\t\tLowest point: %f\n", params.safety_offsets.lowest_point);
 
+        printf("\tThickness: %f\n", params.thickness);
         printf("===========================================================================================\n");
 
         printf("\n\n");

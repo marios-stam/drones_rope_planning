@@ -11,7 +11,7 @@ namespace custom_mesh
 {
     using namespace Eigen;
 
-    CustomMesh::CustomMesh(float rope_length, problem_params::SafetyOffsets safety_offsets)
+    CustomMesh::CustomMesh(float rope_length, problem_params::SafetyOffsets safety_offsets, float rb_thickness)
     {
         L = rope_length;
 
@@ -19,6 +19,8 @@ namespace custom_mesh
         safe_drones_vert_offset = safety_offsets.drones_vertical;
 
         safe_lowest_point_distance = safety_offsets.lowest_point;
+
+        thickness = rb_thickness;
 
         is_created = false;
         get_tris();
@@ -88,8 +90,7 @@ namespace custom_mesh
     void CustomMesh::get_V_3D_points(Vector2f p0, Vector2f p1, Vector2f lower, Vector2f upper)
     {
         // Created a matrix with all the vertices needed for the 3D triangle
-        float thickness = 0.3; // thickness of the triangle ,maybe should be a parameter
-        float offset = 0;      // TODO: makes this 0 (used for comapring with thhe old one)
+        float offset = 0; // TODO: makes this 0 (used for comapring with thhe old one)
 
         verts.block(0, 0, 1, 3) = Vector3f(p0(0), offset - thickness / 2, p0(1)).transpose();
         verts.block(1, 0, 1, 3) = Vector3f(p0(0), offset + thickness / 2, p0(1)).transpose();

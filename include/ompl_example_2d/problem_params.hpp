@@ -28,6 +28,8 @@ namespace problem_params
         float val_check_resolution;
         float range;
 
+        bool use_dynamic_goal, use_ground_collision_check;
+
         std::map<std::string, double> start_pos, goal_pos;
 
         std::map<std::string, std::array<double, 6>> bounds;
@@ -39,6 +41,8 @@ namespace problem_params
 
         // safety offsets
         SafetyOffsets safety_offsets;
+
+        float thickness;
     };
 
     ProblemParams getProblemParams(ros::NodeHandle &nh);

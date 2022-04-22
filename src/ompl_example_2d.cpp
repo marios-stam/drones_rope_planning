@@ -16,6 +16,8 @@ namespace og = ompl::geometric;
 
 namespace ompl_rope_planning
 {
+    typedef std::map<std::string, ob::PlannerPtr> planners_map;
+
     planner::planner(problem_params::ProblemParams prob_prms)
     {
         checker = fcl_checking::checker();
@@ -39,7 +41,7 @@ namespace ompl_rope_planning
 
         L = prob_params.L;
 
-        custom_robot_mesh = new custom_mesh::CustomMesh(L, prob_params.safety_offsets);
+        custom_robot_mesh = new custom_mesh::CustomMesh(L, prob_params.safety_offsets, prob_params.thickness);
         checker.setRobotMesh(custom_robot_mesh->get_fcl_mesh());
 
         dim = 6;
@@ -60,6 +62,7 @@ namespace ompl_rope_planning
         pdef = ob::ProblemDefinitionPtr(new ob::ProblemDefinition(si));
 
         // set Optimizattion objective
+        // pdef->setOptimizationObjective(ob::OptimizationObjectivePtr(new ob::PathLengthOptimizationObjective(si)));
         // pdef->setOptimizationObjective(planner::getPathLengthObjWithCostToGo(si));
 
         std::cout << "Initialized: " << std::endl;
@@ -122,6 +125,89 @@ namespace ompl_rope_planning
         pdef->setStartAndGoalStates(start_state, goal_state);
     }
 
+    template <typename T> ob::Planner *createInstance(ob::SpaceInformationPtr si) { return std::make_shared<T>(si); }
+
+    typedef std::map<std::string, ob::PlannerPtr (*)()> map_type;
+
+    ob::PlannerPtr planner::getPlanner(std::string planner_name, float range)
+    {
+        // choose between ompl planners
+
+        // planners_map plnrs = {
+        //     //
+        //     {"RRT", std::make_shared<og::RRT>(si)},
+        //     {"RRTConnect", std::make_shared<og::RRTConnect>(si)},
+        //     {"RRTstar", std::make_shared<og::RRTstar>(si)},
+        //     // {"RRTstarProb", std::make_shared<og::RRTstarProb>(si)},
+        //     // {"RRTsharp", std::make_shared<og::RRTsharp>(si)},
+        //     // {"LBTRRT", std::make_shared<og::LBTRRT>(si)},
+        //     {"LazyRRT", std::make_shared<og::LazyRRT>(si)},
+        //     // {"LazyRRTstar", std::make_shared<og::LazyRRTstar>(si)},
+        //     // {"PRM", std::make_shared<og::PRM>(si)},
+        //     // {"PRMstar", std::make_shared<og::PRMstar>(si)},
+        //     // {"SBL", std::make_shared<og::SBL>(si)},
+        //     // {"SPARS", std::make_shared<og::SPARS>(si)},
+        //     // {"SPARStwo", std::make_shared<og::SPARStwo>(si)},
+        //     // {"SPARStwoProb", std::make_shared<og::SPARStwoProb>(si)},
+        //     // {"SPARStwoProbFast", std::make_shared<og::SPARStwoProbFast>(si)},
+        //     // {"SPARStwoProbFastest", std::make_shared<og::SPARStwoProbFastest>(si)},
+        //     // {"SPARStwoProbFastest2", std::make_shared<og::SPARStwoProbFastest2>(si)},
+        //     // {"SPARStwoProbFastest3", std::make_shared<og::SPARStwoProbFastest3>(si)},
+        //     // {"SPARStwoProbFastest4", std::make_shared<og::SPARStwoProbFastest4>(si)},
+        //     // {"SPARStwoProbFastest5", std::make_shared<og::SPARStwoProbFastest5>(si)},
+        //     // {"SPARStwoProbFastest6", std::make_shared<og::SPARStwoProbFastest6>(si)},
+        //     // {"SPARStwoProbFastest7", std::make_shared<og::SPARStwoProbFastest7>(si)},
+        //     // {"SPARStwoProbFastest8", std::make_shared<og::SPARStwoProbFastest8>(si)}
+        // };
+
+        if (planner_name == "PRM")
+        {
+            auto plan = std::make_shared<og::PRM>(si);
+            return plan;
+        }
+        else if (planner_name == "RRTConnect")
+        {
+            auto plan = std::make_shared<og::RRTConnect>(si);
+
+            printf("Setting  range...\n");
+            plan->setRange(range);
+            return plan;
+        }
+        else if (planner_name == "LBKPIECE")
+        {
+            auto plan = std::make_shared<og::LBKPIECE1>(si);
+
+            printf("Setting  range...\n");
+            plan->setRange(range);
+            return plan;
+        }
+        else if (planner_name == "KPIECE")
+        {
+            auto plan = std::make_shared<og::KPIECE1>(si);
+
+            printf("Setting  range...\n");
+            plan->setRange(range);
+            return plan;
+        }
+        else if (planner_name == "BKPIECE")
+        {
+            auto plan = std::make_shared<og::BKPIECE1>(si);
+
+            printf("Setting  range...\n");
+            plan->setRange(range);
+            return plan;
+        }
+        else
+        {
+            auto plan = std::make_shared<og::RRT>(si);
+
+            printf("Setting  range...\n");
+            plan->setRange(range);
+
+            return plan;
+        }
+    }
+
     void planner::plan()
     {
 
@@ -129,9 +215,14 @@ namespace ompl_rope_planning
         // ob::PlannerPtr plan(new og::InformedRRTstar(si));
         // ob::PlannerPtr plan(new og::RRT(si));
 
-        auto plan = std::make_shared<og::RRT>(si);
-        printf("Setting  range...\n");
-        plan->setRange(prob_params.range);
+        // auto plan =          std::make_shared<og::RRT>(si);
+
+        // auto plan = std::make_shared<og::RRTConnect>(si);
+
+        auto plan = getPlanner(prob_params.planner_algorithm, prob_params.range);
+
+        // as og::RRT is not correct but it works (need to find a general interface that included setRange)
+        // plan->as<og::RRT>()->setRange(prob_params.range);
 
         // set the problem we are trying to solve for the planner
         printf("Setting  problem definition...\n");
@@ -173,7 +264,8 @@ namespace ompl_rope_planning
             {
                 std::cout << "Simplifying path...\n";
                 og::PathSimplifier path_simplifier(si, pdef->getGoal());
-                path_simplifier.simplify(*pth, 10.0);
+                // path_simplifier.simplify(*pth, 10.0);
+                path_simplifier.simplifyMax(*pth);
             }
 
             if (prob_params.path_interpolation_points > 0)
@@ -222,12 +314,16 @@ namespace ompl_rope_planning
         checker.update_robot(custom_robot_mesh->get_fcl_mesh());
 
         // ground collision check
-        float z_offset = custom_robot_mesh->get_lowest_z();
-        float distance_from_ground = pos[2] - z_offset;
-        bool ground_collision = distance_from_ground <= prob_params.safety_offsets.lowest_point;
-        if (ground_collision)
+        if (prob_params.use_ground_collision_check)
         {
-            return false;
+            float z_offset = custom_robot_mesh->get_lowest_z();
+            float distance_from_ground = pos[2] - z_offset;
+            bool ground_collision = distance_from_ground <= prob_params.safety_offsets.lowest_point;
+
+            if (ground_collision)
+            {
+                return false;
+            }
         }
 
         //  apply yaw rotation

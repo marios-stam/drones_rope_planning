@@ -28,7 +28,7 @@ namespace custom_mesh
     class CustomMesh
     {
     public:
-        CustomMesh(float rope_length, problem_params::SafetyOffsets safety_offsets);
+        CustomMesh(float rope_length, problem_params::SafetyOffsets safety_offsets, float rb_thickness);
 
         ~CustomMesh();
 
@@ -69,6 +69,8 @@ namespace custom_mesh
         fcl_checking::fcl_mesh m;
 
         bool is_created;
+
+        float thickness;
     };
 
 }; // namespace custom_mesh
