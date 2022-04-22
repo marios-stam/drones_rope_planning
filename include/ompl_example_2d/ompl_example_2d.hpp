@@ -47,6 +47,8 @@
 // include optimization objectives
 #include <ompl/base/objectives/PathLengthOptimizationObjective.h>
 
+#include <ompl/base/goals/GoalStates.h>
+
 // Custom classes
 #include "../custom_mesh.hpp"
 #include "fcl_checker.hpp"

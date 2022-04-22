@@ -104,6 +104,38 @@ namespace ompl_rope_planning
 
     void planner::setStartGoal(float start[6], float goal[6])
     {
+
+        // Add goal states
+        ob::GoalStates *goalStates(new ob::GoalStates(si));
+
+        ob::ScopedState<> s(si);
+        s->as<ob::RealVectorStateSpace::StateType>()->values[0] = goal[0];
+        s->as<ob::RealVectorStateSpace::StateType>()->values[1] = goal[1];
+        s->as<ob::RealVectorStateSpace::StateType>()->values[2] = goal[2];
+        s->as<ob::RealVectorStateSpace::StateType>()->values[3] = goal[3];
+        s->as<ob::RealVectorStateSpace::StateType>()->values[4] = goal[4];
+        s->as<ob::RealVectorStateSpace::StateType>()->values[5] = goal[5];
+
+        ob::ScopedState<> s2(si);
+        s2->as<ob::RealVectorStateSpace::StateType>()->values[0] = goal[0];
+        s2->as<ob::RealVectorStateSpace::StateType>()->values[1] = goal[1];
+        s2->as<ob::RealVectorStateSpace::StateType>()->values[2] = goal[2];
+        s2->as<ob::RealVectorStateSpace::StateType>()->values[3] = +M_PI;
+        s2->as<ob::RealVectorStateSpace::StateType>()->values[4] = goal[4];
+        s2->as<ob::RealVectorStateSpace::StateType>()->values[5] = goal[5];
+
+        ob::ScopedState<> s3(si);
+        s3->as<ob::RealVectorStateSpace::StateType>()->values[0] = goal[0];
+        s3->as<ob::RealVectorStateSpace::StateType>()->values[1] = goal[1];
+        s3->as<ob::RealVectorStateSpace::StateType>()->values[2] = goal[2];
+        s3->as<ob::RealVectorStateSpace::StateType>()->values[3] = -M_PI;
+        s3->as<ob::RealVectorStateSpace::StateType>()->values[4] = goal[4];
+        s3->as<ob::RealVectorStateSpace::StateType>()->values[5] = goal[5];
+
+        goalStates->addState(s);
+        goalStates->addState(s2);
+        goalStates->addState(s3);
+
         // create RealVector start_state
         ob::ScopedState<> start_state(planner::space);
         ob::ScopedState<> goal_state(planner::space);
@@ -122,7 +154,11 @@ namespace ompl_rope_planning
         goal_state->as<ob::RealVectorStateSpace::StateType>()->values[4] = goal[4];
         goal_state->as<ob::RealVectorStateSpace::StateType>()->values[5] = goal[5];
 
-        pdef->setStartAndGoalStates(start_state, goal_state);
+        // pdef->setStartAndGoalStates(start_state, goal_state);
+
+        // Set start and goal states
+        pdef->addStartState(start_state);
+        pdef->setGoal(ob::GoalPtr(goalStates));
     }
 
     template <typename T> ob::Planner *createInstance(ob::SpaceInformationPtr si) { return std::make_shared<T>(si); }
