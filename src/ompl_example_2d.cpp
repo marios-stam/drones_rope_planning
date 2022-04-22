@@ -203,32 +203,35 @@ namespace ompl_rope_planning
         os << static_cast<std::underlying_type<fcl::BVHBuildState>::type>(obj);
         return os;
     }
+
     bool planner::isStateValid(const ob::State *state_check)
     {
-        // printf("========================================================\n");
         static int counter = 0;
         static float total_time = 0;
         const ob::RealVectorStateSpace::StateType *state = state_check->as<ob::RealVectorStateSpace::StateType>();
 
-        float pos[3];
-        pos[0] = state->values[0];
-        pos[1] = state->values[1];
-        pos[2] = state->values[2];
-
+        float pos[3] = {state->values[0], state->values[1], state->values[2]};
         const auto yaw = state->values[3];
-
         const float drones_dis = state->values[4];
         const float drones_angle = state->values[5];
 
         auto t0 = ros::Time::now();
-        custom_robot_mesh->update_mesh(drones_dis, drones_angle);
-        auto dt = ros::Time::now() - t0;
 
+        // update dynamic robot meshh
+        custom_robot_mesh->update_mesh(drones_dis, drones_angle);
         checker.update_robot(custom_robot_mesh->get_fcl_mesh());
 
-        // apply yaw rotation
-        tf2::Quaternion q;
+        // ground collision check
+        float z_offset = custom_robot_mesh->get_lowest_z();
+        float distance_from_ground = pos[2] - z_offset;
+        bool ground_collision = distance_from_ground <= prob_params.safety_offsets.lowest_point;
+        if (ground_collision)
+        {
+            return false;
+        }
 
+        //  apply yaw rotation
+        tf2::Quaternion q;
         q.setRPY(0, 0, yaw);
         q = q.normalize();
 
@@ -238,12 +241,14 @@ namespace ompl_rope_planning
         // check colllision
         bool result = !checker.check_collision();
 
+        // time measurements
+        auto dt = ros::Time::now() - t0;
         total_time += dt.toSec() * 1000; // sum msecs
         counter++;
 
         if ((counter % 5000) == 0)
         {
-            std::cout << "\r";
+            std::cout << "\r"; // print at the same line (update effect)
 
             std::cout << "State Validation: " << counter << " calls " << total_time / 1000 << " secs, " << total_time / counter << " msecs/call, "
                       << counter * 1000.0 / total_time << " calls/sec" << std::flush;

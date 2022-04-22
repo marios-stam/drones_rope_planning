@@ -6,13 +6,13 @@ timeout: 120
 
 # env_mesh: "env-scene-ltu-experiment-hole-inclined"
 # env_mesh: "env-scene-ltu-experiment-corridor-narrow-easy"
-env_mesh: "env-scene-ltu-experiment-hole-inclined"
+# env_mesh: "env-scene-ltu-experiment-hole-inclined"
 # env_mesh: "env-scene-ltu-experiment-tunnel2"
-# env_mesh: "env-scene-ltu-experiment-small-hole"
+env_mesh: "env-scene-ltu-experiment-small-hole"
 # env_mesh: "env-scene-ltu-experiment-hole-wide"
 
 #Planning
-val_check_resolution: 0.03
+val_check_resolution: 0.02
 range: 1.8
 use_mesh_improvement: True
 use_dynamic_goal: False
@@ -25,7 +25,7 @@ safety_distances: {
     drones_offsets: { horizontal: 0.05, vertical: 0.05 },
 
     #horizontal and vertical distance offset for lowest point of catenary
-    lowest_point: 0.05,
+    lowest_point: 0.0,
   }
 
 # start and goal

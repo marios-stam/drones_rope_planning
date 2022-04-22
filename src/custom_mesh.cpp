@@ -134,4 +134,11 @@ namespace custom_mesh
     }
 
     fcl_checking::fcl_mesh *CustomMesh::get_fcl_mesh() { return &m; }
+
+    float CustomMesh::get_lowest_z()
+    {
+        // return it with - since the start is at zero and it goes lower
+        return -V_2D.lower(1);
+    }
+
 };

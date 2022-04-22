@@ -48,6 +48,8 @@ namespace custom_mesh
 
         fcl_checking::fcl_mesh *get_fcl_mesh();
 
+        float get_lowest_z();
+
     private:
         float L;
 
