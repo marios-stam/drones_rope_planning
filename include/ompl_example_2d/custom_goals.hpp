@@ -5,20 +5,24 @@
 #include <ompl/config.h>
 
 // Define the goal we want to reach
+
+namespace ob = ompl::base;
+namespace og = ompl::geometric;
+
 class SymmetricalGoal : public ob::GoalRegion
 {
 public:
-    SymmetricalGoal(const ob::SpaceInformationPtr &si, const ob::State *goal, float dist_thres) : ob::GoalRegion(si)
+    SymmetricalGoal(const ob::SpaceInformationPtr &si, const float goal[6], float dist_thres) : ob::GoalRegion(si)
     {
         distance_threshold = dist_thres;
 
         // set the goal state
-        goal_pos[0] = goal->as<ob::RealVectorStateSpace::StateType>()->values[0];
-        goal_pos[1] = goal->as<ob::RealVectorStateSpace::StateType>()->values[1];
-        goal_pos[2] = goal->as<ob::RealVectorStateSpace::StateType>()->values[2];
+        goal_pos[0] = goal[0];
+        goal_pos[1] = goal[1];
+        goal_pos[2] = goal[2];
     }
 
-    virtual ~SymmetricalGoal() = default;
+    ~SymmetricalGoal() = default;
 
     virtual bool isSatisfied(const ob::State *state) const override
     {
@@ -28,10 +32,10 @@ public:
         return dist < distance_threshold;
     }
 
-    virtual float distanceGoal(const ob::State *state) const override
+    virtual double distanceGoal(const ob::State *state) const override
     {
         // cast the state to what we expect it to be
-        float pos[3];
+        double pos[3];
         pos[0] = state->as<ob::RealVectorStateSpace::StateType>()->values[0];
         pos[1] = state->as<ob::RealVectorStateSpace::StateType>()->values[1];
         pos[2] = state->as<ob::RealVectorStateSpace::StateType>()->values[2];
@@ -42,7 +46,7 @@ public:
         return dist;
     }
 
-    virtual void print(std::ostream &out) const override { out << "SymmetricalGoal"; }
+    void print(std::ostream &out) const override { out << "SymmetricalGoal"; }
 
 private:
     float goal_pos[3];

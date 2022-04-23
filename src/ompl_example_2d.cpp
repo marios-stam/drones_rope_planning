@@ -104,42 +104,57 @@ namespace ompl_rope_planning
 
     void planner::setStartGoal(float start[6], float goal[6])
     {
+        /*
+            // Add goal states
+            ob::GoalStates *goalStates(new ob::GoalStates(si));
 
-        // Add goal states
-        ob::GoalStates *goalStates(new ob::GoalStates(si));
+            ob::ScopedState<> s(si);
+            s->as<ob::RealVectorStateSpace::StateType>()->values[0] = goal[0];
+            s->as<ob::RealVectorStateSpace::StateType>()->values[1] = goal[1];
+            s->as<ob::RealVectorStateSpace::StateType>()->values[2] = goal[2];
+            s->as<ob::RealVectorStateSpace::StateType>()->values[3] = goal[3];
+            s->as<ob::RealVectorStateSpace::StateType>()->values[4] = goal[4];
+            s->as<ob::RealVectorStateSpace::StateType>()->values[5] = goal[5];
 
-        ob::ScopedState<> s(si);
-        s->as<ob::RealVectorStateSpace::StateType>()->values[0] = goal[0];
-        s->as<ob::RealVectorStateSpace::StateType>()->values[1] = goal[1];
-        s->as<ob::RealVectorStateSpace::StateType>()->values[2] = goal[2];
-        s->as<ob::RealVectorStateSpace::StateType>()->values[3] = goal[3];
-        s->as<ob::RealVectorStateSpace::StateType>()->values[4] = goal[4];
-        s->as<ob::RealVectorStateSpace::StateType>()->values[5] = goal[5];
+            ob::ScopedState<> s2(si);
+            s2->as<ob::RealVectorStateSpace::StateType>()->values[0] = goal[0];
+            s2->as<ob::RealVectorStateSpace::StateType>()->values[1] = goal[1];
+            s2->as<ob::RealVectorStateSpace::StateType>()->values[2] = goal[2];
+            s2->as<ob::RealVectorStateSpace::StateType>()->values[3] = +M_PI;
+            s2->as<ob::RealVectorStateSpace::StateType>()->values[4] = goal[4];
+            s2->as<ob::RealVectorStateSpace::StateType>()->values[5] = goal[5];
 
-        ob::ScopedState<> s2(si);
-        s2->as<ob::RealVectorStateSpace::StateType>()->values[0] = goal[0];
-        s2->as<ob::RealVectorStateSpace::StateType>()->values[1] = goal[1];
-        s2->as<ob::RealVectorStateSpace::StateType>()->values[2] = goal[2];
-        s2->as<ob::RealVectorStateSpace::StateType>()->values[3] = +M_PI;
-        s2->as<ob::RealVectorStateSpace::StateType>()->values[4] = goal[4];
-        s2->as<ob::RealVectorStateSpace::StateType>()->values[5] = goal[5];
+            ob::ScopedState<> s3(si);
+            s3->as<ob::RealVectorStateSpace::StateType>()->values[0] = goal[0];
+            s3->as<ob::RealVectorStateSpace::StateType>()->values[1] = goal[1];
+            s3->as<ob::RealVectorStateSpace::StateType>()->values[2] = goal[2];
+            s3->as<ob::RealVectorStateSpace::StateType>()->values[3] = -M_PI;
+            s3->as<ob::RealVectorStateSpace::StateType>()->values[4] = goal[4];
+            s3->as<ob::RealVectorStateSpace::StateType>()->values[5] = goal[5];
 
-        ob::ScopedState<> s3(si);
-        s3->as<ob::RealVectorStateSpace::StateType>()->values[0] = goal[0];
-        s3->as<ob::RealVectorStateSpace::StateType>()->values[1] = goal[1];
-        s3->as<ob::RealVectorStateSpace::StateType>()->values[2] = goal[2];
-        s3->as<ob::RealVectorStateSpace::StateType>()->values[3] = -M_PI;
-        s3->as<ob::RealVectorStateSpace::StateType>()->values[4] = goal[4];
-        s3->as<ob::RealVectorStateSpace::StateType>()->values[5] = goal[5];
+            goalStates->addState(s);
+            goalStates->addState(s2);
+            goalStates->addState(s3);
 
-        goalStates->addState(s);
-        goalStates->addState(s2);
-        goalStates->addState(s3);
+            // create RealVector start_state
+            ob::ScopedState<> start_state(planner::space);
+            ob::ScopedState<> goal_state(planner::space);
 
-        // create RealVector start_state
+            goal_state->as<ob::RealVectorStateSpace::StateType>()->values[0] = goal[0];
+            goal_state->as<ob::RealVectorStateSpace::StateType>()->values[1] = goal[1];
+            goal_state->as<ob::RealVectorStateSpace::StateType>()->values[2] = goal[2];
+            goal_state->as<ob::RealVectorStateSpace::StateType>()->values[3] = goal[3];
+            goal_state->as<ob::RealVectorStateSpace::StateType>()->values[4] = goal[4];
+            goal_state->as<ob::RealVectorStateSpace::StateType>()->values[5] = goal[5];
+
+            // pdef->setStartAndGoalStates(start_state, goal_state);
+
+            // Set start and goal states
+            pdef->addStartState(start_state);
+            pdef->setGoal(ob::GoalPtr(goalStates));
+        */
+
         ob::ScopedState<> start_state(planner::space);
-        ob::ScopedState<> goal_state(planner::space);
-
         start_state->as<ob::RealVectorStateSpace::StateType>()->values[0] = start[0];
         start_state->as<ob::RealVectorStateSpace::StateType>()->values[1] = start[1];
         start_state->as<ob::RealVectorStateSpace::StateType>()->values[2] = start[2];
@@ -147,18 +162,35 @@ namespace ompl_rope_planning
         start_state->as<ob::RealVectorStateSpace::StateType>()->values[4] = start[4];
         start_state->as<ob::RealVectorStateSpace::StateType>()->values[5] = start[5];
 
-        goal_state->as<ob::RealVectorStateSpace::StateType>()->values[0] = goal[0];
-        goal_state->as<ob::RealVectorStateSpace::StateType>()->values[1] = goal[1];
-        goal_state->as<ob::RealVectorStateSpace::StateType>()->values[2] = goal[2];
-        goal_state->as<ob::RealVectorStateSpace::StateType>()->values[3] = goal[3];
-        goal_state->as<ob::RealVectorStateSpace::StateType>()->values[4] = goal[4];
-        goal_state->as<ob::RealVectorStateSpace::StateType>()->values[5] = goal[5];
-
-        // pdef->setStartAndGoalStates(start_state, goal_state);
-
-        // Set start and goal states
         pdef->addStartState(start_state);
-        pdef->setGoal(ob::GoalPtr(goalStates));
+
+        // choose goal state
+        if (prob_params.use_dynamic_goal)
+        {
+            auto goal_region = std::make_shared<SymmetricalGoal>(si, goal, 0.5);
+            pdef->setGoal(ob::GoalPtr(goal_region));
+
+            float start_distance = 0.1;
+            float goal_distance = 0.5;
+            unsigned int max_attempts = 100;
+            pdef->fixInvalidInputStates(start_distance, goal_distance, max_attempts);
+        }
+        else
+        {
+            // Add goal states
+            ob::GoalStates *goalStates(new ob::GoalStates(si));
+
+            ob::ScopedState<> s(si);
+            s->as<ob::RealVectorStateSpace::StateType>()->values[0] = goal[0];
+            s->as<ob::RealVectorStateSpace::StateType>()->values[1] = goal[1];
+            s->as<ob::RealVectorStateSpace::StateType>()->values[2] = goal[2];
+            s->as<ob::RealVectorStateSpace::StateType>()->values[3] = goal[3];
+            s->as<ob::RealVectorStateSpace::StateType>()->values[4] = goal[4];
+            s->as<ob::RealVectorStateSpace::StateType>()->values[5] = goal[5];
+
+            goalStates->addState(s);
+            pdef->setGoal(ob::GoalPtr(goalStates));
+        }
     }
 
     template <typename T> ob::Planner *createInstance(ob::SpaceInformationPtr si) { return std::make_shared<T>(si); }
@@ -199,6 +231,14 @@ namespace ompl_rope_planning
         if (planner_name == "PRM")
         {
             auto plan = std::make_shared<og::PRM>(si);
+            return plan;
+        }
+        else if (planner_name == "InformedRRTstar")
+        {
+            auto plan = std::make_shared<og::InformedRRTstar>(si);
+
+            printf("Setting  range...\n");
+            plan->setRange(range);
             return plan;
         }
         else if (planner_name == "RRTConnect")

@@ -2,7 +2,7 @@ visualization: True #TODO:icluse this option in launch file
 rope_length: 1.4
 
 calculate_new_path: True
-timeout: 40
+timeout: 15
 
 # env_mesh: "env-scene-ltu-experiment-corridor-narrow-easy"
 # env_mesh: "env-scene-ltu-experiment-hole-inclined"
@@ -46,7 +46,8 @@ bounds: {
 #planner algorithm
 # planner_algorithm: "RRTstar"
 # planner_algorithm: "RRTConnect"
-planner_algorithm: "RRT"
+# planner_algorithm: "RRT"
+planner_algorithm: "InformedRRTstar"
 # planner_algorithm: "PRM"
 # planner_algorithm: "LBKPIECE1"
 # planner_algorithm: "KPIECE"
