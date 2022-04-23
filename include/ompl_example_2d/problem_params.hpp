@@ -17,6 +17,14 @@ namespace problem_params
         float lowest_point;
     };
 
+    enum GoalType
+    {
+        SIMPLE,
+        SYMMETRICAL,
+        SAMPLABLE,
+        MULTIPLE_GOALS
+    };
+
     struct ProblemParams
     {
         float timeout;
@@ -28,7 +36,9 @@ namespace problem_params
         float val_check_resolution;
         float range;
 
-        bool use_dynamic_goal, use_ground_collision_check;
+        bool use_ground_collision_check;
+
+        int goal_type;
 
         std::map<std::string, double> start_pos, goal_pos;
 

@@ -46,5 +46,9 @@ int main(int argc, char **argv)
     planner.plan();
 
     printf("Done!\n");
+
+    // exit ros node
+    ros::shutdown();
+
     return 0;
 }

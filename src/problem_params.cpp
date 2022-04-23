@@ -42,7 +42,19 @@ namespace problem_params
 
         ros::param::get("/planning/path_interpolation_points", pdef.path_interpolation_points);
 
-        ros::param::get("/planning/use_dynamic_goal", pdef.use_dynamic_goal);
+        // Select goal type
+        std::map<std::string, int> goal_type_map = {{"simple", GoalType::SIMPLE},
+                                                    {"symmetrical", GoalType::SYMMETRICAL},
+                                                    {"samplable", GoalType::SAMPLABLE},
+                                                    {"multiple_goals", GoalType::MULTIPLE_GOALS}
+
+        };
+
+        std::string goal_type_str;
+        ros::param::get("/planning/goal_type", goal_type_str);
+        pdef.goal_type = goal_type_map[goal_type_str];
+
+        // Enable ground collision check
         ros::param::get("/planning/use_ground_collision_check", pdef.use_ground_collision_check);
 
         // safety distances
@@ -78,7 +90,26 @@ namespace problem_params
         printf("\tSimplify path: %d\n", params.simplify_path);
         printf("\tPath interpolation points: %d\n", params.path_interpolation_points);
 
-        printf("\tUse dynamic goal: %d\n", params.use_dynamic_goal);
+        // print goal type
+        switch (params.goal_type)
+        {
+        case GoalType::SIMPLE:
+            printf("\tGoal type: simple\n");
+            break;
+        case GoalType::SYMMETRICAL:
+            printf("\tGoal type: symmetrical\n");
+            break;
+        case GoalType::SAMPLABLE:
+            printf("\tGoal type: samplable\n");
+            break;
+        case GoalType::MULTIPLE_GOALS:
+            printf("\tGoal type: multiple goals\n");
+            break;
+        default:
+            printf("\tGoal type: unknown\n");
+            break;
+        }
+
         printf("\tUse ground collision check: %d\n", params.use_ground_collision_check);
 
         printf("\n\tSafety distances:\n");
@@ -94,5 +125,4 @@ namespace problem_params
 
         printf("\n\n");
     }
-
 }; // namespace problem_params

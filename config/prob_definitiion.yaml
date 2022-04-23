@@ -2,7 +2,7 @@ visualization: True #TODO:icluse this option in launch file
 rope_length: 1.4
 
 calculate_new_path: True
-timeout: 15
+timeout: 10
 
 # env_mesh: "env-scene-ltu-experiment-corridor-narrow-easy"
 # env_mesh: "env-scene-ltu-experiment-hole-inclined"
@@ -15,7 +15,8 @@ env_mesh: "env-scene-ltu-experiment-corridor-narrow-narrow"
 val_check_resolution: 0.045
 range: 1
 use_mesh_improvement: True
-use_dynamic_goal: False
+goal_type: "samplable" #simple,samplable,symmetrical,multiple_goals
+
 use_ground_collision_check: False
 
 #values:None, ob.PathLengthOptimizationObjective,balanced,obstacle_clearance
@@ -39,15 +40,15 @@ goal: { x: +0.5, y: 5.25, z: 0.75 }
 # All ANGLES are in DEGREES
 bounds: {
     #x, y , z, yaw , drones_distance(% of L) , drones_angle
-    low: [-1.5, 0.5, 0.3, -180.0, 0.1, -60.0],
+    low: [-1.5, 0.5, 0.3, -180.0, 0.3, -60.0],
     high: [1.5, 6.0, 2.0, 180.0, 0.95, 60.0],
   }
 
 #planner algorithm
 # planner_algorithm: "RRTstar"
 # planner_algorithm: "RRTConnect"
-# planner_algorithm: "RRT"
-planner_algorithm: "InformedRRTstar"
+planner_algorithm: "RRT"
+# planner_algorithm: "InformedRRTstar"
 # planner_algorithm: "PRM"
 # planner_algorithm: "LBKPIECE1"
 # planner_algorithm: "KPIECE"

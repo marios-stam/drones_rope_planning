@@ -1,11 +1,3 @@
-/*
- * controllerUR_node.cpp
- *
- *  Created on: Jun 3, 2017
- *      Author: Dominik Belter
- *   Institute: Instute of Robotics and Machine Intelligence, Poznan University of Technology
- */
-
 #include "../include/ompl_example_2d/ompl_example_2d.hpp"
 
 using namespace std;
@@ -164,9 +156,31 @@ namespace ompl_rope_planning
 
         pdef->addStartState(start_state);
 
-        // choose goal state
-        if (prob_params.use_dynamic_goal)
+        switch (prob_params.goal_type)
         {
+        case problem_params::GoalType::SIMPLE:
+        {
+            printf("Simple goal\n");
+            // Add goal states
+            ob::GoalStates *goalStates(new ob::GoalStates(si));
+
+            ob::ScopedState<> goal_state(planner::space);
+            goal_state->as<ob::RealVectorStateSpace::StateType>()->values[0] = goal[0];
+            goal_state->as<ob::RealVectorStateSpace::StateType>()->values[1] = goal[1];
+            goal_state->as<ob::RealVectorStateSpace::StateType>()->values[2] = goal[2];
+            goal_state->as<ob::RealVectorStateSpace::StateType>()->values[3] = goal[3];
+            goal_state->as<ob::RealVectorStateSpace::StateType>()->values[4] = goal[4];
+            goal_state->as<ob::RealVectorStateSpace::StateType>()->values[5] = goal[5];
+
+            goalStates->addState(goal_state);
+
+            pdef->setGoal(ob::GoalPtr(goalStates));
+
+            break;
+        }
+        case problem_params::GoalType::SYMMETRICAL:
+        {
+            printf("Symmetrical goal\n");
             auto goal_region = std::make_shared<SymmetricalGoal>(si, goal, 0.5);
             pdef->setGoal(ob::GoalPtr(goal_region));
 
@@ -174,9 +188,23 @@ namespace ompl_rope_planning
             float goal_distance = 0.5;
             unsigned int max_attempts = 100;
             pdef->fixInvalidInputStates(start_distance, goal_distance, max_attempts);
+            break;
         }
-        else
+        case problem_params::GoalType::SAMPLABLE:
         {
+            printf("Samplable goal\n");
+            auto samplable_goal = std::make_shared<CustomSamplabeGoal>(si, goal, 0.5);
+            pdef->setGoal(ob::GoalPtr(samplable_goal));
+
+            float start_distance = 0.1;
+            float goal_distance = 0.5;
+            unsigned int max_attempts = 100;
+            pdef->fixInvalidInputStates(start_distance, goal_distance, max_attempts);
+            break;
+        }
+        case problem_params::GoalType::MULTIPLE_GOALS:
+        {
+            printf("Multiple goals\n");
             // Add goal states
             ob::GoalStates *goalStates(new ob::GoalStates(si));
 
@@ -190,6 +218,12 @@ namespace ompl_rope_planning
 
             goalStates->addState(s);
             pdef->setGoal(ob::GoalPtr(goalStates));
+            break;
+        }
+        default:
+        {
+            throw std::runtime_error("Unknown goal type");
+        }
         }
     }
 
@@ -199,35 +233,6 @@ namespace ompl_rope_planning
 
     ob::PlannerPtr planner::getPlanner(std::string planner_name, float range)
     {
-        // choose between ompl planners
-
-        // planners_map plnrs = {
-        //     //
-        //     {"RRT", std::make_shared<og::RRT>(si)},
-        //     {"RRTConnect", std::make_shared<og::RRTConnect>(si)},
-        //     {"RRTstar", std::make_shared<og::RRTstar>(si)},
-        //     // {"RRTstarProb", std::make_shared<og::RRTstarProb>(si)},
-        //     // {"RRTsharp", std::make_shared<og::RRTsharp>(si)},
-        //     // {"LBTRRT", std::make_shared<og::LBTRRT>(si)},
-        //     {"LazyRRT", std::make_shared<og::LazyRRT>(si)},
-        //     // {"LazyRRTstar", std::make_shared<og::LazyRRTstar>(si)},
-        //     // {"PRM", std::make_shared<og::PRM>(si)},
-        //     // {"PRMstar", std::make_shared<og::PRMstar>(si)},
-        //     // {"SBL", std::make_shared<og::SBL>(si)},
-        //     // {"SPARS", std::make_shared<og::SPARS>(si)},
-        //     // {"SPARStwo", std::make_shared<og::SPARStwo>(si)},
-        //     // {"SPARStwoProb", std::make_shared<og::SPARStwoProb>(si)},
-        //     // {"SPARStwoProbFast", std::make_shared<og::SPARStwoProbFast>(si)},
-        //     // {"SPARStwoProbFastest", std::make_shared<og::SPARStwoProbFastest>(si)},
-        //     // {"SPARStwoProbFastest2", std::make_shared<og::SPARStwoProbFastest2>(si)},
-        //     // {"SPARStwoProbFastest3", std::make_shared<og::SPARStwoProbFastest3>(si)},
-        //     // {"SPARStwoProbFastest4", std::make_shared<og::SPARStwoProbFastest4>(si)},
-        //     // {"SPARStwoProbFastest5", std::make_shared<og::SPARStwoProbFastest5>(si)},
-        //     // {"SPARStwoProbFastest6", std::make_shared<og::SPARStwoProbFastest6>(si)},
-        //     // {"SPARStwoProbFastest7", std::make_shared<og::SPARStwoProbFastest7>(si)},
-        //     // {"SPARStwoProbFastest8", std::make_shared<og::SPARStwoProbFastest8>(si)}
-        // };
-
         if (planner_name == "PRM")
         {
             auto plan = std::make_shared<og::PRM>(si);
@@ -340,8 +345,11 @@ namespace ompl_rope_planning
             {
                 std::cout << "Simplifying path...\n";
                 og::PathSimplifier path_simplifier(si, pdef->getGoal());
-                // path_simplifier.simplify(*pth, 10.0);
-                path_simplifier.simplifyMax(*pth);
+
+                ptc = ob::PlannerTerminationCondition(ob::timedPlannerTerminationCondition(prob_params.timeout));
+                path_simplifier.simplify(*pth, ptc, false);
+
+                // path_simplifier.simplifyMax(*pth);
             }
 
             if (prob_params.path_interpolation_points > 0)
