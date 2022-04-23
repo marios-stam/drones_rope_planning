@@ -291,19 +291,7 @@ namespace ompl_rope_planning
 
     void planner::plan()
     {
-
-        // create a planner for the defined space
-        // ob::PlannerPtr plan(new og::InformedRRTstar(si));
-        // ob::PlannerPtr plan(new og::RRT(si));
-
-        // auto plan =          std::make_shared<og::RRT>(si);
-
-        // auto plan = std::make_shared<og::RRTConnect>(si);
-
         auto plan = getPlanner(prob_params.planner_algorithm, prob_params.range);
-
-        // as og::RRT is not correct but it works (need to find a general interface that included setRange)
-        // plan->as<og::RRT>()->setRange(prob_params.range);
 
         // set the problem we are trying to solve for the planner
         printf("Setting  problem definition...\n");
@@ -316,27 +304,40 @@ namespace ompl_rope_planning
         // print the settings for this space
         printf("============================ OMPL SPACE SETTINGS: ============================\n");
         si->printSettings(std::cout);
-        // printf("===============================================================================\n");
 
         // print the problem settings
         printf("============================ OMPL PROBLEM SETTINGS: ============================\n");
         pdef->print(std::cout);
         printf("================================================================================\n");
 
-        // create termination condition
-        ob::PlannerTerminationCondition ptc(ob::timedPlannerTerminationCondition(prob_params.timeout));
         // attempt to solve the problem within one second of planning time
-        auto t0 = std::chrono::high_resolution_clock::now();
-        ob::PlannerStatus solved = plan->solve(ptc);
-        std::cout << std::endl;
-        auto dt = std::chrono::high_resolution_clock::now() - t0;
-        std::cout << "Planning time: " << std::chrono::duration_cast<std::chrono::milliseconds>(dt).count() << " ms" << std::endl;
 
-        if (solved)
+        ob::PlannerStatus solved;
+        do
+        {
+            // If planner is not reset
+            // it is allowed  to continue work for more time on an unsolved problem
+            // otherwise it will be reset and start from scratch
+
+            //  plan->clear();
+
+            // create termination condition
+            ob::PlannerTerminationCondition ptc(ob::timedPlannerTerminationCondition(prob_params.timeout));
+
+            auto t0 = std::chrono::high_resolution_clock::now();
+            solved = plan->solve(ptc);
+            std::cout << std::endl;
+            auto dt = std::chrono::high_resolution_clock::now() - t0;
+
+            std::cout << "Planning time: " << std::chrono::duration_cast<std::chrono::milliseconds>(dt).count() << " ms" << std::endl;
+
+        } while (solved != ob::PlannerStatus::EXACT_SOLUTION);
+
+        if (solved == ob::PlannerStatus::EXACT_SOLUTION)
         {
             // get the goal representation from the problem definition (not the same as the goal state)
             // and inquire about the found path
-            std::cout << "Found solution :" << std::endl;
+            std::cout << "Found exact solution :" << std::endl;
 
             ob::PathPtr path = pdef->getSolutionPath();
             og::PathGeometric *pth = pdef->getSolutionPath()->as<og::PathGeometric>();
@@ -346,7 +347,8 @@ namespace ompl_rope_planning
                 std::cout << "Simplifying path...\n";
                 og::PathSimplifier path_simplifier(si, pdef->getGoal());
 
-                ptc = ob::PlannerTerminationCondition(ob::timedPlannerTerminationCondition(prob_params.timeout));
+                ob::PlannerTerminationCondition ptc(ob::timedPlannerTerminationCondition(prob_params.timeout));
+
                 path_simplifier.simplify(*pth, ptc, false);
 
                 // path_simplifier.simplifyMax(*pth);
@@ -371,7 +373,9 @@ namespace ompl_rope_planning
             myfile.close();
         }
         else
+        {
             std::cout << "No solution found" << std::endl;
+        }
     }
 
     std::ostream &operator<<(std::ostream &os, const fcl::BVHBuildState &obj)
@@ -426,7 +430,7 @@ namespace ompl_rope_planning
         total_time += dt.toSec() * 1000; // sum msecs
         counter++;
 
-        if ((counter % 5000) == 0)
+        if ((counter % 2000) == 0)
         {
             std::cout << "\r"; // print at the same line (update effect)
 
