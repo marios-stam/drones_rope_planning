@@ -53,6 +53,7 @@
 #include "../custom_mesh.hpp"
 #include "custom_goals.hpp"
 #include "fcl_checker.hpp"
+#include "optim_objectives.hpp"
 #include "problem_params.hpp"
 
 namespace ob = ompl::base;

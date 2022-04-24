@@ -54,8 +54,15 @@ namespace ompl_rope_planning
         pdef = ob::ProblemDefinitionPtr(new ob::ProblemDefinition(si));
 
         // set Optimizattion objective
-        // pdef->setOptimizationObjective(ob::OptimizationObjectivePtr(new ob::PathLengthOptimizationObjective(si)));
-        // pdef->setOptimizationObjective(planner::getPathLengthObjWithCostToGo(si));
+        // ob::OptimizationObjectivePtr obj(new ob::PathLengthOptimizationObjective(si));
+        // pdef->setOptimizationObjective(obj);
+
+        // ob::OptimizationObjectivePtr obj(new custom_objectives::RopeRelaxedObjective(si, prob_params.L));
+        // pdef->setOptimizationObjective(obj);
+
+        // set own heuristic
+        auto obj = custom_objectives::custom_heuristic(si);
+        pdef->setOptimizationObjective(obj);
 
         std::cout << "Initialized: " << std::endl;
     }
@@ -278,7 +285,15 @@ namespace ompl_rope_planning
             plan->setRange(range);
             return plan;
         }
-        else
+        else if (planner_name == "RRTstar")
+        {
+            auto plan = std::make_shared<og::RRTstar>(si);
+
+            printf("Setting  range...\n");
+            plan->setRange(range);
+            return plan;
+        }
+        else if (planner_name == "RRT")
         {
             auto plan = std::make_shared<og::RRT>(si);
 
@@ -286,6 +301,10 @@ namespace ompl_rope_planning
             plan->setRange(range);
 
             return plan;
+        }
+        else
+        {
+            throw std::runtime_error("Unknown planner");
         }
     }
 

@@ -113,6 +113,7 @@ file(GLOB ompl_example_2d_sources
 
     src/custom_mesh.cpp
     src/problem_params.cpp
+    src/optim_objectives.cpp
 
 )
 
@@ -128,6 +129,10 @@ file(GLOB ompl_example_2d_headers
     include/catenaries/math_utils.hpp
     
     include/custom_mesh.hpp
+
+    include/ompl_example_2d/custom_goals.hpp
+    include/ompl_example_2d/optim_objectives.hpp
+
 ) 
 
 
