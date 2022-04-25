@@ -37,14 +37,14 @@ thickness: 0.3
 
 # start and goal
 start: { x: +0.0, y: 2.0, z: 0.75 }
-goal: { x: +0.0, y: 4.5, z: 0.75 }
+goal: { x: +0.0, y: 6, z: 0.75 }
 
 # Bounds of states
 # All ANGLES are in DEGREES
 bounds: {
     #x, y , z, yaw , drones_distance(% of L) , drones_angle
     low: [-1.5, 0.5, 0.3, -180.0, 0.3, -60.0],
-    high: [1.5, 6.0, 2.0, 180.0, 0.95, 60.0],
+    high: [1.5, 6.5, 2.0, 180.0, 0.95, 60.0],
   }
 
 #planner algorithm

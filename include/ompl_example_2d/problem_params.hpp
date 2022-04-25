@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../include/moving_obstacles.hpp"
 #include "ros/ros.h"
 
 namespace problem_params
@@ -33,34 +34,39 @@ namespace problem_params
 
     struct ProblemParams
     {
+        // planning
         int planning_type;
+
+        std::string planner_algorithm;
 
         float timeout;
         float L;
 
-        std::string robot_filename;
-        std::string env_filename;
-
+        // state validation
         float val_check_resolution;
         float range;
-
         bool use_ground_collision_check;
 
-        int goal_type;
-
-        std::map<std::string, double> start_pos, goal_pos;
-
-        std::map<std::string, std::array<double, 6>> bounds;
-
-        std::string planner_algorithm;
-
-        bool simplify_path;
-        int path_interpolation_points;
-
+        // robot
+        std::string robot_filename;
+        float thickness;
         // safety offsets
         SafetyOffsets safety_offsets;
 
-        float thickness;
+        // environment
+        std::string env_filename;
+        std::vector<realtime_obstacles::CylinderDefinition> obstacles_config;
+
+        // start-goal
+        int goal_type;
+        std::map<std::string, double> start_pos, goal_pos;
+
+        // bounds
+        std::map<std::string, std::array<double, 6>> bounds;
+
+        // path simplification
+        bool simplify_path;
+        int path_interpolation_points;
     };
 
     ProblemParams getProblemParams(ros::NodeHandle &nh);

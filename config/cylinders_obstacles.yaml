@@ -1,0 +1,7 @@
+cylinders_number: 2
+
+cylinders:
+  [
+    { radius: 0.3, height: 3.5, x: 0.0, y: 4.0, z: 0.0 },
+    { radius: 0.3, height: 3.5, x: 0.0, y: 5.0, z: 0.0 },
+  ]

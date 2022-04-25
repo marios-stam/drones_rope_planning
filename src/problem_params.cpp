@@ -74,6 +74,8 @@ namespace problem_params
 
         ros::param::get("/planning/thickness", pdef.thickness);
 
+        pdef.obstacles_config = realtime_obstacles::load_cylinders_definition(nh);
+
         return pdef;
     }
 
@@ -132,6 +134,14 @@ namespace problem_params
         printf("\t\tLowest point: %f\n", params.safety_offsets.lowest_point);
 
         printf("\tThickness: %f\n", params.thickness);
+
+        printf("\tCYLINDER OBSTACLES CONFIG\n");
+
+        for (int i = 0; i < params.obstacles_config.size(); i++)
+        {
+            auto c = params.obstacles_config[i];
+            printf("\t\tradius: %f height: %f pos : %f %f %f \n", c.radius, c.height, c.pos[0], c.pos[1], c.pos[2]);
+        }
         printf("===========================================================================================\n");
 
         printf("\n\n");

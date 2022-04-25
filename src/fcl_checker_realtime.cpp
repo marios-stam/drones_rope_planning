@@ -11,6 +11,18 @@ namespace fcl_checking_realtime
         // Load the environment
         env = new realtime_obstacles::Cylinders(obs_number);
     }
+    void checker::updateEnvironmentTransforms(std::vector<realtime_obstacles::CylinderDefinition> cyls_config)
+    {
+        float q[4] = {0, 0, 0, 1};
+        float pos[3];
+        for (int i = 0; i < cyls_config.size(); i++)
+        {
+            pos[0] = cyls_config[i].pos[0];
+            pos[1] = cyls_config[i].pos[1];
+            pos[2] = cyls_config[i].pos[2];
+            env->set_cylinder_transform(i, pos, q);
+        }
+    }
 
     void checker::updateEnvironmentTransforms()
     {

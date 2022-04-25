@@ -29,6 +29,8 @@ namespace fcl_checking_realtime
 
         void updateEnvironmentTransforms();
 
+        void updateEnvironmentTransforms(std::vector<realtime_obstacles::CylinderDefinition>);
+
         void update_env_obstacle_transform(int index, float pos[3], float q[4]);
 
         bool check_collision(void);

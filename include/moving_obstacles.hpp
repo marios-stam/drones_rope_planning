@@ -1,25 +1,31 @@
 #pragma once
 
-// fcl core
-
-#include "fcl/geometry/shape/cylinder.h"
-// collisions
-#include "fcl/narrowphase/collision-inl.h"
-// Vector3
-#include "fcl/math/geometry-inl.h"
-// Transform3
+// fcl
+#include "fcl/common/types.h"
 #include "fcl/config.h"
 #include "fcl/fcl.h"
+#include "fcl/geometry/shape/cylinder.h"
+#include "fcl/math/geometry-inl.h"
+#include "fcl/narrowphase/collision-inl.h"
 
-// CollisionObject
-#include "fcl/common/types.h"
+// ROS
+#include <ros/ros.h>
 
 namespace realtime_obstacles
 {
+    struct CylinderDefinition
+    {
+        double radius;
+        double height;
+        double pos[3];
+    };
+
     class Cylinders
     {
     public:
-        Cylinders(int N);
+        Cylinders(std::vector<CylinderDefinition> cylinders_def);
+
+        Cylinders(int obs_number);
 
         ~Cylinders();
 
@@ -49,4 +55,5 @@ namespace realtime_obstacles
         // std::vector<bool> cylinders_coll_object_updated;
     };
 
+    std::vector<CylinderDefinition> load_cylinders_definition(ros::NodeHandle &nh);
 }; // namespace realtime_obstacles

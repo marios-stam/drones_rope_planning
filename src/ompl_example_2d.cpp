@@ -22,14 +22,9 @@ namespace ompl_rope_planning
             checker = new fcl_checking_realtime::checker();
 
             printf("Loading Environment\n");
-            checker->as<fcl_checking_realtime::checker>()->loadEnvironment(2);
-
-            float pos[3] = {0, 4, 0};
-            float q[4] = {0, 0, 0, 1};
-            printf("Setting env transforms\n");
-            checker->as<fcl_checking_realtime::checker>()->update_env_obstacle_transform(0, pos, q);
-            pos[1] = 5;
-            checker->as<fcl_checking_realtime::checker>()->update_env_obstacle_transform(1, pos, q);
+            auto cyls_conf = prob_params.obstacles_config;
+            checker->as<fcl_checking_realtime::checker>()->loadEnvironment(cyls_conf.size());
+            checker->as<fcl_checking_realtime::checker>()->updateEnvironmentTransforms(cyls_conf);
         }
         else if (prob_prms.planning_type == problem_params::PlanningType::STATIC)
         {
