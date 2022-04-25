@@ -116,6 +116,10 @@ file(GLOB ompl_example_2d_sources
     src/optim_objectives.cpp
 
     src/moving_obstacles.cpp
+    
+    #fcl_checkers
+    src/fcl_checker_base.cpp
+    src/fcl_checker_realtime.cpp
 
 )
 
@@ -136,6 +140,11 @@ file(GLOB ompl_example_2d_headers
     include/ompl_example_2d/optim_objectives.hpp
 
     include/moving_obstacles.hpp
+
+    #fcl_checkers
+    include/fcl_checker_base.hpp
+    include/fcl_checker_realtime.hpp
+
 
 ) 
 

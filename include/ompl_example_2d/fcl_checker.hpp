@@ -1,5 +1,4 @@
-#ifndef FCL_CHECKER_HPP
-#define FCL_CHECKER_HPP
+#pragma once 
 
 #include "fcl/geometry/bvh/BVH_model-inl.h"
 #include "fcl/geometry/bvh/BVH_model.h"
@@ -54,5 +53,3 @@ namespace fcl_checking
     };
 
 }
-
-#endif // FCL_CHECKER_HPP

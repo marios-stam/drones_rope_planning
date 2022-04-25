@@ -6,7 +6,8 @@
  *   Institute: Instute of Robotics and Machine Intelligence, Poznan University of Technology
  */
 
-#include "../include/ompl_example_2d/fcl_checker.hpp"
+#include "../include/ompl_example_2d/fcl_checker_realtime.hpp"
+
 #include "../include/ompl_example_2d/ompl_example_2d.hpp"
 
 #include "../include/catenaries/catenary.hpp"
@@ -54,11 +55,9 @@ int main_static_planning(int argc, char **argv)
 
     return 0;
 }
-int main(int argc, char **argv)
-{
-    // diffeent mains
-    // main_static_planning(argc, argv);
 
+int main_Cylinders_test()
+{
     int number_of_obstacles = 2;
     realtime_obstacles::Cylinders obstacles(number_of_obstacles);
 
@@ -98,4 +97,17 @@ int main(int argc, char **argv)
     }
 
     return 0;
+}
+
+int main(int argc, char **argv)
+{
+    // diffeent mains
+    // main_static_planning(argc, argv);
+    // main_Cylinders_test();
+
+    fcl_checker_base *fcl_checker;
+
+    fcl_checker = new fcl_checking_realtime::checker();
+
+    fcl_checker->loadEnvironment(2);
 }

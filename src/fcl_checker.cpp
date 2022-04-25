@@ -1,4 +1,3 @@
-#pragma once
 #include "../include/ompl_example_2d/fcl_checker.hpp"
 #include "../include/custom_mesh.hpp"
 

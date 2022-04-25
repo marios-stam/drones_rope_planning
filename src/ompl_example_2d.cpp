@@ -24,6 +24,7 @@ namespace ompl_rope_planning
         }
         catch (std::exception &e)
         {
+            // moving obstacles
             std::cout << "Using environment mesh from drones_path_planning" << std::endl;
             std::string env_mesh = "/home/marios/thesis_ws/src/drone_path_planning/resources/stl/" + prob_params.env_filename + ".stl";
             checker.loadEnvironment(env_mesh);
