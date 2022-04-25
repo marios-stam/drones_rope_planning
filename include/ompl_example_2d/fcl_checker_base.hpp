@@ -32,6 +32,9 @@ public:
 
     virtual bool check_collision(void) = 0;
 
+    /** \brief Cast this instance to a desired type. */
+    template <typename T> T *as() { return dynamic_cast<T *>(this); };
+
 protected:
     fcl_checking::fcl_mesh *robot_mesh;
 };

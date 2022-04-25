@@ -99,15 +99,52 @@ int main_Cylinders_test()
     return 0;
 }
 
+int main_fcl_checker_realtime_test()
+{
+    fcl_checker_base *fcl_checker;
+
+    fcl_checker = new fcl_checking_realtime::checker();
+
+    // robot
+    fcl_checker->loadRobot("/home/marios/thesis_ws/src/drones_rope_planning/resources/stl/custom_V_robot.stl");
+    float pos[3] = {0, 0, 0};
+    float q[4] = {0, 0, 0, 1};
+
+    fcl_checker->setRobotTransform(pos, q);
+
+    // environment
+    fcl_checker->loadEnvironment(2);
+
+    pos[0] = 0;
+    pos[1] = 0;
+    pos[2] = 0;
+
+    fcl_checker->as<fcl_checking_realtime::checker>()->update_env_obstacle_transform(0, pos, q);
+    pos[1] = 1;
+    fcl_checker->as<fcl_checking_realtime::checker>()->update_env_obstacle_transform(1, pos, q);
+
+    float pos_robot[3] = {0, 0, 0};
+    bool collision;
+
+    for (float t = 0; t < 10; t += 0.1)
+    {
+        pos_robot[1] = cos(2 * M_PI * t / 5);
+        fcl_checker->setRobotTransform(pos_robot, q);
+        printf("pos_robot:%f %f %f\n", pos_robot[0], pos_robot[1], pos_robot[2]);
+
+        // check collision
+        collision = fcl_checker->as<fcl_checking_realtime::checker>()->check_collision();
+
+        std::cout << "Collision: " << collision << std::endl;
+    }
+
+    return 0;
+}
+
 int main(int argc, char **argv)
 {
     // diffeent mains
     // main_static_planning(argc, argv);
     // main_Cylinders_test();
-
-    fcl_checker_base *fcl_checker;
-
-    fcl_checker = new fcl_checking_realtime::checker();
-
-    fcl_checker->loadEnvironment(2);
+    // main_fcl_checker_realtime_test();
 }
