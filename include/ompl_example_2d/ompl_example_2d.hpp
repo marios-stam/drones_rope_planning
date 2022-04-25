@@ -52,7 +52,7 @@
 // Custom classes
 #include "../custom_mesh.hpp"
 #include "custom_goals.hpp"
-#include "fcl_checker.hpp"
+#include "fcl_checker_realtime.hpp"
 #include "optim_objectives.hpp"
 #include "problem_params.hpp"
 
@@ -101,7 +101,7 @@ namespace ompl_rope_planning
 
         ompl::geometric::PathGeometric *path_smooth = NULL;
 
-        fcl_checking::checker checker;
+        fcl_checker_base *checker;
 
         custom_mesh::CustomMesh *custom_robot_mesh;
 

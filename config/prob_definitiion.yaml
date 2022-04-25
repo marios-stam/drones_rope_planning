@@ -1,6 +1,8 @@
 visualization: True #TODO:icluse this option in launch file
 rope_length: 1.4
 
+planning_type: "moving_obstacles" # static,moving_obstacles
+
 calculate_new_path: True
 timeout: 4
 
@@ -35,7 +37,7 @@ thickness: 0.3
 
 # start and goal
 start: { x: +0.0, y: 2.0, z: 0.75 }
-goal: { x: +0.5, y: 5.25, z: 0.75 }
+goal: { x: +0.0, y: 4.5, z: 0.75 }
 
 # Bounds of states
 # All ANGLES are in DEGREES

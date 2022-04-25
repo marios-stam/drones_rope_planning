@@ -12,30 +12,52 @@ namespace ompl_rope_planning
 
     planner::planner(problem_params::ProblemParams prob_prms)
     {
-        checker = fcl_checking::checker();
 
         prob_params = prob_prms;
         problem_params::printProblemParams(prob_params);
 
-        try
+        if (prob_prms.planning_type == problem_params::PlanningType::MOVING_OBSTACLES)
         {
-            std::string env_mesh = "/home/marios/thesis_ws/src/drones_rope_planning/resources/stl/" + prob_params.env_filename + ".stl";
-            checker.loadEnvironment(env_mesh);
-        }
-        catch (std::exception &e)
-        {
-            // moving obstacles
-            std::cout << "Using environment mesh from drones_path_planning" << std::endl;
-            std::string env_mesh = "/home/marios/thesis_ws/src/drone_path_planning/resources/stl/" + prob_params.env_filename + ".stl";
-            checker.loadEnvironment(env_mesh);
-        }
+            printf("Planning with moving obstacles\n");
+            checker = new fcl_checking_realtime::checker();
 
-        // checker.loadRobot(robot_filename);
+            printf("Loading Environment\n");
+            checker->as<fcl_checking_realtime::checker>()->loadEnvironment(2);
+
+            float pos[3] = {0, 4, 0};
+            float q[4] = {0, 0, 0, 1};
+            printf("Setting env transforms\n");
+            checker->as<fcl_checking_realtime::checker>()->update_env_obstacle_transform(0, pos, q);
+            pos[1] = 5;
+            checker->as<fcl_checking_realtime::checker>()->update_env_obstacle_transform(1, pos, q);
+        }
+        else if (prob_prms.planning_type == problem_params::PlanningType::STATIC)
+        {
+            // TODO: make fcl_checker inherit from fcl_checker_base
+            // and load environment here
+
+            // try
+            // {
+            //     std::string env_mesh = "/home/marios/thesis_ws/src/drones_rope_planning/resources/stl/" + prob_params.env_filename + ".stl";
+            //     checker.loadEnvironment(env_mesh);
+            // }
+            // catch (std::exception &e)
+            // {
+            //     // moving obstacles
+            //     std::cout << "Using environment mesh from drones_path_planning" << std::endl;
+            //     std::string env_mesh = "/home/marios/thesis_ws/src/drone_path_planning/resources/stl/" + prob_params.env_filename + ".stl";
+            //     checker.loadEnvironment(env_mesh);
+            // }
+        }
+        else
+        {
+            throw std::runtime_error("Planning type not supported");
+        }
 
         L = prob_params.L;
 
         custom_robot_mesh = new custom_mesh::CustomMesh(L, prob_params.safety_offsets, prob_params.thickness);
-        checker.setRobotMesh(custom_robot_mesh->get_fcl_mesh());
+        checker->update_robot(custom_robot_mesh->get_fcl_mesh());
 
         dim = 6;
         space = ob::StateSpacePtr(new ob::RealVectorStateSpace(dim));
@@ -104,56 +126,6 @@ namespace ompl_rope_planning
 
     void planner::setStartGoal(float start[6], float goal[6])
     {
-        /*
-            // Add goal states
-            ob::GoalStates *goalStates(new ob::GoalStates(si));
-
-            ob::ScopedState<> s(si);
-            s->as<ob::RealVectorStateSpace::StateType>()->values[0] = goal[0];
-            s->as<ob::RealVectorStateSpace::StateType>()->values[1] = goal[1];
-            s->as<ob::RealVectorStateSpace::StateType>()->values[2] = goal[2];
-            s->as<ob::RealVectorStateSpace::StateType>()->values[3] = goal[3];
-            s->as<ob::RealVectorStateSpace::StateType>()->values[4] = goal[4];
-            s->as<ob::RealVectorStateSpace::StateType>()->values[5] = goal[5];
-
-            ob::ScopedState<> s2(si);
-            s2->as<ob::RealVectorStateSpace::StateType>()->values[0] = goal[0];
-            s2->as<ob::RealVectorStateSpace::StateType>()->values[1] = goal[1];
-            s2->as<ob::RealVectorStateSpace::StateType>()->values[2] = goal[2];
-            s2->as<ob::RealVectorStateSpace::StateType>()->values[3] = +M_PI;
-            s2->as<ob::RealVectorStateSpace::StateType>()->values[4] = goal[4];
-            s2->as<ob::RealVectorStateSpace::StateType>()->values[5] = goal[5];
-
-            ob::ScopedState<> s3(si);
-            s3->as<ob::RealVectorStateSpace::StateType>()->values[0] = goal[0];
-            s3->as<ob::RealVectorStateSpace::StateType>()->values[1] = goal[1];
-            s3->as<ob::RealVectorStateSpace::StateType>()->values[2] = goal[2];
-            s3->as<ob::RealVectorStateSpace::StateType>()->values[3] = -M_PI;
-            s3->as<ob::RealVectorStateSpace::StateType>()->values[4] = goal[4];
-            s3->as<ob::RealVectorStateSpace::StateType>()->values[5] = goal[5];
-
-            goalStates->addState(s);
-            goalStates->addState(s2);
-            goalStates->addState(s3);
-
-            // create RealVector start_state
-            ob::ScopedState<> start_state(planner::space);
-            ob::ScopedState<> goal_state(planner::space);
-
-            goal_state->as<ob::RealVectorStateSpace::StateType>()->values[0] = goal[0];
-            goal_state->as<ob::RealVectorStateSpace::StateType>()->values[1] = goal[1];
-            goal_state->as<ob::RealVectorStateSpace::StateType>()->values[2] = goal[2];
-            goal_state->as<ob::RealVectorStateSpace::StateType>()->values[3] = goal[3];
-            goal_state->as<ob::RealVectorStateSpace::StateType>()->values[4] = goal[4];
-            goal_state->as<ob::RealVectorStateSpace::StateType>()->values[5] = goal[5];
-
-            // pdef->setStartAndGoalStates(start_state, goal_state);
-
-            // Set start and goal states
-            pdef->addStartState(start_state);
-            pdef->setGoal(ob::GoalPtr(goalStates));
-        */
-
         ob::ScopedState<> start_state(planner::space);
         start_state->as<ob::RealVectorStateSpace::StateType>()->values[0] = start[0];
         start_state->as<ob::RealVectorStateSpace::StateType>()->values[1] = start[1];
@@ -419,7 +391,8 @@ namespace ompl_rope_planning
 
         // update dynamic robot meshh
         custom_robot_mesh->update_mesh(drones_dis, drones_angle);
-        checker.update_robot(custom_robot_mesh->get_fcl_mesh());
+
+        checker->update_robot(custom_robot_mesh->get_fcl_mesh());
 
         // ground collision check
         if (prob_params.use_ground_collision_check)
@@ -440,10 +413,10 @@ namespace ompl_rope_planning
         q = q.normalize();
 
         float quat[4] = {q.x(), q.y(), q.z(), q.w()};
-        checker.setRobotTransform(pos, quat);
+        checker->setRobotTransform(pos, quat);
 
         // check colllision
-        bool result = !checker.check_collision();
+        bool result = !checker->check_collision();
 
         // time measurements
         auto dt = ros::Time::now() - t0;

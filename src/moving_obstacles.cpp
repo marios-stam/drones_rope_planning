@@ -23,7 +23,7 @@ namespace realtime_obstacles
     {
         for (int i = 0; i < cylinders.size(); i++)
         {
-            float radius = 0.1;
+            float radius = 0.2;
             float height = 2;
 
             // cylinders[i] = new fcl::Cylinder<float>(radius, height);

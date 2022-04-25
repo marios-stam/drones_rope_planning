@@ -144,7 +144,7 @@ int main_fcl_checker_realtime_test()
 int main(int argc, char **argv)
 {
     // diffeent mains
-    // main_static_planning(argc, argv);
+    main_static_planning(argc, argv);
     // main_Cylinders_test();
     // main_fcl_checker_realtime_test();
 }
