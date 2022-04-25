@@ -25,8 +25,16 @@ namespace problem_params
         MULTIPLE_GOALS
     };
 
+    enum PlanningType
+    {
+        STATIC,
+        MOVING_OBSTACLES
+    };
+
     struct ProblemParams
     {
+        int planning_type;
+
         float timeout;
         float L;
 

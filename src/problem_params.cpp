@@ -6,6 +6,15 @@ namespace problem_params
     ProblemParams getProblemParams(ros::NodeHandle &nh)
     {
         ProblemParams pdef;
+        // Select planning type
+        std::map<std::string, int> planning_type_map = {// planning types
+                                                        {"static", PlanningType::STATIC},
+                                                        {"moving_obstacles", PlanningType::MOVING_OBSTACLES}};
+
+        std::string planning_type_str;
+        ros::param::get("/planning/planning_type", planning_type_str);
+        pdef.planning_type = planning_type_map[planning_type_str];
+
         ros::param::get("/planning/timeout", pdef.timeout);
         ros::param::get("/planning/rope_length", pdef.L);
         ros::param::get("/planning/env_mesh", pdef.env_filename);
@@ -72,6 +81,8 @@ namespace problem_params
     {
         printf("\n\n");
         printf("=================================== PROBLEM PARAMETERS: ===================================\n");
+        printf("\tPlanning type: %d\n", params.planning_type);
+
         printf("\tTimeout: %f\n", params.timeout);
         printf("\tRope length: %f\n", params.L);
         printf("\tEnvironment filename: %s\n", params.env_filename.c_str());
