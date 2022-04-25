@@ -115,6 +115,8 @@ file(GLOB ompl_example_2d_sources
     src/problem_params.cpp
     src/optim_objectives.cpp
 
+    src/moving_obstacles.cpp
+
 )
 
 file(GLOB ompl_example_2d_headers
@@ -132,6 +134,8 @@ file(GLOB ompl_example_2d_headers
 
     include/ompl_example_2d/custom_goals.hpp
     include/ompl_example_2d/optim_objectives.hpp
+
+    include/moving_obstacles.hpp
 
 ) 
 

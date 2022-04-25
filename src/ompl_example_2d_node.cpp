@@ -12,6 +12,8 @@
 #include "../include/catenaries/catenary.hpp"
 #include "../include/custom_mesh.hpp"
 
+#include "../include/moving_obstacles.hpp"
+
 #include <ros/ros.h>
 
 #include <geometry_msgs/PoseStamped.h>
@@ -21,7 +23,7 @@
 namespace ob = ompl::base;
 namespace og = ompl::geometric;
 
-int main(int argc, char **argv)
+int main_static_planning(int argc, char **argv)
 {
     // init ROS node
     ros::init(argc, argv, "ompl_example_2d");
@@ -49,6 +51,51 @@ int main(int argc, char **argv)
 
     // exit ros node
     ros::shutdown();
+
+    return 0;
+}
+int main(int argc, char **argv)
+{
+    // diffeent mains
+    // main_static_planning(argc, argv);
+
+    int number_of_obstacles = 2;
+    realtime_obstacles::Cylinders obstacles(number_of_obstacles);
+
+    // set position of obstacle
+    float pos[3] = {0, 1, 0};
+    float q[4] = {0, 0, 0, 1};
+
+    obstacles.set_cylinder_transform(0, pos, q);
+
+    pos[1] = 0;
+    obstacles.set_cylinder_transform(1, pos, q);
+
+    // create robot collision object
+    fcl_checking::fcl_mesh robot;
+
+    robot = fcl_checking::fcl_mesh();
+
+    // load robot mesh
+    robot.load_stl("/home/marios/thesis_ws/src/drones_rope_planning/resources/stl/custom_V_robot.stl");
+
+    robot.create_collision_object();
+
+    float pos_robot[3] = {0, 0, 0};
+    bool collision;
+
+    for (float t = 0; t < 10; t += 0.1)
+    {
+        pos_robot[1] = cos(2 * M_PI * t / 5);
+        robot.set_transform(pos_robot, q);
+        printf("pos_robot:%f %f %f\n", pos_robot[0], pos_robot[1], pos_robot[2]);
+
+        robot.set_transform(pos_robot, q);
+
+        // check collision
+        collision = obstacles.collision_detection(robot.collision_object);
+        std::cout << "Collision: " << collision << std::endl;
+    }
 
     return 0;
 }
