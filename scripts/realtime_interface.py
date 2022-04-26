@@ -27,23 +27,34 @@ def service_client():
         print("Service call failed: %s" % e)
 
 
+def load_obstacles_config():
+    """
+    Loads the obstacles configuration from the rosparams
+    and prepares it to be sent throyght the service.
+    """
+    # load ros param
+    obstacles_config = rospy.get_param("/obstacles/cylinders")
+    print("obstacles_config: ", obstacles_config)
+
+    cyl_config = []
+    for index, cyl in enumerate(obstacles_config):
+        cylinder = CylinderObstacleData()
+
+        cylinder.radius = cyl['radius']
+        cylinder.height = cyl['height']
+        cylinder.pos = [cyl['x'], cyl['y'], cyl['z']]
+        cylinder.quat = [0, 0, 0, 1]
+
+        cyl_config.append(cylinder)
+
+    return cyl_config
+
+
 if __name__ == "__main__":
     rospy.init_node('realtime_interface')
-
-    cyl = CylinderObstacleData()
-    cyl.radius = 0.5
-    cyl.height = 1
-
-    cyl.pos = [0, 1, 2]
 
     start = [0, 0, 0]
     goal = [69, 69, 69]
 
-    cyl2 = CylinderObstacleData()
-    cyl2.radius = 0.75
-    cyl2.height = 3
-
-    cyl2.pos = [4, 5, 6]
-
-    conf = [cyl, cyl2]
+    conf = load_obstacles_config()
     service_client()
