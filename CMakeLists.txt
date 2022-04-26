@@ -35,10 +35,26 @@ find_package(ompl)
 find_package(octomap REQUIRED)
 find_package(fcl REQUIRED)
 
-#  add_service_files(
-#    FILES
-#    RG2.srv
-# )
+##===========MESSAGE AND SERVICE GENERATION===========
+## Generate messages in the 'msg' folder
+add_message_files(
+  FILES
+  CylinderObstacleData.msg
+  #Message2.msg
+)
+## Generate services in the 'srv' folder
+add_service_files(
+   FILES
+   PlanningRequest.srv
+)
+
+## Generate added messages and services with any dependencies listed here
+generate_messages(
+  DEPENDENCIES
+  std_msgs
+)
+##====================================================
+
 # generate_messages(DEPENDENCIES std_msgs sensor_msgs) 
 ###################################
 ## catkin specific configuration ##
@@ -70,6 +86,7 @@ catkin_package(
       octomap_ros 
       pcl_conversions 
       pcl_ros roscpp 
+      message_runtime
 #  DEPENDS system_lib
 )
 
@@ -77,6 +94,7 @@ install(PROGRAMS
   scripts/path_vis.py
   scripts/path_vis_dynamic.py
   scripts/realtime_obstacles_viz.py
+  scripts/realtime_interface.py
 
 
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}

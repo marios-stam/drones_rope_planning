@@ -21,6 +21,10 @@
 #include <nav_msgs/OccupancyGrid.h>
 #include <nav_msgs/Path.h>
 
+// custom services
+#include <drones_rope_planning/CylinderObstacleData.h>
+#include <drones_rope_planning/PlanningRequest.h>
+
 namespace ob = ompl::base;
 namespace og = ompl::geometric;
 
@@ -141,10 +145,88 @@ int main_fcl_checker_realtime_test()
     return 0;
 }
 
+int main_realtime_planning(int argc, char **argv)
+{
+    // init ROS node
+    ros::init(argc, argv, "ompl_example_2d");
+
+    // create node handler
+    ros::NodeHandle nodeHandle("~");
+
+    //=======================================================================================================================
+
+    // get problem parameters
+    problem_params::ProblemParams prob_prms = problem_params::getProblemParams(nodeHandle);
+    ompl_rope_planning::planner planner(prob_prms);
+
+    printf("Setting start and goal\n");
+    float L = prob_prms.L;
+    float goal[6] = {prob_prms.goal_pos["x"], prob_prms.goal_pos["y"], prob_prms.goal_pos["z"], 0.0, L * 0.5, 0.0};
+
+    float start[6] = {prob_prms.start_pos["x"], prob_prms.start_pos["y"], prob_prms.start_pos["z"], 0.0, L * 0.5, 0.0};
+
+    // create ros service
+    // ros::ServiceServer service = nodeHandle.advertiseService("ompl_planning_service", &ompl_rope_planning::planner::plan, &planner);
+
+    do
+    {
+        printf("Planning with goal : %f %f %f\n", goal[0], goal[1], goal[2]);
+        planner.setStartGoal(start, goal);
+
+        printf("Planning...\n");
+        planner.plan();
+
+        printf("Enter new goal position\n");
+        printf("x: ");
+        std::cin >> goal[0];
+        printf("y: ");
+        std::cin >> goal[1];
+        printf("z: ");
+        std::cin >> goal[2];
+
+    } while (goal[2] != 69.0);
+
+    printf("Done!\n");
+
+    // exit ros node
+    ros::shutdown();
+
+    return 0;
+}
+
+bool add(drones_rope_planning::PlanningRequest::Request &req, drones_rope_planning::PlanningRequest::Response &res)
+{
+    printf("Request received\n");
+    printf("Start: %f %f %f\n", req.start_pos[0], req.start_pos[1], req.start_pos[2]);
+    printf("Goal: %f %f %f\n", req.goal_pos[0], req.goal_pos[1], req.goal_pos[2]);
+
+    for (int i = 0; i < req.config.size(); i++)
+    {
+        auto cyl = req.config[i];
+        printf("Cylinder: radius: %f height: %f x: %f y: %f z: %f  \n", cyl.radius, cyl.height, cyl.pos[0], cyl.pos[1], cyl.pos[2]);
+    }
+
+    return true;
+}
+
 int main(int argc, char **argv)
 {
     // diffeent mains
-    main_static_planning(argc, argv);
+    // main_static_planning(argc, argv);
     // main_Cylinders_test();
     // main_fcl_checker_realtime_test();
+    // main_realtime_planning(argc, argv);
+
+    // init ROS node
+    ros::init(argc, argv, "ompl_example_2d");
+
+    // create node handler
+    ros::NodeHandle n("~");
+
+    // create ros service
+    ros::ServiceServer service = n.advertiseService("ompl_realtime_planning", add);
+
+    ROS_INFO("Service ready!");
+
+    ros::spin();
 }

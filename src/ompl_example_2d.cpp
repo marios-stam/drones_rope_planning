@@ -288,17 +288,19 @@ namespace ompl_rope_planning
         printf("Setting  planner up...\n");
         plan->setup();
 
-        // print the settings for this space
-        printf("============================ OMPL SPACE SETTINGS: ============================\n");
-        si->printSettings(std::cout);
+        if (prob_params.planning_type != problem_params::PlanningType::MOVING_OBSTACLES)
+        {
+            // print the settings for this space
+            printf("============================ OMPL SPACE SETTINGS: ============================\n");
+            si->printSettings(std::cout);
 
-        // print the problem settings
-        printf("============================ OMPL PROBLEM SETTINGS: ============================\n");
-        pdef->print(std::cout);
-        printf("================================================================================\n");
+            // print the problem settings
+            printf("============================ OMPL PROBLEM SETTINGS: ============================\n");
+            pdef->print(std::cout);
+            printf("================================================================================\n");
+        }
 
         // attempt to solve the problem within one second of planning time
-
         ob::PlannerStatus solved;
         do
         {
@@ -350,8 +352,8 @@ namespace ompl_rope_planning
                 pth->interpolate(prob_params.path_interpolation_points);
             }
 
-            std::cout << "Finale path :" << std::endl;
-            pth->printAsMatrix(std::cout);
+            std::cout << "Final path :" << std::endl;
+            // pth->printAsMatrix(std::cout);
 
             // save path to file
             std::ofstream myfile;

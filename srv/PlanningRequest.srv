@@ -1,0 +1,5 @@
+CylinderObstacleData[] config
+float32[] start_pos
+float32[] goal_pos
+---
+int32 result
