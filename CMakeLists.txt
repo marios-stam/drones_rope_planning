@@ -76,6 +76,8 @@ catkin_package(
 install(PROGRAMS
   scripts/path_vis.py
   scripts/path_vis_dynamic.py
+  scripts/realtime_obstacles_viz.py
+
 
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
