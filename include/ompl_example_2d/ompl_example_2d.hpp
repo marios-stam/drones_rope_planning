@@ -86,6 +86,8 @@ namespace ompl_rope_planning
 
         bool isStateValid(const ompl::base::State *state_check);
 
+        fcl_checker_base *checker;
+
     private:
         // rope_length
         float L;
@@ -100,8 +102,6 @@ namespace ompl_rope_planning
         ompl::base::ProblemDefinitionPtr pdef;
 
         ompl::geometric::PathGeometric *path_smooth = NULL;
-
-        fcl_checker_base *checker;
 
         custom_mesh::CustomMesh *custom_robot_mesh;
 

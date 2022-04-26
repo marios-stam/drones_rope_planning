@@ -23,7 +23,7 @@ namespace ompl_rope_planning
 
             printf("Loading Environment\n");
             auto cyls_conf = prob_params.obstacles_config;
-            checker->as<fcl_checking_realtime::checker>()->loadEnvironment(cyls_conf.size());
+            checker->as<fcl_checking_realtime::checker>()->loadEnvironment(cyls_conf);
             checker->as<fcl_checking_realtime::checker>()->updateEnvironmentTransforms(cyls_conf);
         }
         else if (prob_prms.planning_type == problem_params::PlanningType::STATIC)

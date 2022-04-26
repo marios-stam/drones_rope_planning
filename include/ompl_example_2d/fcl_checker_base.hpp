@@ -22,6 +22,8 @@ public:
 
     virtual void loadEnvironment(int obs_number) = 0;
 
+    // void checker::loadEnvironment(std::vector<realtime_obstacles::CylinderDefinition> cylinders_def) = 0;
+
     void loadRobot(std::string filename);
 
     void loadRobot(std::vector<fcl::Vector3<float>> fcl_vertices, std::vector<fcl::Triangle> fcl_tris);

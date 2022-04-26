@@ -27,6 +27,8 @@ namespace fcl_checking_realtime
         // environment
         void loadEnvironment(int obs_number) override;
 
+        void loadEnvironment(std::vector<realtime_obstacles::CylinderDefinition> cylinders_def);
+
         void updateEnvironmentTransforms();
 
         void updateEnvironmentTransforms(std::vector<realtime_obstacles::CylinderDefinition>);

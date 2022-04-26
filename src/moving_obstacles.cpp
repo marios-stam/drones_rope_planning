@@ -10,8 +10,9 @@ namespace realtime_obstacles
         cylinders.resize(N);
         collision_objects.resize(N);
 
-        loadCylinders();
+        loadCylinders(cylinders_def);
         create_collision_objects();
+        update_cylinders_transforms(cylinders_def);
 
         // fcl collision detection
         request.num_max_contacts = 1;
@@ -31,6 +32,22 @@ namespace realtime_obstacles
         request.enable_contact = false;
     }
     Cylinders::~Cylinders() {}
+
+    void Cylinders::loadCylinders(std::vector<CylinderDefinition> cylinders_def)
+    {
+        fcl::Transform3f identity_transform;
+        identity_transform.setIdentity();
+
+        for (int i = 0; i < cylinders_def.size(); i++)
+        {
+            float radius = cylinders_def[i].radius;
+            float height = cylinders_def[i].height;
+
+            // cylinders[i] = new fcl::Cylinder<float>(radius, height);
+            auto c = std::make_shared<fcl::Cylinder<float>>(radius, height);
+            cylinders[i] = c;
+        }
+    }
 
     void Cylinders::loadCylinders()
     {
@@ -65,9 +82,20 @@ namespace realtime_obstacles
         }
     }
 
+    void Cylinders::update_cylinders_transforms(std::vector<CylinderDefinition> cylinders_def)
+    {
+        float q[4] = {1, 0, 0, 0};
+
+        for (int i = 0; i < cylinders_def.size(); i++)
+        {
+            float pos[3] = {cylinders_def[i].pos[0], cylinders_def[i].pos[1], cylinders_def[i].pos[2]};
+            set_cylinder_transform(i, pos, q);
+        }
+    }
+
     void Cylinders::set_cylinder_transform(int index, float pos[3], float q[4])
     {
-        printf("Setting index: %d at pos : %f %f %f \n", index, pos[0], pos[1], pos[2]);
+        // printf("Setting index: %d at pos : %f %f %f \n", index, pos[0], pos[1], pos[2]);
 
         collision_objects[index]->setTranslation(fcl::Vector3<float>(pos[0], pos[1], pos[2]));
         collision_objects[index]->setQuatRotation(fcl::Quaternion<float>(q[0], q[1], q[2], q[3]));
@@ -129,4 +157,9 @@ namespace realtime_obstacles
         return cylinders_def;
     }
 
+    int Cylinders::get_cylinders_size()
+    {
+        // retunr the number of cylinders
+        return cylinders.size();
+    }
 } // namespace realtime_obstacles

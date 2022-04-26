@@ -31,7 +31,11 @@ namespace realtime_obstacles
 
         void loadCylinders();
 
+        void loadCylinders(std::vector<CylinderDefinition> cylinders_def);
+
         void update_cylinders_transforms(std::vector<fcl::Transform3f> cylinders_transforms);
+
+        void update_cylinders_transforms(std::vector<CylinderDefinition> cylinders_def);
 
         void set_cylinder_transform(int index, float pos[3], float q[4]);
 
@@ -39,6 +43,7 @@ namespace realtime_obstacles
 
         bool collision_detection(fcl::CollisionObject<float> *robot);
 
+        int get_cylinders_size();
     private:
         void create_collision_objects();
 
