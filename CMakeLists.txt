@@ -99,6 +99,8 @@ install(PROGRAMS
   scripts/path_vis_dynamic.py
   scripts/realtime_obstacles_viz.py
   scripts/realtime_interface.py
+  scripts/moving_obstacles_pub.py
+  scripts/path_vis_dynamic_realtime.py
 
 
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}

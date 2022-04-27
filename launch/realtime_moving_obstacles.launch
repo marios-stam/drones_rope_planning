@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<launch>
+
+	<include file="$(find drones_rope_planning)/launch/visualize_dynamic.launch">
+	  <!-- all vars that included.launch requires must be set -->
+	  <!-- <arg name="hoge" value="fuga" /> -->
+	</include>
+
+
+    <group ns="planning" >
+		<rosparam command="load" file="$(find drones_rope_planning)/config/prob_definitiion.yaml" />
+	</group>
+    
+    <group ns="obstacles" >
+		<rosparam command="load" file="$(find drones_rope_planning)/config/cylinders_obstacles.yaml" />
+	</group>
+
+    <node name="drones_rope_planning_node" pkg="drones_rope_planning"  type="drones_rope_planning_node"  />
+    
+    <node name="realtime_interface" pkg="drones_rope_planning"  type="realtime_interface.py"   />
+		
+    <node name="moving_obstacles_pub" pkg="drones_rope_planning"  type="moving_obstacles_pub.py" output="screen" />
+
+</launch>

@@ -62,6 +62,14 @@ def config_to_Path(conf: list) -> Path:
     return path
 
 
+def callback(pose: PoseStamped):
+    global pos
+    pos = [pose.pose.position.x, pose.pose.position.y, pose.pose.position.z]
+
+
+# Global Variables
+pos = [0, 0, 0]
+
 if __name__ == "__main__":
     rospy.init_node('moving_obstacles_pub')
 
@@ -70,14 +78,19 @@ if __name__ == "__main__":
 
     pub = rospy.Publisher("/obstacles_transforms", Path, queue_size=1)
 
-    rate = rospy.Rate(1)  # hz
+    rospy.Subscriber("/obstacles_transforms_odometry", PoseStamped, callback)
+
+    rate = rospy.Rate(2)  # hz
     while not rospy.is_shutdown():
         path.header.stamp = rospy.Time.now()
         pub.publish(path)
 
-        path.poses[0].pose.position.x = np.random.uniform(-1, 1)
-        path.poses[0].pose.position.y = np.random.uniform(3.5, 4.5)
+        # path.poses[0].pose.position.x = np.random.uniform(-1, 1)
+        # path.poses[0].pose.position.y = np.random.uniform(3.5, 4.5)
 
-        input("Press Enter to continue...")
+        # input("Press Enter to continue...")
+        rospy.loginfo(str(rospy.Time.now().to_sec()))
+        path.poses[0].pose.position.x = pos[0]
+        path.poses[0].pose.position.y = pos[1]
 
         rate.sleep()

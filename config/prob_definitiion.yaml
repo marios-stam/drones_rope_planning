@@ -4,7 +4,7 @@ rope_length: 1.4
 planning_type: "moving_obstacles" # static,moving_obstacles
 
 calculate_new_path: True
-timeout: 4
+timeout: 0.6
 
 # env_mesh: "env-scene-ltu-experiment-corridor-narrow-easy"
 # env_mesh: "env-scene-ltu-experiment-hole-inclined"
@@ -15,8 +15,8 @@ timeout: 4
 env_mesh: "env-scene-ltu-experiment"
 
 #Planning
-val_check_resolution: 0.005
-range: 0.5
+val_check_resolution: 0.01
+range: 1
 use_mesh_improvement: True
 goal_type: "simple" #simple,samplable,symmetrical,multiple_goals
 
@@ -49,8 +49,8 @@ bounds: {
 
 #planner algorithm
 # planner_algorithm: "RRTstar"
-# planner_algorithm: "RRTConnect"
-planner_algorithm: "RRT"
+planner_algorithm: "RRTConnect"
+# planner_algorithm: "RRT"
 # planner_algorithm: "InformedRRTstar"
 # planner_algorithm: "PRM"
 # planner_algorithm: "LBKPIECE1"

@@ -5,6 +5,7 @@ Panels:
     Property Tree Widget:
       Expanded:
         - /Global Options1
+        - /Grid1
         - /TF1
         - /TF1/Frames1
       Splitter Ratio: 0.5
@@ -47,7 +48,7 @@ Visualization Manager:
       Normal Cell Count: 0
       Offset:
         X: 0
-        Y: 0
+        Y: 4
         Z: 0
       Plane: XY
       Plane Cell Count: 10
@@ -58,6 +59,10 @@ Visualization Manager:
       Frame Timeout: 15
       Frames:
         All Enabled: false
+        drone1:
+          Value: false
+        drone2:
+          Value: false
         ompl:
           Value: true
         rigid_body:
@@ -73,6 +78,10 @@ Visualization Manager:
       Tree:
         ompl:
           world:
+            drone1:
+              {}
+            drone2:
+              {}
             rigid_body:
               {}
       Update Interval: 0
@@ -110,7 +119,7 @@ Visualization Manager:
       Marker Topic: /dronesMarkers_array
       Name: Drones Markers
       Namespaces:
-        {}
+        cf: true
       Queue Size: 100
       Value: true
     - Alpha: 1
@@ -238,7 +247,7 @@ Visualization Manager:
       Marker Topic: /env_markers_array
       Name: MarkerArray
       Namespaces:
-        {}
+        cylinders: true
       Queue Size: 100
       Value: true
   Enabled: true
@@ -269,7 +278,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 7.012413501739502
+      Distance: 8.796371459960938
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -285,9 +294,9 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.5247971415519714
+      Pitch: 1.1147966384887695
       Target Frame: <Fixed Frame>
-      Yaw: 4.155355930328369
+      Yaw: 4.355355262756348
     Saved: ~
 Window Geometry:
   Displays:
