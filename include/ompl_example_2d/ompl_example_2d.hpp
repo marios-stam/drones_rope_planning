@@ -56,6 +56,9 @@
 #include "optim_objectives.hpp"
 #include "problem_params.hpp"
 
+// msgs
+#include "drones_rope_planning/rigid_body_dynamic_path.h"
+
 namespace ob = ompl::base;
 namespace og = ompl::geometric;
 
@@ -78,7 +81,7 @@ namespace ompl_rope_planning
 
         void setBounds(void);
 
-        void plan(void);
+        drones_rope_planning::rigid_body_dynamic_path plan(void);
 
         void replan(void);
 
@@ -109,7 +112,11 @@ namespace ompl_rope_planning
 
         problem_params::ProblemParams prob_params;
 
+        ob::PlannerPtr planner_;
+
         ob::PlannerPtr getPlanner(std::string, float range);
+
+        drones_rope_planning::rigid_body_dynamic_path convert_path_to_msg(og::PathGeometric *pth);
     };
 
 }

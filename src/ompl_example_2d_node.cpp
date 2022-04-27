@@ -24,6 +24,7 @@
 // custom services
 #include <drones_rope_planning/CylinderObstacleData.h>
 #include <drones_rope_planning/PlanningRequest.h>
+#include <drones_rope_planning/rigid_body_dynamic_path.h>
 
 namespace ob = ompl::base;
 namespace og = ompl::geometric;
@@ -196,21 +197,22 @@ int main_realtime_planning(int argc, char **argv)
 
 // use planner as global variable
 ompl_rope_planning::planner *planner;
+ros::Publisher dyn_path_pub;
 
 bool add(drones_rope_planning::PlanningRequest::Request &req, drones_rope_planning::PlanningRequest::Response &res)
 {
-    printf("Request received\n");
-    printf("Start: %f %f %f\n", req.start_pos[0], req.start_pos[1], req.start_pos[2]);
-    printf("Goal: %f %f %f\n", req.goal_pos[0], req.goal_pos[1], req.goal_pos[2]);
+    printf("===========================================================================\n");
+    // printf("Start: %f %f %f\n", req.start_pos[0], req.start_pos[1], req.start_pos[2]);
+    // printf("Goal: %f %f %f\n", req.goal_pos[0], req.goal_pos[1], req.goal_pos[2]);
 
     std::vector<realtime_obstacles::CylinderDefinition> cylinders_def_vec;
 
     realtime_obstacles::CylinderDefinition cylinder_def;
-
+    auto t0 = std::chrono::high_resolution_clock::now();
     for (int i = 0; i < req.config.size(); i++)
     {
         auto cyl = req.config[i];
-        printf("Cylinder: radius: %f height: %f x: %f y: %f z: %f  \n", cyl.radius, cyl.height, cyl.pos[0], cyl.pos[1], cyl.pos[2]);
+        // printf("Cylinder: radius: %f height: %f x: %f y: %f z: %f  \n", cyl.radius, cyl.height, cyl.pos[0], cyl.pos[1], cyl.pos[2]);
         cylinder_def.radius = cyl.radius;
         cylinder_def.height = cyl.height;
         cylinder_def.pos[0] = cyl.pos[0];
@@ -219,10 +221,22 @@ bool add(drones_rope_planning::PlanningRequest::Request &req, drones_rope_planni
 
         cylinders_def_vec.push_back(cylinder_def);
     }
+    auto dt = std::chrono::high_resolution_clock::now() - t0;
+    std::cout << "Time to create cylinders: " << std::chrono::duration_cast<std::chrono::milliseconds>(dt).count() << " ms" << std::endl;
 
-    printf("Setting the environment\n");
+    auto t02 = std::chrono::high_resolution_clock::now();
+    // printf("Setting the environment\n");
     planner->checker->as<fcl_checking_realtime::checker>()->updateEnvironmentTransforms(cylinders_def_vec);
+    auto dt2 = std::chrono::high_resolution_clock::now() - t02;
+    std::cout << "Time to update environment: " << std::chrono::duration_cast<std::chrono::milliseconds>(dt2).count() << " ms" << std::endl;
 
+    printf("Planning...\n");
+    auto t03 = std::chrono::high_resolution_clock::now();
+    auto dyn_path_msg = planner->plan();
+    auto dt3 = std::chrono::high_resolution_clock::now() - t03;
+    std::cout << "Time to plan: " << std::chrono::duration_cast<std::chrono::milliseconds>(dt3).count() << " ms" << std::endl;
+
+    dyn_path_pub.publish(dyn_path_msg);
     return true;
 }
 
@@ -285,6 +299,9 @@ int main(int argc, char **argv)
 
     printf("Planning with goal : %f %f %f\n", goal[0], goal[1], goal[2]);
     planner->setStartGoal(start, goal);
+
+    // create ros publisher
+    dyn_path_pub = nodeHandle.advertise<drones_rope_planning::rigid_body_dynamic_path>("/dynamicRigiBodyPath", 1);
 
     // create ros service
     ros::ServiceServer service = nodeHandle.advertiseService("ompl_realtime_planning", add);

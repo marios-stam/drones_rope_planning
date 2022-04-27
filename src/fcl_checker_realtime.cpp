@@ -21,7 +21,7 @@ namespace fcl_checking_realtime
 
     void checker::updateEnvironmentTransforms(std::vector<realtime_obstacles::CylinderDefinition> cyls_config)
     {
-        printf("Cylinders size already in env: %d\n", env->get_cylinders_size());
+        // printf("Cylinders size already in env: %d\n", env->get_cylinders_size());
         float q[4] = {0, 0, 0, 1};
         float pos[3];
         for (int i = 0; i < cyls_config.size(); i++)
@@ -29,7 +29,7 @@ namespace fcl_checking_realtime
             pos[0] = cyls_config[i].pos[0];
             pos[1] = cyls_config[i].pos[1];
             pos[2] = cyls_config[i].pos[2];
-            printf("Setting pos:%f %f %f\n", pos[0], pos[1], pos[2]);
+            // printf("Setting pos:%f %f %f\n", pos[0], pos[1], pos[2]);
             env->set_cylinder_transform(i, pos, q);
         }
     }

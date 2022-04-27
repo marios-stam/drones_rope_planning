@@ -102,7 +102,8 @@ if __name__ == "__main__":
 
     conf = generate_obstacles_markers()
 
-    rate = rospy.Rate(5)
+    rate = rospy.Rate(10)  # hz
+
     while not rospy.is_shutdown():
         env_markers_pub.publish(cyls_marker_array)
         rate.sleep()

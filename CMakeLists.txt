@@ -25,6 +25,8 @@ find_package(catkin REQUIRED COMPONENTS
     pcl_ros
     roscpp
     std_msgs
+    nav_msgs
+    
 )
 
 ## System dependencies are found with CMake's conventions
@@ -40,6 +42,7 @@ find_package(fcl REQUIRED)
 add_message_files(
   FILES
   CylinderObstacleData.msg
+  rigid_body_dynamic_path.msg
   #Message2.msg
 )
 ## Generate services in the 'srv' folder
@@ -52,6 +55,7 @@ add_service_files(
 generate_messages(
   DEPENDENCIES
   std_msgs
+  nav_msgs
 )
 ##====================================================
 

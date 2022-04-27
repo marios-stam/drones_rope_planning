@@ -276,17 +276,17 @@ namespace ompl_rope_planning
         }
     }
 
-    void planner::plan()
+    drones_rope_planning::rigid_body_dynamic_path planner::plan()
     {
-        auto plan = getPlanner(prob_params.planner_algorithm, prob_params.range);
+        planner_ = getPlanner(prob_params.planner_algorithm, prob_params.range);
 
         // set the problem we are trying to solve for the planner
-        printf("Setting  problem definition...\n");
-        plan->setProblemDefinition(pdef);
+        // printf("Setting  problem definition...\n");
+        planner_->setProblemDefinition(pdef);
 
         // perform setup steps for the planner
-        printf("Setting  planner up...\n");
-        plan->setup();
+        // printf("Setting  planner up...\n");
+        planner_->setup();
 
         if (prob_params.planning_type != problem_params::PlanningType::MOVING_OBSTACLES)
         {
@@ -314,7 +314,7 @@ namespace ompl_rope_planning
             ob::PlannerTerminationCondition ptc(ob::timedPlannerTerminationCondition(prob_params.timeout));
 
             auto t0 = std::chrono::high_resolution_clock::now();
-            solved = plan->solve(ptc);
+            solved = planner_->solve(ptc);
             std::cout << std::endl;
             auto dt = std::chrono::high_resolution_clock::now() - t0;
 
@@ -326,46 +326,61 @@ namespace ompl_rope_planning
         {
             // get the goal representation from the problem definition (not the same as the goal state)
             // and inquire about the found path
-            std::cout << "Found exact solution :" << std::endl;
+            // std::cout << "Found exact solution :" << std::endl;
 
             ob::PathPtr path = pdef->getSolutionPath();
             og::PathGeometric *pth = pdef->getSolutionPath()->as<og::PathGeometric>();
 
             if (prob_params.simplify_path)
             {
-                std::cout << "Simplifying path...\n";
+                auto t0 = std::chrono::high_resolution_clock::now();
+                // std::cout << "Simplifying path...\n";
                 og::PathSimplifier path_simplifier(si, pdef->getGoal());
 
                 ob::PlannerTerminationCondition ptc(ob::timedPlannerTerminationCondition(prob_params.timeout));
 
-                path_simplifier.simplify(*pth, ptc, false);
+                // path_simplifier.simplify(*pth, ptc, true);
+                path_simplifier.collapseCloseVertices(*pth);
 
                 // path_simplifier.simplifyMax(*pth);
+                auto dt = std::chrono::high_resolution_clock::now() - t0;
+                std::cout << "Simplifying time: " << std::chrono::duration_cast<std::chrono::milliseconds>(dt).count() << " ms" << std::endl;
             }
 
             if (prob_params.path_interpolation_points > 0)
             {
-                std::cout << "Interpolating path...\n";
+                // std::cout << "Interpolating path...\n";
                 // og::PathGeometric::InterpolationType interp_type = og::PathGeometric::CSPLINE;
                 // pth->interpolate(interp_type);
-
+                auto t0 = std::chrono::high_resolution_clock::now();
                 pth->interpolate(prob_params.path_interpolation_points);
+                auto dt = std::chrono::high_resolution_clock::now() - t0;
+                std::cout << "Interpolating time: " << std::chrono::duration_cast<std::chrono::milliseconds>(dt).count() << " ms" << std::endl;
             }
 
-            std::cout << "Final path :" << std::endl;
+            // std::cout << "Final path :" << std::endl;
             // pth->printAsMatrix(std::cout);
 
-            // save path to file
-            std::ofstream myfile;
-            myfile.open("/home/marios/thesis_ws/src/drones_rope_planning/resources/paths/path.txt");
-            pth->printAsMatrix(myfile);
-            myfile.close();
+            // convert path to rigid_body_dynamic_path.msg to be published
+            auto dyn_path_msg = convert_path_to_msg(pth);
+
+            return dyn_path_msg;
+            // // save path to file
+            // auto t0 = std::chrono::high_resolution_clock::now();
+            // std::ofstream myfile;
+            // myfile.open("/home/marios/thesis_ws/src/drones_rope_planning/resources/paths/path.txt");
+            // pth->printAsMatrix(myfile);
+            // myfile.close();
+            // auto dt = std::chrono::high_resolution_clock::now() - t0;
+            // std::cout << "Saving path to file time: " << std::chrono::duration_cast<std::chrono::milliseconds>(dt).count() << " ms" << std::endl;
         }
         else
         {
             std::cout << "No solution found" << std::endl;
         }
     }
+
+    void planner::replan() {}
 
     std::ostream &operator<<(std::ostream &os, const fcl::BVHBuildState &obj)
     {
@@ -430,4 +445,57 @@ namespace ompl_rope_planning
 
         return result;
     }
+
+    drones_rope_planning::rigid_body_dynamic_path planner::convert_path_to_msg(og::PathGeometric *pth)
+    {
+        drones_rope_planning::rigid_body_dynamic_path path_msg;
+
+        auto states = pth->getStates();
+        auto num_states = states.size();
+
+        // setting up Path message
+        path_msg.Path.header.frame_id = "world";
+        path_msg.Path.header.stamp = ros::Time::now();
+        path_msg.Path.poses.resize(num_states);
+
+        // setting up vectors for drones distance and angle
+        path_msg.drones_distances.resize(num_states);
+        path_msg.drones_angles.resize(num_states);
+
+        // maybe need to put this in the loop (dont know if it is passed by reference)
+        geometry_msgs::PoseStamped pose_msg;
+        pose_msg.header.frame_id = "world";
+
+        for (auto i = 0; i < num_states; i++)
+        {
+
+            auto state = states[i];
+            auto state_values = state->as<ob::RealVectorStateSpace::StateType>()->values;
+
+            double yaw = state_values[3];
+            double drones_dis = state_values[4];
+            double state_angle = state_values[5];
+
+            // pos
+            pose_msg.pose.position.x = state_values[0];
+            pose_msg.pose.position.y = state_values[1];
+            pose_msg.pose.position.z = state_values[2];
+
+            // orientation
+            tf2::Quaternion q;
+            q.setRPY(0, 0, yaw);
+            pose_msg.pose.orientation = tf2::toMsg(q);
+
+            path_msg.Path.poses[i] = pose_msg;
+
+            // drones distance
+            path_msg.drones_distances[i] = drones_dis;
+
+            // drones angle
+            path_msg.drones_angles[i] = state_angle;
+        }
+
+        return path_msg;
+    }
+
 }

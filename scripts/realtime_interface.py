@@ -20,17 +20,21 @@ def service_client():
     try:
 
         ompl_realtime_srv = rospy.ServiceProxy('/drones_rope_planning_node/ompl_realtime_planning', PlanningRequest)
-        print(ompl_realtime_srv)
         resp1 = ompl_realtime_srv(conf, start, goal)
+        print("Service response:")
+        print(resp1)
 
     except rospy.ServiceException as e:
         print("Service call failed: %s" % e)
 
 
-def load_obstacles_config():
+def load_obstacles_config() -> list:
     """
     Loads the obstacles configuration from the rosparams
     and prepares it to be sent throyght the service.
+
+    Returns:
+        list of CylinderObstacleData: The obstacles configuration.
     """
     # load ros param
     obstacles_config = rospy.get_param("/obstacles/cylinders")
@@ -57,4 +61,19 @@ if __name__ == "__main__":
     goal = [69, 69, 69]
 
     conf = load_obstacles_config()
-    service_client()
+
+    times = 10
+    total_time = 0
+    for i in range(times):
+        t0 = rospy.get_time()
+
+        # get random number between a and b
+        low_lim_x, high_lim_x = -1, 1
+        conf[0].pos[0] = np.random.randint(low_lim_x, high_lim_x)
+
+        service_client()
+        dt = rospy.get_time()-t0
+        total_time += dt
+        rospy.sleep(1.5)
+
+    print("Average time: ", total_time/times, "sec")

@@ -15,10 +15,10 @@ timeout: 4
 env_mesh: "env-scene-ltu-experiment"
 
 #Planning
-val_check_resolution: 0.01
-range: 0.5
+val_check_resolution: 0.02
+range: 2
 use_mesh_improvement: True
-goal_type: "samplable" #simple,samplable,symmetrical,multiple_goals
+goal_type: "simple" #simple,samplable,symmetrical,multiple_goals
 
 use_ground_collision_check: False
 

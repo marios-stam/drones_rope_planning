@@ -30,12 +30,6 @@ pkg_drone_path_planning_path = rospack.get_path('drone_path_planning')
 pkg_drones_rope_planning_path = rospack.get_path('drones_rope_planning')
 
 
-# get command line arguments
-CALCULATE_PATH = len(sys.argv) == 1 or sys.argv[1] == '1' or sys.argv[1].lower() == 'true'
-
-PLANNERS_COMPARISON = 0
-
-
 class MeshMarker(Marker):
     def __init__(self, id, mesh_path, pos=[0, 0, 0], rot=[0, 0, 0, 1]):
         super().__init__()
@@ -248,23 +242,23 @@ def main():
     # generate dynamic path msg
     # path = getPath(data)
     dynamic_path = generate_dynamic_path_msg(data)
-    print("Loaded and generated dynamic path")
+    # print("Loaded and generated dynamic path")
 
-    trajPub = rospy.Publisher('rigiBodyPath',  Path, queue_size=10)
+    # trajPub = rospy.Publisher('rigiBodyPath',  Path, queue_size=10)
 
-    trajPub.publish(dynamic_path.Path)
+    # trajPub.publish(dynamic_path.Path)
 
-    dynamic_path_pub = rospy.Publisher('dynamicRigiBodyPath', rigid_body_dynamic_path, queue_size=10)
+    # dynamic_path_pub = rospy.Publisher('dynamicRigiBodyPath', rigid_body_dynamic_path, queue_size=10)
 
-    print("Waiting for connections to the  /dynamicRigiBodyPath topic...")
-    while dynamic_path_pub.get_num_connections() == 0:
-        if rospy.is_shutdown():
-            sys.exit()
-        rospy.sleep(0.1)
+    # print("Waiting for connections to the  /dynamicRigiBodyPath topic...")
+    # while dynamic_path_pub.get_num_connections() == 0:
+    #     if rospy.is_shutdown():
+    #         sys.exit()
+    #     rospy.sleep(0.1)
 
-    print("Publishing dynamic path...")
-    dynamic_path_pub.publish(dynamic_path)
-    print("Published dynamic path!")
+    # print("Publishing dynamic path...")
+    # dynamic_path_pub.publish(dynamic_path)
+    # print("Published dynamic path!")
 
     # transform
     br = tf.TransformBroadcaster()
@@ -294,7 +288,7 @@ def main():
 
         envPub.publish(env)
         # trajPub.publish(path)
-        trajPub.publish(dynamic_path.Path)
+        # trajPub.publish(dynamic_path.Path)
 
         rate.sleep()
 
