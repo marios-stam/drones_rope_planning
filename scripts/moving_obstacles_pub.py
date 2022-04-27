@@ -17,19 +17,6 @@ from drones_rope_planning.msg import CylinderObstacleData
 from nav_msgs.msg import Path
 
 
-def service_client():
-    rospy.wait_for_service('/drones_rope_planning_node/ompl_realtime_planning')
-    try:
-
-        ompl_realtime_srv = rospy.ServiceProxy('/drones_rope_planning_node/ompl_realtime_planning', PlanningRequest)
-        resp1 = ompl_realtime_srv(conf, start, goal)
-        print("Service response:")
-        print(resp1)
-
-    except rospy.ServiceException as e:
-        print("Service call failed: %s" % e)
-
-
 def load_obstacles_config() -> list:
     """
     Loads the obstacles configuration from the rosparams
@@ -56,31 +43,41 @@ def load_obstacles_config() -> list:
     return cyl_config
 
 
-def callback(path: Path):
-    global times, total_time
-    t0 = rospy.get_time()
+def config_to_Path(conf: list) -> Path:
+    path = Path()
+    path.header.frame_id = "world"
+    path.poses = []
+    for i in conf:
+        pose = PoseStamped()
+        pose.pose.position.x = i.pos[0]
+        pose.pose.position.y = i.pos[1]
+        pose.pose.position.z = i.pos[2]
+        pose.pose.orientation.x = i.quat[0]
+        pose.pose.orientation.y = i.quat[1]
+        pose.pose.orientation.z = i.quat[2]
+        pose.pose.orientation.w = i.quat[3]
 
-    for i, pose in enumerate(path.poses):
-        conf[i].pos = [pose.pose.position.x, pose.pose.position.y, pose.pose.position.z]
-        conf[i].quat = [pose.pose.orientation.x, pose.pose.orientation.y, pose.pose.orientation.z, pose.pose.orientation.w]
+        path.poses.append(pose)
 
-    service_client()
-    dt = rospy.get_time()-t0
-    total_time += dt
-    times += 1
-    print("Average time: ", total_time/times, "sec")
+    return path
 
 
-times = 0
-total_time = 0
 if __name__ == "__main__":
-    rospy.init_node('realtime_interface')
-
-    start = [0, 0, 0]
-    goal = [69, 69, 69]
+    rospy.init_node('moving_obstacles_pub')
 
     conf = load_obstacles_config()
+    path = config_to_Path(conf)
 
-    rospy.Subscriber("/obstacles_transforms", Path, callback)
+    pub = rospy.Publisher("/obstacles_transforms", Path, queue_size=1)
 
-    rospy.spin()
+    rate = rospy.Rate(1)  # hz
+    while not rospy.is_shutdown():
+        path.header.stamp = rospy.Time.now()
+        pub.publish(path)
+
+        path.poses[0].pose.position.x = np.random.uniform(-1, 1)
+        path.poses[0].pose.position.y = np.random.uniform(3.5, 4.5)
+
+        input("Press Enter to continue...")
+
+        rate.sleep()

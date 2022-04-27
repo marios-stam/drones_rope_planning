@@ -278,6 +278,8 @@ namespace ompl_rope_planning
 
     drones_rope_planning::rigid_body_dynamic_path planner::plan()
     {
+        pdef->clearSolutionPaths();
+
         planner_ = getPlanner(prob_params.planner_algorithm, prob_params.range);
 
         // set the problem we are trying to solve for the planner
@@ -358,8 +360,8 @@ namespace ompl_rope_planning
                 std::cout << "Interpolating time: " << std::chrono::duration_cast<std::chrono::milliseconds>(dt).count() << " ms" << std::endl;
             }
 
-            // std::cout << "Final path :" << std::endl;
-            // pth->printAsMatrix(std::cout);
+            std::cout << "Final path :" << std::endl;
+            pth->printAsMatrix(std::cout);
 
             // convert path to rigid_body_dynamic_path.msg to be published
             auto dyn_path_msg = convert_path_to_msg(pth);

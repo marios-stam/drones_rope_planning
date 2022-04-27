@@ -9,7 +9,7 @@ from visualization_msgs.msg import Marker, MarkerArray
 from math import pi
 import tf
 from geometry_msgs.msg import PoseStamped
-
+from nav_msgs.msg import Path
 import rospkg
 
 
@@ -93,6 +93,19 @@ def generate_obstacles_markers():
         cyls_marker_array.update(index, r, h, pos, quatern)
 
 
+def callback(path: Path):
+
+    for i, pose in enumerate(path.poses):
+        pose: PoseStamped
+
+        pos = [pose.pose.position.x, pose.pose.position.y, pose.pose.position.z]
+        q = [pose.pose.orientation.x, pose.pose.orientation.y, pose.pose.orientation.z, pose.pose.orientation.w]
+
+        cyls_marker_array.update(i, 0.1, 0.1, pos, q)
+
+    env_markers_pub.publish(cyls_marker_array)
+
+
 if __name__ == "__main__":
     rospy.init_node("rb_path_planning")
 
@@ -102,8 +115,6 @@ if __name__ == "__main__":
 
     conf = generate_obstacles_markers()
 
-    rate = rospy.Rate(10)  # hz
+    sub = rospy.Subscriber("/obstacles_transforms", Path, callback)
 
-    while not rospy.is_shutdown():
-        env_markers_pub.publish(cyls_marker_array)
-        rate.sleep()
+    rospy.spin()
