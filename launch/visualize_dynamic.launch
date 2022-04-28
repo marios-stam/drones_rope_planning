@@ -16,7 +16,7 @@
 	  <!-- <arg name="hoge" value="fuga" /> -->
 	</include>
 
-	<node name="path_vis" pkg="drones_rope_planning" type="path_vis_dynamic_realtime.py" output="screen"/>
+	<!-- <node name="path_vis" pkg="drones_rope_planning" type="path_vis_dynamic_realtime.py" output="screen"/> -->
 	
 	<node name="realtime_obstacles_vis" pkg="drones_rope_planning" type="realtime_obstacles_viz.py" output="screen"/>
 	

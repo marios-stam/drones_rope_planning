@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<launch>
+
+	<!-- ========================== ROS PARAMETERS ========================= -->
+	
+	<group ns="planning" >
+		<rosparam command="load" file="$(find drones_rope_planning)/config/prob_definitiion.yaml" />
+	</group>
+	
+	<group ns="obstacles" >
+		<rosparam command="load" file="$(find drones_rope_planning)/config/cylinders_obstacles.yaml" />
+	</group>
+	
+
+	<!-- ========================== VISUALIZATION ========================== -->
+  	<node name="rviz" pkg="rviz" type="rviz" args="-d $(find drones_rope_planning)/launch/test.rviz" />
+
+    <node name="drones_vis_on_rb" pkg="drone_path_planning" type="drones_vis.py" />
+
+  	<node name="droneMarkerVis" pkg="3Dvisualization" type="droneMarkerVisMarios.py" />
+
+	<node name="realtime_obstacles_vis" pkg="drones_rope_planning" type="realtime_obstacles_viz.py" />
+	
+	<!-- ============================= PLANNING ============================= -->
+	<node name="drones_rope_planning_node" pkg="drones_rope_planning"  type="drones_rope_planning_node" output="screen" />
+	
+	<!-- OBSTACLES INTERFACE -->
+    <node name="realtime_interface" pkg="drones_rope_planning"  type="realtime_interface.py"   />
+		
+    <node name="moving_obstacles_pub" pkg="drones_rope_planning"  type="moving_obstacles_pub.py" output="screen" />
+
+</launch>

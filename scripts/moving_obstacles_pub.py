@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # print working directory
+from cmath import cos, sin
 from geometry_msgs.msg import TransformStamped, Quaternion
 import rospy
 from tf import TransformListener, transformations
@@ -63,12 +64,15 @@ def config_to_Path(conf: list) -> Path:
 
 
 def callback(pose: PoseStamped):
-    global pos
+    global pos, new_odom_received
+
     pos = [pose.pose.position.x, pose.pose.position.y, pose.pose.position.z]
+    new_odom_received = True
 
 
 # Global Variables
 pos = [0, 0, 0]
+new_odom_received = False
 
 if __name__ == "__main__":
     rospy.init_node('moving_obstacles_pub')
@@ -78,19 +82,32 @@ if __name__ == "__main__":
 
     pub = rospy.Publisher("/obstacles_transforms", Path, queue_size=1)
 
-    rospy.Subscriber("/obstacles_transforms_odometry", PoseStamped, callback)
-
+    # rospy.Subscriber("/obstacles_transforms_odometry", PoseStamped, callback)
+    t = 0
     rate = rospy.Rate(2)  # hz
     while not rospy.is_shutdown():
         path.header.stamp = rospy.Time.now()
-        pub.publish(path)
+
+        # if new_odom_received:
+        # rospy.loginfo(str(rospy.Time.now().to_sec()))
+        # path.poses[0].pose.position.x = pos[0]
+        # path.poses[0].pose.position.y = pos[1]
+        # pub.publish(path)
+        # new_odom_received = False
 
         # path.poses[0].pose.position.x = np.random.uniform(-1, 1)
         # path.poses[0].pose.position.y = np.random.uniform(3.5, 4.5)
-
         # input("Press Enter to continue...")
-        rospy.loginfo(str(rospy.Time.now().to_sec()))
-        path.poses[0].pose.position.x = pos[0]
-        path.poses[0].pose.position.y = pos[1]
+
+        period = 8
+
+        path.poses[0].pose.position.x = np.cos(2*np.pi*t/period)
+        path.poses[0].pose.position.y = 4+0.5*np.sin(2*np.pi*t/period)
+        # print("t: ", t, " x: ", path.poses[0].pose.position.x, " y: ", path.poses[0].pose.position.y)
+        print(rospy.Time.now().to_sec())
+
+        t += rate.sleep_dur.to_sec()
+
+        pub.publish(path)
 
         rate.sleep()

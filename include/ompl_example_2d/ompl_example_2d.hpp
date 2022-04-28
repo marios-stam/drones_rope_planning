@@ -43,6 +43,10 @@
 #include <nav_msgs/Path.h>
 #include <ros/ros.h>
 
+// Transforms
+#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
+#include <tf2_ros/transform_listener.h>
+
 #include <ompl/base/spaces/RealVectorStateSpace.h>
 // include optimization objectives
 #include <ompl/base/objectives/PathLengthOptimizationObjective.h>
@@ -81,7 +85,7 @@ namespace ompl_rope_planning
 
         void setBounds(void);
 
-        drones_rope_planning::rigid_body_dynamic_path plan(void);
+        og::PathGeometric *plan(void);
 
         void replan(void);
 
@@ -90,6 +94,8 @@ namespace ompl_rope_planning
         bool isStateValid(const ompl::base::State *state_check);
 
         fcl_checker_base *checker;
+
+        void convert_path_to_drones_paths(og::PathGeometric *pth, nav_msgs::Path &drone_pth1, nav_msgs::Path &drone_pth2);
 
     private:
         // rope_length

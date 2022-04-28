@@ -50,6 +50,8 @@ namespace custom_mesh
 
         float get_lowest_z();
 
+        data2D get_V_2D();
+
     private:
         float L;
 

@@ -276,8 +276,11 @@ namespace ompl_rope_planning
         }
     }
 
-    drones_rope_planning::rigid_body_dynamic_path planner::plan()
+    og::PathGeometric *planner::plan()
     {
+        // statistics
+
+        static float max_planning_time = 0.0;
         pdef->clearSolutionPaths();
 
         planner_ = getPlanner(prob_params.planner_algorithm, prob_params.range);
@@ -302,6 +305,8 @@ namespace ompl_rope_planning
             printf("================================================================================\n");
         }
 
+        float simpilfying_time, interpolating_time, saving_path_time, planning_time;
+
         // attempt to solve the problem within one second of planning time
         ob::PlannerStatus solved;
         do
@@ -319,8 +324,13 @@ namespace ompl_rope_planning
             solved = planner_->solve(ptc);
             std::cout << std::endl;
             auto dt = std::chrono::high_resolution_clock::now() - t0;
+            auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(dt).count();
+            // get maximum of 2 values
+            max_planning_time = std::max(max_planning_time, (float)duration);
+            planning_time = (float)duration;
 
-            std::cout << "Planning time: " << std::chrono::duration_cast<std::chrono::milliseconds>(dt).count() << " ms" << std::endl;
+            // std::cout << "Planning time: " << duration << " ms" << std::endl;
+            // std::cout << "Max planning time: " << max_planning_time << " ms" << std::endl;
 
         } while (solved != ob::PlannerStatus::EXACT_SOLUTION);
 
@@ -346,7 +356,7 @@ namespace ompl_rope_planning
 
                 // path_simplifier.simplifyMax(*pth);
                 auto dt = std::chrono::high_resolution_clock::now() - t0;
-                std::cout << "Simplifying time: " << std::chrono::duration_cast<std::chrono::milliseconds>(dt).count() << " ms" << std::endl;
+                simpilfying_time = std::chrono::duration_cast<std::chrono::milliseconds>(dt).count();
             }
 
             if (prob_params.path_interpolation_points > 0)
@@ -357,16 +367,12 @@ namespace ompl_rope_planning
                 auto t0 = std::chrono::high_resolution_clock::now();
                 pth->interpolate(prob_params.path_interpolation_points);
                 auto dt = std::chrono::high_resolution_clock::now() - t0;
-                std::cout << "Interpolating time: " << std::chrono::duration_cast<std::chrono::milliseconds>(dt).count() << " ms" << std::endl;
+                interpolating_time = std::chrono::duration_cast<std::chrono::milliseconds>(dt).count();
             }
 
             // std::cout << "Final path :" << std::endl;
             // pth->printAsMatrix(std::cout);
 
-            // convert path to rigid_body_dynamic_path.msg to be published
-            auto dyn_path_msg = convert_path_to_msg(pth);
-
-            return dyn_path_msg;
             // // save path to file
             // auto t0 = std::chrono::high_resolution_clock::now();
             // std::ofstream myfile;
@@ -374,7 +380,19 @@ namespace ompl_rope_planning
             // pth->printAsMatrix(myfile);
             // myfile.close();
             // auto dt = std::chrono::high_resolution_clock::now() - t0;
-            // std::cout << "Saving path to file time: " << std::chrono::duration_cast<std::chrono::milliseconds>(dt).count() << " ms" << std::endl;
+            // saving_path_time = std::chrono::duration_cast<std::chrono::milliseconds>(dt).count();
+
+            bool print_times = false;
+            if (print_times)
+            {
+                std::cout << "Planning time: " << planning_time << " ms" << std::endl;
+                std::cout << "Max planning time: " << max_planning_time << " ms" << std::endl;
+                std::cout << "Simplifying time: " << simpilfying_time << " ms" << std::endl;
+                std::cout << "Interpolating time: " << interpolating_time << " ms" << std::endl;
+                // std::cout << "Saving path to file time: " << saving_path_time << " ms" << std::endl;
+            }
+
+            return pth;
         }
         else
         {
@@ -500,4 +518,78 @@ namespace ompl_rope_planning
         return path_msg;
     }
 
-}
+    void planner::convert_path_to_drones_paths(og::PathGeometric *pth, nav_msgs::Path &drone_pth1, nav_msgs::Path &drone_pth2)
+    { // frames
+        std::string rb_path_frame_name = "rb_path";
+        std::string world_frame_name = "world";
+
+        auto states = pth->getStates();
+        auto num_states = states.size();
+
+        // cretae path for drone1
+        drone_pth1.header.frame_id = world_frame_name;
+        drone_pth1.header.stamp = ros::Time::now();
+        drone_pth1.poses.resize(num_states);
+
+        // create poseStamped for drone1
+        geometry_msgs::PoseStamped drone_pose1;
+        geometry_msgs::PoseStamped transformed_drone_pose1;
+        drone_pose1.header.frame_id = rb_path_frame_name;
+        drone_pose1.pose.orientation = tf2::toMsg(tf2::Quaternion(0, 0, 0, 1));
+
+        // cretae path for drone2
+        drone_pth2.header.frame_id = world_frame_name;
+        drone_pth2.header.stamp = ros::Time::now();
+        drone_pth2.poses.resize(num_states);
+
+        // create poseStamped for drone2
+        geometry_msgs::PoseStamped drone_pose2;
+        geometry_msgs::PoseStamped transformed_drone_pose2;
+        drone_pose2.header.frame_id = rb_path_frame_name;
+        drone_pose2.pose.orientation = tf2::toMsg(tf2::Quaternion(0, 0, 0, 1));
+
+        tf2_ros::Buffer tf_buffer;
+        tf2_ros::TransformListener tf2_listener(tf_buffer);
+
+        for (auto i = 0; i < num_states; i++)
+        {
+
+            auto state = states[i];
+            auto state_values = state->as<ob::RealVectorStateSpace::StateType>()->values;
+
+            double yaw = state_values[3];
+            double drones_dis = state_values[4];
+            double drones_angle = state_values[5];
+
+            geometry_msgs::TransformStamped ts2; // My frames are named "base_link" and "leap_motion"
+            ts2.header.stamp = ros::Time(0);
+            ts2.header.frame_id = world_frame_name;
+            ts2.child_frame_id = rb_path_frame_name;
+
+            ts2.transform.translation.x = state_values[0];
+            ts2.transform.translation.y = state_values[1];
+            ts2.transform.translation.z = state_values[2];
+
+            tf2::Quaternion q;
+            q.setRPY(0, 0, yaw);
+            ts2.transform.rotation = tf2::toMsg(q);
+
+            custom_robot_mesh->drones_formation_2_triangle_points(drones_dis, drones_angle);
+            custom_mesh::data2D V2D = custom_robot_mesh->get_V_2D();
+
+            // drone 1
+            drone_pose1.pose.position.x = V2D.p0[0];
+            drone_pose1.pose.position.y = 0;
+            drone_pose1.pose.position.z = V2D.p0[1];
+            tf2::doTransform(drone_pose1, transformed_drone_pose1, ts2);
+            drone_pth1.poses[i] = transformed_drone_pose1;
+
+            // drone2
+            drone_pose2.pose.position.x = V2D.p1[0];
+            drone_pose2.pose.position.y = 0;
+            drone_pose2.pose.position.z = V2D.p1[1];
+            tf2::doTransform(drone_pose2, transformed_drone_pose2, ts2);
+            drone_pth2.poses[i] = transformed_drone_pose2;
+        }
+    }
+} // namespace drones_rope_planning

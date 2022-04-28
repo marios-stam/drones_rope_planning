@@ -142,4 +142,5 @@ namespace custom_mesh
         return -V_2D.lower(1);
     }
 
+    data2D CustomMesh::get_V_2D() { return V_2D; }
 };
