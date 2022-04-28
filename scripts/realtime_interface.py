@@ -23,8 +23,6 @@ def service_client():
 
         ompl_realtime_srv = rospy.ServiceProxy('/drones_rope_planning_node/ompl_realtime_planning', PlanningRequest)
         resp1 = ompl_realtime_srv(conf, start, goal)
-        print("Service response:")
-        print(resp1)
 
     except rospy.ServiceException as e:
         print("Service call failed: %s" % e)
@@ -81,16 +79,15 @@ if __name__ == "__main__":
 
     rospy.Subscriber("/obstacles_transforms", Path, callback)
 
-    rate = rospy.Rate(6)
+    rate = rospy.Rate(10)
     while not rospy.is_shutdown():
         t0 = rospy.get_time()
+        print("======================================================")
+        rospy.loginfo("Calling planning")
         service_client()
         dt = rospy.get_time()-t0
         total_time += dt
         times += 1
         print("Average time: ", total_time/times, "sec")
-
-        if times == 1:
-            input("Press Enter to continue...")
 
         rate.sleep()

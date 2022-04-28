@@ -34,7 +34,8 @@ namespace fcl_checking_realtime
             q[1] = cyls_config[i].quat[1];
             q[2] = cyls_config[i].quat[2];
             q[3] = cyls_config[i].quat[3];
-            printf("Setting q: %f %f %f %f\n", q[0], q[1], q[2], q[3]);
+
+            // printf("Setting q: %f %f %f %f\n", q[0], q[1], q[2], q[3]);
             // printf("Setting pos:%f %f %f\n", pos[0], pos[1], pos[2]);
             env->set_cylinder_transform(i, pos, q);
         }

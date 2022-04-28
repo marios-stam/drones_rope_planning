@@ -111,14 +111,14 @@ if __name__ == "__main__":
         # path.poses[0].pose.position.y = np.random.uniform(3.5, 4.5)
         # input("Press Enter to continue...")
 
-        period = 15
+        period = 10
 
-        path.poses[0].pose.position.x = np.cos(2*np.pi*t/period)
-        # path.poses[0].pose.position.y = 4+0.5*np.sin(2*np.pi*t/period)
+        path.poses[0].pose.position.x = np.sin(2*np.pi*t/period)
+        # path.poses[0].pose.position.y = 4+0.5*np.cos(2*np.pi*t/period)
         # path.poses[0].pose.position.y = 4
         # path.poses[0].pose.position.z = 1+0.5*np.cos(2*np.pi*t/period)
 
-        path.poses[1].pose.position.x = -np.cos(2*np.pi*t/period)
+        # path.poses[1].pose.position.x = -np.cos(2*np.pi*t/period)
         # path.poses[0].pose.position.y = 4+0.5*np.sin(2*np.pi*t/period)
         # path.poses[0].pose.position.y = 4
         # path.poses[1].pose.position.z = 1-0.5*np.cos(2*np.pi*t/period)

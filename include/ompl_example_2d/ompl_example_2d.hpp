@@ -97,6 +97,15 @@ namespace ompl_rope_planning
 
         void convert_path_to_drones_paths(og::PathGeometric *pth, nav_msgs::Path &drone_pth1, nav_msgs::Path &drone_pth2);
 
+        problem_params::ProblemParams prob_params;
+
+        ompl::base::StateSpacePtr getSpace();
+
+        void setStart(float start[6]);
+
+        std::vector<float> getStartState();
+        std::vector<float> getGoalState();
+
     private:
         // rope_length
         float L;
@@ -116,13 +125,14 @@ namespace ompl_rope_planning
 
         int dim;
 
-        problem_params::ProblemParams prob_params;
-
         ob::PlannerPtr planner_;
 
         ob::PlannerPtr getPlanner(std::string, float range);
 
         drones_rope_planning::rigid_body_dynamic_path convert_path_to_msg(og::PathGeometric *pth);
+
+        std::vector<float> start_state_;
+        std::vector<float> goal_state_;
     };
 
 }

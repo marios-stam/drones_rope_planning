@@ -121,6 +121,15 @@ namespace ompl_rope_planning
 
     void planner::setStartGoal(float start[6], float goal[6])
     {
+        start_state_.resize(dim);
+        goal_state_.resize(dim);
+
+        for (int i = 0; i < dim; i++)
+        {
+            start_state_[i] = start[i];
+            goal_state_[i] = goal[i];
+        }
+
         ob::ScopedState<> start_state(planner::space);
         start_state->as<ob::RealVectorStateSpace::StateType>()->values[0] = start[0];
         start_state->as<ob::RealVectorStateSpace::StateType>()->values[1] = start[1];
@@ -278,8 +287,9 @@ namespace ompl_rope_planning
 
     og::PathGeometric *planner::plan()
     {
-        // statistics
+        pdef->fixInvalidInputStates(0.2, 0.5, 20);
 
+        // statistics
         static float max_planning_time = 0.0;
         pdef->clearSolutionPaths();
 
@@ -292,6 +302,12 @@ namespace ompl_rope_planning
         // perform setup steps for the planner
         // printf("Setting  planner up...\n");
         planner_->setup();
+
+        // check if having a start
+        if (pdef->getStartStateCount() == 0 || pdef->getGoal() == nullptr)
+        {
+            throw std::runtime_error("No start or goal state defined");
+        }
 
         if (prob_params.planning_type != problem_params::PlanningType::MOVING_OBSTACLES)
         {
@@ -591,5 +607,25 @@ namespace ompl_rope_planning
             tf2::doTransform(drone_pose2, transformed_drone_pose2, ts2);
             drone_pth2.poses[i] = transformed_drone_pose2;
         }
+    }
+
+    ompl::base::StateSpacePtr planner::getSpace() { return space; }
+
+    std::vector<float> planner::getStartState() { return start_state_; }
+
+    std::vector<float> planner::getGoalState() { return goal_state_; }
+
+    void planner::setStart(float start[6])
+    {
+        ob::ScopedState<> start_state(planner::space);
+        start_state->as<ob::RealVectorStateSpace::StateType>()->values[0] = start[0];
+        start_state->as<ob::RealVectorStateSpace::StateType>()->values[1] = start[1];
+        start_state->as<ob::RealVectorStateSpace::StateType>()->values[2] = start[2];
+        start_state->as<ob::RealVectorStateSpace::StateType>()->values[3] = start[3];
+        start_state->as<ob::RealVectorStateSpace::StateType>()->values[4] = start[4];
+        start_state->as<ob::RealVectorStateSpace::StateType>()->values[5] = start[5];
+
+        pdef->clearStartStates();
+        pdef->addStartState(start_state);
     }
 } // namespace drones_rope_planning

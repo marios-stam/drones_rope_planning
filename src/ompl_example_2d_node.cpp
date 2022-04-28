@@ -31,179 +31,13 @@
 namespace ob = ompl::base;
 namespace og = ompl::geometric;
 
-int main_static_planning(int argc, char **argv)
-{
-    // init ROS node
-    ros::init(argc, argv, "ompl_example_2d");
-
-    // create node handler
-    ros::NodeHandle nodeHandle("~");
-
-    //=======================================================================================================================
-
-    // get problem parameters
-    problem_params::ProblemParams prob_prms = problem_params::getProblemParams(nodeHandle);
-    ompl_rope_planning::planner planner(prob_prms);
-
-    printf("Setting start and goal\n");
-    float L = prob_prms.L;
-
-    float start[6] = {prob_prms.start_pos["x"], prob_prms.start_pos["y"], prob_prms.start_pos["z"], 0.0, L * 0.5, 0.0};
-    float goal[6] = {prob_prms.goal_pos["x"], prob_prms.goal_pos["y"], prob_prms.goal_pos["z"], 0.0, L * 0.5, 0.0};
-    planner.setStartGoal(start, goal);
-
-    printf("Planning...\n");
-    planner.plan();
-
-    printf("Done!\n");
-
-    // exit ros node
-    ros::shutdown();
-
-    return 0;
-}
-
-int main_Cylinders_test()
-{
-    int number_of_obstacles = 2;
-    realtime_obstacles::Cylinders obstacles(number_of_obstacles);
-
-    // set position of obstacle
-    float pos[3] = {0, 1, 0};
-    float q[4] = {0, 0, 0, 1};
-
-    obstacles.set_cylinder_transform(0, pos, q);
-
-    pos[1] = 0;
-    obstacles.set_cylinder_transform(1, pos, q);
-
-    // create robot collision object
-    fcl_checking::fcl_mesh robot;
-
-    robot = fcl_checking::fcl_mesh();
-
-    // load robot mesh
-    robot.load_stl("/home/marios/thesis_ws/src/drones_rope_planning/resources/stl/custom_V_robot.stl");
-
-    robot.create_collision_object();
-
-    float pos_robot[3] = {0, 0, 0};
-    bool collision;
-
-    for (float t = 0; t < 10; t += 0.1)
-    {
-        pos_robot[1] = cos(2 * M_PI * t / 5);
-        robot.set_transform(pos_robot, q);
-        printf("pos_robot:%f %f %f\n", pos_robot[0], pos_robot[1], pos_robot[2]);
-
-        robot.set_transform(pos_robot, q);
-
-        // check collision
-        collision = obstacles.collision_detection(robot.collision_object);
-        std::cout << "Collision: " << collision << std::endl;
-    }
-
-    return 0;
-}
-
-int main_fcl_checker_realtime_test()
-{
-    fcl_checker_base *fcl_checker;
-
-    fcl_checker = new fcl_checking_realtime::checker();
-
-    // robot
-    fcl_checker->loadRobot("/home/marios/thesis_ws/src/drones_rope_planning/resources/stl/custom_V_robot.stl");
-    float pos[3] = {0, 0, 0};
-    float q[4] = {0, 0, 0, 1};
-
-    fcl_checker->setRobotTransform(pos, q);
-
-    // environment
-    fcl_checker->loadEnvironment(2);
-
-    pos[0] = 0;
-    pos[1] = 0;
-    pos[2] = 0;
-
-    fcl_checker->as<fcl_checking_realtime::checker>()->update_env_obstacle_transform(0, pos, q);
-    pos[1] = 1;
-    fcl_checker->as<fcl_checking_realtime::checker>()->update_env_obstacle_transform(1, pos, q);
-
-    float pos_robot[3] = {0, 0, 0};
-    bool collision;
-
-    for (float t = 0; t < 10; t += 0.1)
-    {
-        pos_robot[1] = cos(2 * M_PI * t / 5);
-        fcl_checker->setRobotTransform(pos_robot, q);
-        printf("pos_robot:%f %f %f\n", pos_robot[0], pos_robot[1], pos_robot[2]);
-
-        // check collision
-        collision = fcl_checker->as<fcl_checking_realtime::checker>()->check_collision();
-
-        std::cout << "Collision: " << collision << std::endl;
-    }
-
-    return 0;
-}
-
-int main_realtime_planning(int argc, char **argv)
-{
-    // init ROS node
-    ros::init(argc, argv, "ompl_example_2d");
-
-    // create node handler
-    ros::NodeHandle nodeHandle("~");
-
-    //=======================================================================================================================
-
-    // get problem parameters
-    problem_params::ProblemParams prob_prms = problem_params::getProblemParams(nodeHandle);
-    ompl_rope_planning::planner planner(prob_prms);
-
-    printf("Setting start and goal\n");
-    float L = prob_prms.L;
-    float goal[6] = {prob_prms.goal_pos["x"], prob_prms.goal_pos["y"], prob_prms.goal_pos["z"], 0.0, L * 0.5, 0.0};
-
-    float start[6] = {prob_prms.start_pos["x"], prob_prms.start_pos["y"], prob_prms.start_pos["z"], 0.0, L * 0.5, 0.0};
-
-    // create ros service
-    // ros::ServiceServer service = nodeHandle.advertiseService("ompl_planning_service", &ompl_rope_planning::planner::plan, &planner);
-
-    do
-    {
-        printf("Planning with goal : %f %f %f\n", goal[0], goal[1], goal[2]);
-        planner.setStartGoal(start, goal);
-
-        printf("Planning...\n");
-        planner.plan();
-
-        printf("Enter new goal position\n");
-        printf("x: ");
-        std::cin >> goal[0];
-        printf("y: ");
-        std::cin >> goal[1];
-        printf("z: ");
-        std::cin >> goal[2];
-
-    } while (goal[2] != 69.0);
-
-    printf("Done!\n");
-
-    // exit ros node
-    ros::shutdown();
-
-    return 0;
-}
-
 // use planner as global variable
 ompl_rope_planning::planner *planner;
 ros::Publisher dyn_path_pub;
 ros::Publisher drone_path1_pub, drone_path2_pub;
-// tf::TransformListener listener;
+tf::TransformListener *listener;
 
-bool add(drones_rope_planning::PlanningRequest::Request &req, drones_rope_planning::PlanningRequest::Response &res)
+bool planning_service(drones_rope_planning::PlanningRequest::Request &req, drones_rope_planning::PlanningRequest::Response &res)
 {
     // printf("Start: %f %f %f\n", req.start_pos[0], req.start_pos[1], req.start_pos[2]);
     // printf("Goal: %f %f %f\n", req.goal_pos[0], req.goal_pos[1], req.goal_pos[2]);
@@ -237,17 +71,57 @@ bool add(drones_rope_planning::PlanningRequest::Request &req, drones_rope_planni
     planner->checker->as<fcl_checking_realtime::checker>()->updateEnvironmentTransforms(cylinders_def_vec);
     auto dt2 = std::chrono::high_resolution_clock::now() - t02;
 
-    // // set start
-    // ob::ScopedState<> start_state(planner->space);
-    // start_state->as<ob::RealVectorStateSpace::StateType>()->values[0] = start[0];
-    // start_state->as<ob::RealVectorStateSpace::StateType>()->values[1] = start[1];
-    // start_state->as<ob::RealVectorStateSpace::StateType>()->values[2] = start[2];
-    // start_state->as<ob::RealVectorStateSpace::StateType>()->values[3] = start[3];
-    // start_state->as<ob::RealVectorStateSpace::StateType>()->values[4] = start[4];
-    // start_state->as<ob::RealVectorStateSpace::StateType>()->values[5] = start[5];
+    // set new start
+    auto old_start = planner->getStartState();
 
-    // planner->pdef->addStartState(start_state);
+    float new_start[6];
 
+    tf::StampedTransform transform, transform2;
+    listener->waitForTransform("/world", "/drone1Path", ros::Time(0), ros::Duration(0.1));
+    try
+    {
+        listener->lookupTransform("/world", "/drone1", ros::Time(0), transform);
+        listener->lookupTransform("/world", "/drone2", ros::Time(0), transform2);
+
+        new_start[0] = (transform.getOrigin().x() + transform2.getOrigin().x()) / 2;
+        new_start[1] = (transform.getOrigin().y() + transform2.getOrigin().y()) / 2;
+        new_start[2] = (transform.getOrigin().z() + transform2.getOrigin().z()) / 2;
+        float dx = transform.getOrigin().x() - transform2.getOrigin().x();
+        float dy = transform.getOrigin().y() - transform2.getOrigin().y();
+        float dz = transform.getOrigin().z() - transform2.getOrigin().z();
+        // calculate yaw
+        new_start[3] = atan2(dy, dx);
+
+        new_start[4] = old_start[4]; // TODO: calculate the appropriate one (iverse dynamic transform)
+        new_start[5] = old_start[5]; // TODO: calculate the appropriate one (iverse dynamic transform)
+
+        // calculate distance between start and goal
+        auto goal = planner->getGoalState();
+        float dist = sqrt(pow(new_start[0] - goal[0], 2) + pow(new_start[1] - goal[1], 2) + pow(new_start[2] - goal[2], 2));
+
+        if (dist < 0.5)
+        {
+            printf("Start and goal are too close\n");
+            new_start[0] = planner->prob_params.start_pos["x"];
+            new_start[1] = planner->prob_params.start_pos["y"];
+            new_start[2] = planner->prob_params.start_pos["z"];
+        }
+    }
+    catch (tf::TransformException &ex)
+    {
+        ROS_ERROR("%s", ex.what());
+        // Its the first time and nothin has been published to the tree
+        new_start[0] = old_start[0];
+        new_start[1] = old_start[1];
+        new_start[2] = old_start[2];
+        new_start[3] = old_start[3];
+        new_start[4] = old_start[4];
+        new_start[5] = old_start[5];
+    }
+
+    planner->setStart(new_start);
+
+    // planning
     auto t03 = std::chrono::high_resolution_clock::now();
     auto pth = planner->plan();
     auto dt3 = std::chrono::high_resolution_clock::now() - t03;
@@ -275,39 +149,6 @@ bool add(drones_rope_planning::PlanningRequest::Request &req, drones_rope_planni
     return true;
 }
 
-int main_realtime_planning_test(int argc, char **argv)
-{
-    // init ROS node
-    ros::init(argc, argv, "ompl_example_2d");
-
-    // create node handler
-    ros::NodeHandle nodeHandle("~");
-
-    //=======================================================================================================================
-
-    // get problem parameters
-    problem_params::ProblemParams prob_prms = problem_params::getProblemParams(nodeHandle);
-    ompl_rope_planning::planner planner(prob_prms);
-
-    printf("Setting start and goal\n");
-    float L = prob_prms.L;
-    float goal[6] = {prob_prms.goal_pos["x"], prob_prms.goal_pos["y"], prob_prms.goal_pos["z"], 0.0, L * 0.5, 0.0};
-
-    float start[6] = {prob_prms.start_pos["x"], prob_prms.start_pos["y"], prob_prms.start_pos["z"], 0.0, L * 0.5, 0.0};
-
-    printf("Planning with goal : %f %f %f\n", goal[0], goal[1], goal[2]);
-    planner.setStartGoal(start, goal);
-
-    // create ros service
-    ros::ServiceServer service = nodeHandle.advertiseService("ompl_realtime_planning", add);
-
-    ROS_INFO("Service ready!");
-
-    ros::spin();
-}
-
-//=======================================================================================================================
-
 int main(int argc, char **argv)
 {
     // diffeent mains
@@ -321,6 +162,9 @@ int main(int argc, char **argv)
 
     // create node handler
     ros::NodeHandle nodeHandle("~");
+
+    // instantiate listener
+    listener = new tf::TransformListener();
 
     // initialize planner
     problem_params::ProblemParams prob_prms = problem_params::getProblemParams(nodeHandle);
@@ -342,7 +186,7 @@ int main(int argc, char **argv)
     drone_path2_pub = nodeHandle.advertise<nav_msgs::Path>("/drone2Path", 1);
 
     // create ros service
-    ros::ServiceServer service = nodeHandle.advertiseService("ompl_realtime_planning", add);
+    ros::ServiceServer service = nodeHandle.advertiseService("ompl_realtime_planning", planning_service);
 
     ROS_INFO("Service ready!");
 
