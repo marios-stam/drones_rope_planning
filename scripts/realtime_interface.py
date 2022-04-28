@@ -49,7 +49,11 @@ def load_obstacles_config() -> list:
         cylinder.radius = cyl['radius']
         cylinder.height = cyl['height']
         cylinder.pos = [cyl['x'], cyl['y'], cyl['z']]
-        cylinder.quat = [0, 0, 0, 1]
+
+        roll = cyl['roll'] * pi/180
+        pitch = cyl['pitch'] * pi/180
+        yaw = 0  # there is no point of a cylinder having yaw rotation
+        cylinder.quat = transformations.quaternion_from_euler(roll, pitch, yaw)
 
         cyl_config.append(cylinder)
 
@@ -57,22 +61,16 @@ def load_obstacles_config() -> list:
 
 
 def callback(path: Path):
-    global times, total_time
-    t0 = rospy.get_time()
+    global conf
 
     for i, pose in enumerate(path.poses):
         conf[i].pos = [pose.pose.position.x, pose.pose.position.y, pose.pose.position.z]
         conf[i].quat = [pose.pose.orientation.x, pose.pose.orientation.y, pose.pose.orientation.z, pose.pose.orientation.w]
 
-    service_client()
-    dt = rospy.get_time()-t0
-    total_time += dt
-    times += 1
-    print("Average time: ", total_time/times, "sec")
-
 
 times = 0
 total_time = 0
+conf = []
 if __name__ == "__main__":
     rospy.init_node('realtime_interface')
 
@@ -83,4 +81,16 @@ if __name__ == "__main__":
 
     rospy.Subscriber("/obstacles_transforms", Path, callback)
 
-    rospy.spin()
+    rate = rospy.Rate(6)
+    while not rospy.is_shutdown():
+        t0 = rospy.get_time()
+        service_client()
+        dt = rospy.get_time()-t0
+        total_time += dt
+        times += 1
+        print("Average time: ", total_time/times, "sec")
+
+        if times == 1:
+            input("Press Enter to continue...")
+
+        rate.sleep()

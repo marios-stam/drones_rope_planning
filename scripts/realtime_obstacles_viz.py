@@ -103,6 +103,8 @@ def callback(path: Path):
 
         cyls_marker_array.update(i, 0.1, 0.1, pos, q)
 
+    print("publishing markers:" + str(cyls_marker_array.markers[0].pose))
+
     env_markers_pub.publish(cyls_marker_array)
 
 

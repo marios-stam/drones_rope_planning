@@ -15,7 +15,7 @@ timeout: 0.6
 env_mesh: "env-scene-ltu-experiment"
 
 #Planning
-val_check_resolution: 0.01
+val_check_resolution: 0.02
 range: 1
 use_mesh_improvement: True
 goal_type: "simple" #simple,samplable,symmetrical,multiple_goals
@@ -33,7 +33,7 @@ safety_distances: {
     lowest_point: 0.0,
   }
 
-thickness: 0.3
+thickness: 0.2
 
 # start and goal
 start: { x: +0.0, y: 2.0, z: 0.75 }
@@ -53,7 +53,7 @@ planner_algorithm: "RRTConnect"
 # planner_algorithm: "RRT"
 # planner_algorithm: "InformedRRTstar"
 # planner_algorithm: "PRM"
-# planner_algorithm: "LBKPIECE1"
+# planner_algorithm: "LBKPIECE"
 # planner_algorithm: "KPIECE"
 
 simplify_path: True

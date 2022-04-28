@@ -18,6 +18,7 @@ namespace realtime_obstacles
         double radius;
         double height;
         double pos[3];
+        double quat[4];
     };
 
     class Cylinders
@@ -44,6 +45,7 @@ namespace realtime_obstacles
         bool collision_detection(fcl::CollisionObject<float> *robot);
 
         int get_cylinders_size();
+
     private:
         void create_collision_objects();
 

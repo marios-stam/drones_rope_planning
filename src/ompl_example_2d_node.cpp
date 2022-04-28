@@ -16,6 +16,8 @@
 #include "../include/moving_obstacles.hpp"
 
 #include <ros/ros.h>
+// include transform listener
+#include <tf/transform_listener.h>
 
 #include <geometry_msgs/PoseStamped.h>
 #include <nav_msgs/OccupancyGrid.h>
@@ -199,6 +201,7 @@ int main_realtime_planning(int argc, char **argv)
 ompl_rope_planning::planner *planner;
 ros::Publisher dyn_path_pub;
 ros::Publisher drone_path1_pub, drone_path2_pub;
+// tf::TransformListener listener;
 
 bool add(drones_rope_planning::PlanningRequest::Request &req, drones_rope_planning::PlanningRequest::Response &res)
 {
@@ -215,9 +218,15 @@ bool add(drones_rope_planning::PlanningRequest::Request &req, drones_rope_planni
         // printf("Cylinder: radius: %f height: %f x: %f y: %f z: %f  \n", cyl.radius, cyl.height, cyl.pos[0], cyl.pos[1], cyl.pos[2]);
         cylinder_def.radius = cyl.radius;
         cylinder_def.height = cyl.height;
+
         cylinder_def.pos[0] = cyl.pos[0];
         cylinder_def.pos[1] = cyl.pos[1];
         cylinder_def.pos[2] = cyl.pos[2];
+
+        cylinder_def.quat[0] = cyl.quat[0];
+        cylinder_def.quat[1] = cyl.quat[1];
+        cylinder_def.quat[2] = cyl.quat[2];
+        cylinder_def.quat[3] = cyl.quat[3];
 
         cylinders_def_vec.push_back(cylinder_def);
     }
@@ -227,6 +236,17 @@ bool add(drones_rope_planning::PlanningRequest::Request &req, drones_rope_planni
     // printf("Setting the environment\n");
     planner->checker->as<fcl_checking_realtime::checker>()->updateEnvironmentTransforms(cylinders_def_vec);
     auto dt2 = std::chrono::high_resolution_clock::now() - t02;
+
+    // // set start
+    // ob::ScopedState<> start_state(planner->space);
+    // start_state->as<ob::RealVectorStateSpace::StateType>()->values[0] = start[0];
+    // start_state->as<ob::RealVectorStateSpace::StateType>()->values[1] = start[1];
+    // start_state->as<ob::RealVectorStateSpace::StateType>()->values[2] = start[2];
+    // start_state->as<ob::RealVectorStateSpace::StateType>()->values[3] = start[3];
+    // start_state->as<ob::RealVectorStateSpace::StateType>()->values[4] = start[4];
+    // start_state->as<ob::RealVectorStateSpace::StateType>()->values[5] = start[5];
+
+    // planner->pdef->addStartState(start_state);
 
     auto t03 = std::chrono::high_resolution_clock::now();
     auto pth = planner->plan();
