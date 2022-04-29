@@ -76,6 +76,8 @@ namespace problem_params
 
         pdef.obstacles_config = realtime_obstacles::load_cylinders_definition(nh);
 
+        ros::param::get("/planning/setting_new_start", pdef.setting_new_start);
+
         return pdef;
     }
 
@@ -84,6 +86,10 @@ namespace problem_params
         printf("\n\n");
         printf("=================================== PROBLEM PARAMETERS: ===================================\n");
         printf("\tPlanning type: %d\n", params.planning_type);
+        if (params.planning_type == PlanningType::MOVING_OBSTACLES)
+        {
+            printf("\t\tSetting new start:%d\n", params.setting_new_start);
+        }
 
         printf("\tTimeout: %f\n", params.timeout);
         printf("\tRope length: %f\n", params.L);

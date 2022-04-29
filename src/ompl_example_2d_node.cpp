@@ -71,55 +71,85 @@ bool planning_service(drones_rope_planning::PlanningRequest::Request &req, drone
     planner->checker->as<fcl_checking_realtime::checker>()->updateEnvironmentTransforms(cylinders_def_vec);
     auto dt2 = std::chrono::high_resolution_clock::now() - t02;
 
-    // set new start
-    auto old_start = planner->getStartState();
-
-    float new_start[6];
-
-    tf::StampedTransform transform, transform2;
-    listener->waitForTransform("/world", "/drone1Path", ros::Time(0), ros::Duration(0.1));
-    try
+    if (planner->prob_params.setting_new_start)
     {
-        listener->lookupTransform("/world", "/drone1", ros::Time(0), transform);
-        listener->lookupTransform("/world", "/drone2", ros::Time(0), transform2);
+        // set new start
+        auto old_start = planner->getStartState();
 
-        new_start[0] = (transform.getOrigin().x() + transform2.getOrigin().x()) / 2;
-        new_start[1] = (transform.getOrigin().y() + transform2.getOrigin().y()) / 2;
-        new_start[2] = (transform.getOrigin().z() + transform2.getOrigin().z()) / 2;
-        float dx = transform.getOrigin().x() - transform2.getOrigin().x();
-        float dy = transform.getOrigin().y() - transform2.getOrigin().y();
-        float dz = transform.getOrigin().z() - transform2.getOrigin().z();
-        // calculate yaw
-        new_start[3] = atan2(dy, dx);
+        float new_start[6];
 
-        new_start[4] = old_start[4]; // TODO: calculate the appropriate one (iverse dynamic transform)
-        new_start[5] = old_start[5]; // TODO: calculate the appropriate one (iverse dynamic transform)
-
-        // calculate distance between start and goal
-        auto goal = planner->getGoalState();
-        float dist = sqrt(pow(new_start[0] - goal[0], 2) + pow(new_start[1] - goal[1], 2) + pow(new_start[2] - goal[2], 2));
-
-        if (dist < 0.5)
+        tf::StampedTransform transform, transform2;
+        listener->waitForTransform("/world", "/drone1Path", ros::Time(0), ros::Duration(0.1));
+        try
         {
-            printf("Start and goal are too close\n");
-            new_start[0] = planner->prob_params.start_pos["x"];
-            new_start[1] = planner->prob_params.start_pos["y"];
-            new_start[2] = planner->prob_params.start_pos["z"];
+            listener->lookupTransform("/world", "/drone1", ros::Time(0), transform);
+            listener->lookupTransform("/world", "/drone2", ros::Time(0), transform2);
+
+            new_start[0] = (transform.getOrigin().x() + transform2.getOrigin().x()) / 2;
+            new_start[1] = (transform.getOrigin().y() + transform2.getOrigin().y()) / 2;
+            new_start[2] = (transform.getOrigin().z() + transform2.getOrigin().z()) / 2;
+            float dx = transform.getOrigin().x() - transform2.getOrigin().x();
+            float dy = transform.getOrigin().y() - transform2.getOrigin().y();
+            float dz = transform.getOrigin().z() - transform2.getOrigin().z();
+            // calculate yaw
+            new_start[3] = atan2(dy, dx);
+
+            new_start[4] = old_start[4]; // TODO: calculate the appropriate one (iverse dynamic transform)
+            new_start[5] = old_start[5]; // TODO: calculate the appropriate one (iverse dynamic transform)
+
+            // calculate distance between start and goal
+            auto goal = planner->getGoalState();
+            float dist = sqrt(pow(new_start[0] - goal[0], 2) + pow(new_start[1] - goal[1], 2) + pow(new_start[2] - goal[2], 2));
+
+            if (dist < 0.5)
+            {
+                printf("Start and goal are too close\n");
+                new_start[0] = planner->prob_params.start_pos["x"];
+                new_start[1] = planner->prob_params.start_pos["y"];
+                new_start[2] = planner->prob_params.start_pos["z"];
+            }
+        }
+        catch (tf::TransformException &ex)
+        {
+            ROS_ERROR("%s", ex.what());
+            // Its the first time and nothin has been published to the tree
+            new_start[0] = old_start[0];
+            new_start[1] = old_start[1];
+            new_start[2] = old_start[2];
+            new_start[3] = old_start[3];
+            new_start[4] = old_start[4];
+            new_start[5] = old_start[5];
+        }
+
+        planner->setStart(new_start);
+    }
+
+    // check if previous plan is valid after environment changes
+    ompl::geometric::PathGeometric *prev_path = planner->getPath();
+    if (prev_path != nullptr)
+    {
+        bool prev_path_is_valid = true;
+
+        auto states = prev_path->getStates();
+        for (int i = 0; i < states.size(); i++)
+        {
+            auto s = states[i];
+            // check state validity
+            if (!planner->isStateValid(s))
+            {
+
+                ROS_ERROR("Previous path is invalid\n");
+                prev_path_is_valid = false;
+                break;
+            };
+        }
+
+        if (prev_path_is_valid)
+        {
+            ROS_DEBUG("Previous path is valid\n");
+            return true;
         }
     }
-    catch (tf::TransformException &ex)
-    {
-        ROS_ERROR("%s", ex.what());
-        // Its the first time and nothin has been published to the tree
-        new_start[0] = old_start[0];
-        new_start[1] = old_start[1];
-        new_start[2] = old_start[2];
-        new_start[3] = old_start[3];
-        new_start[4] = old_start[4];
-        new_start[5] = old_start[5];
-    }
-
-    planner->setStart(new_start);
 
     // planning
     auto t03 = std::chrono::high_resolution_clock::now();

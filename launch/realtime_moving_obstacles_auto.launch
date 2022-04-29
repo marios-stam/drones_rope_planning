@@ -22,10 +22,10 @@
 	<node name="realtime_obstacles_vis" pkg="drones_rope_planning" type="realtime_obstacles_viz.py"  />
 	
 	<!-- ============================= PLANNING ============================= -->
-	<node name="drones_rope_planning_node" pkg="drones_rope_planning"  type="drones_rope_planning_node"   />
+	<node name="drones_rope_planning_node" pkg="drones_rope_planning"  type="drones_rope_planning_node" output="screen"  />
 	
 	<!-- OBSTACLES INTERFACE -->
-    <node name="realtime_interface" pkg="drones_rope_planning"  type="realtime_interface.py"  output="screen" />
+    <node name="realtime_interface" pkg="drones_rope_planning"  type="realtime_interface.py"   />
 		
     <node name="moving_obstacles_pub" pkg="drones_rope_planning"  type="moving_obstacles_pub.py"  />
 

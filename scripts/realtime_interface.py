@@ -79,7 +79,7 @@ if __name__ == "__main__":
 
     rospy.Subscriber("/obstacles_transforms", Path, callback)
 
-    rate = rospy.Rate(10)
+    rate = rospy.Rate(20)
     while not rospy.is_shutdown():
         t0 = rospy.get_time()
         print("======================================================")

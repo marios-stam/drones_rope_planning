@@ -37,6 +37,9 @@ namespace problem_params
         // planning
         int planning_type;
 
+        // realtime planning settings
+        bool setting_new_start;
+
         std::string planner_algorithm;
 
         float timeout;

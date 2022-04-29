@@ -106,6 +106,8 @@ namespace ompl_rope_planning
         std::vector<float> getStartState();
         std::vector<float> getGoalState();
 
+        ompl::geometric::PathGeometric *getPath();
+
     private:
         // rope_length
         float L;
@@ -119,7 +121,7 @@ namespace ompl_rope_planning
         // create a problem instance
         ompl::base::ProblemDefinitionPtr pdef;
 
-        ompl::geometric::PathGeometric *path_smooth = NULL;
+        ompl::geometric::PathGeometric *path_ = nullptr;
 
         custom_mesh::CustomMesh *custom_robot_mesh;
 

@@ -287,8 +287,8 @@ namespace ompl_rope_planning
 
     og::PathGeometric *planner::plan()
     {
-        pdef->fixInvalidInputStates(0.2, 0.5, 20);
 
+        pdef->fixInvalidInputStates(0.2, 0.5, 20);
         // statistics
         static float max_planning_time = 0.0;
         pdef->clearSolutionPaths();
@@ -407,6 +407,8 @@ namespace ompl_rope_planning
                 std::cout << "Interpolating time: " << interpolating_time << " ms" << std::endl;
                 // std::cout << "Saving path to file time: " << saving_path_time << " ms" << std::endl;
             }
+
+            path_ = pth;
 
             return pth;
         }
@@ -628,4 +630,6 @@ namespace ompl_rope_planning
         pdef->clearStartStates();
         pdef->addStartState(start_state);
     }
+
+    ompl::geometric::PathGeometric *planner::getPath() { return path_; }
 } // namespace drones_rope_planning
