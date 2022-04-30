@@ -10,6 +10,8 @@
 #include <vector>
 
 #include <ros/ros.h>
+// include nav_msgs::Path
+#include <nav_msgs/Path.h>
 
 using namespace std;
 using namespace ros;
@@ -56,10 +58,81 @@ VectorXd allocateTime(const MatrixXd &wayPs, double vel, double acc)
     return durations;
 }
 
+void path_hande_callback(const nav_msgs::Path &wp)
+{
+    MatrixXd route;
+    Matrix3d iS, fS;
+    Eigen::Matrix<double, 3, 4> iSS, fSS;
+    min_snap::SnapOpt snapOpt;
+    min_snap::Trajectory minSnapTraj;
+
+    int waypoints_number = wp.poses.size();
+    printf("waypoints_number: %d\n", waypoints_number);
+    VectorXd ts = VectorXd::Zero(waypoints_number);
+    float total_time = 10;              // sec
+    float dur = total_time / ts.size(); // duaration of each piece
+
+    printf("Filling time durations...\n");
+    for (int i = 0; i < waypoints_number; i++)
+    {
+        ts(i) = dur;
+    }
+
+    printf("Resizing route...\n");
+    route.resize(3, wp.poses.size());
+    printf("Filling route...\n");
+    for (int k = 0; k < (int)wp.poses.size(); k++)
+    {
+        Vector3d pt(wp.poses[k].pose.position.x, wp.poses[k].pose.position.y, wp.poses[k].pose.position.z);
+        route.col(k) << pt(0), pt(1), pt(2);
+    }
+
+    printf("Resized route: %d x %d\n", route.rows(), route.cols());
+    iS.col(0) << route.leftCols<1>();
+    fS.col(0) << route.rightCols<1>();
+
+    printf("Resizing iSS...\n");
+    iSS << iS, Eigen::MatrixXd::Zero(3, 1);
+    fSS << fS, Eigen::MatrixXd::Zero(3, 1);
+    // ts = allocateTime(route, 3.0, 3.0);
+
+    printf("snapOpt stuff...\n");
+    auto tc1 = std::chrono::high_resolution_clock::now();
+    snapOpt.reset(iSS, fSS, route.cols() - 1);
+    printf("calling generate...\n");
+    snapOpt.generate(route.block(0, 1, 3, waypoints_number - 2), ts);
+    printf("calling getTraj...\n");
+    snapOpt.getTraj(minSnapTraj);
+    auto tc2 = std::chrono::high_resolution_clock::now();
+
+    auto dt = std::chrono::duration_cast<std::chrono::duration<double>>(tc2 - tc1).count();
+    std::cout << "min_snap generation time : " << dt * 1000 << " msec" << std::endl;
+
+    printf("Trajectory duration: %f\n", minSnapTraj.getTotalDuration());
+
+    // Testing to prove that generation is working
+    float t = 0;
+    printf("Trajectory pos at t=%f sec : %f, %f, %f\n", t, minSnapTraj.getPos(t).x(), minSnapTraj.getPos(t).y(), minSnapTraj.getPos(t).z());
+
+    t = 0.5;
+    printf("Trajectory pos at t=%f sec : %f, %f, %f\n", t, minSnapTraj.getPos(t).x(), minSnapTraj.getPos(t).y(), minSnapTraj.getPos(t).z());
+
+    t = 1;
+    printf("Trajectory pos at t=%f sec : %f, %f, %f\n", t, minSnapTraj.getPos(t).x(), minSnapTraj.getPos(t).y(), minSnapTraj.getPos(t).z());
+
+    int ind = 0;
+    printf("Path pos at ind=%d: %f, %f, %f\n", ind, wp.poses[ind].pose.position.x, wp.poses[ind].pose.position.y, wp.poses[ind].pose.position.z);
+
+    ind = 1;
+    printf("Path pos at ind=%d: %f, %f, %f\n", ind, wp.poses[ind].pose.position.x, wp.poses[ind].pose.position.y, wp.poses[ind].pose.position.z);
+
+    printf("============================================================\n");
+}
+
 int main(int argc, char **argv)
 {
     ros::init(argc, argv, "example1_node");
-    ros::NodeHandle nh_;
+    ros::NodeHandle nh("~");
 
     min_jerk::JerkOpt jerkOpt;
     min_jerk::Trajectory minJerkTraj;
@@ -68,8 +141,6 @@ int main(int argc, char **argv)
     min_snap::Trajectory minSnapTraj;
 
     MatrixXd route;
-    VectorXd ts = VectorXd::Zero(3);
-    ts << 1.0, 1.0, 1.0;
 
     Matrix3d iS, fS;
     Eigen::Matrix<double, 3, 4> iSS, fSS;
@@ -82,53 +153,9 @@ int main(int argc, char **argv)
     std::chrono::high_resolution_clock::time_point tc0, tc1, tc2;
     double d0, d1;
 
-    int i = 2; // 30 waypoiints
+    auto path_sub = nh.subscribe("/drone1Path", 1, path_hande_callback);
 
-    // first row of route
-    printf("Generating route...\n");
-    route.resize(3, i + 1);
-    printf("Setting 1st row of route...\n");
-    route.col(0) << 0.0, 0.0, 0.0;
-    printf("Setting 2nd row of route...\n");
-
-    route.col(1) << 1.0, 1.0, 1.0;
-    printf("Setting 3rd row of route...\n");
-
-    route.col(2) << 2.0, 2.0, 2.0;
-
-    printf("Route genrated!\n");
-
-    d0 = d1 = 0.0;
-    for (int j = 0; j < groupSize && ok(); j++)
-    {
-        // printf("route rows: %d, cols: %d\n", route.rows(), route.cols());
-
-        iS.col(0) << route.leftCols<1>();
-        fS.col(0) << route.rightCols<1>();
-
-        iSS << iS, Eigen::MatrixXd::Zero(3, 1);
-        fSS << fS, Eigen::MatrixXd::Zero(3, 1);
-        // ts = allocateTime(route, 3.0, 3.0);
-
-        tc1 = std::chrono::high_resolution_clock::now();
-        snapOpt.reset(iSS, fSS, route.cols() - 1);
-        snapOpt.generate(route.block(0, 1, 3, i - 1), ts);
-        snapOpt.getTraj(minSnapTraj);
-        tc2 = std::chrono::high_resolution_clock::now();
-
-        d1 += std::chrono::duration_cast<std::chrono::duration<double>>(tc2 - tc1).count();
-    }
-
-    std::cout << " MinSnap Comp. Time: " << d1 / groupSize * 1000 << " msec" << std::endl;
-
-    printf("Snap ttrajectory duration: %f\n", minSnapTraj.getTotalDuration());
-    float t = 1.0;
-    printf("Snap trajectory pos at t=%f: %f, %f, %f\n", t, minSnapTraj.getPos(t).x(), minSnapTraj.getPos(t).y(), minSnapTraj.getPos(t).z());
-    t = 2.0;
-    printf("Snap trajectory pos at t=%f: %f, %f, %f\n", t, minSnapTraj.getPos(t).x(), minSnapTraj.getPos(t).y(), minSnapTraj.getPos(t).z());
-
-    ros::spinOnce();
-    lp.sleep();
+    ros::spin();
 
     return 0;
 }
