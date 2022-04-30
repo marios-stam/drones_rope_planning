@@ -123,6 +123,8 @@ include_directories(
   ${OCTOMAP_INCLUDE_DIRS}
   ${cl_INCLUDE_DIRS}
 
+  #marios
+  include/traj_generation
 )
 
 # link_libraries(${OCTOMAP_LIBRARIES} ${fcl_LIBRARY_DIRS} ${OMPL_LIBRARY_DIRS})
@@ -200,6 +202,15 @@ target_link_libraries(${PROJECT_NAME}_library
 add_executable(
   ${PROJECT_NAME}_node
   src/ompl_example_2d_node.cpp
+)
+
+add_executable(
+  traj_generation_node 
+  src/traj_generation/example1_node.cpp
+  )
+
+  target_link_libraries(traj_generation_node
+  ${catkin_LIBRARIES}
 )
 
 # add_executable(
