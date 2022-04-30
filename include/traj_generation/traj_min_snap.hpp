@@ -29,8 +29,8 @@
 
 #include <Eigen/Eigen>
 
-#include <iostream>
 #include <cmath>
+#include <iostream>
 #include <vector>
 
 namespace min_snap
@@ -69,22 +69,14 @@ namespace min_snap
                 double t2 = t1 * t1;
                 double t3 = t2 * t1;
 
-                nCoeffMat.col(0) = (boundCond.col(7) / 6.0 + boundCond.col(3) / 6.0) * t3 +
-                                   (-2.0 * boundCond.col(6) + 2.0 * boundCond.col(2)) * t2 +
-                                   (10.0 * boundCond.col(5) + 10.0 * boundCond.col(1)) * t1 +
-                                   (-20.0 * boundCond.col(4) + 20.0 * boundCond.col(0));
-                nCoeffMat.col(1) = (-0.5 * boundCond.col(7) - boundCond.col(3) / 1.5) * t3 +
-                                   (6.5 * boundCond.col(6) - 7.5 * boundCond.col(2)) * t2 +
-                                   (-34.0 * boundCond.col(5) - 36.0 * boundCond.col(1)) * t1 +
-                                   (70.0 * boundCond.col(4) - 70.0 * boundCond.col(0));
-                nCoeffMat.col(2) = (0.5 * boundCond.col(7) + boundCond.col(3)) * t3 +
-                                   (-7.0 * boundCond.col(6) + 10.0 * boundCond.col(2)) * t2 +
-                                   (39.0 * boundCond.col(5) + 45.0 * boundCond.col(1)) * t1 +
-                                   (-84.0 * boundCond.col(4) + 84.0 * boundCond.col(0));
-                nCoeffMat.col(3) = (-boundCond.col(7) / 6.0 - boundCond.col(3) / 1.5) * t3 +
-                                   (2.5 * boundCond.col(6) - 5.0 * boundCond.col(2)) * t2 +
-                                   (-15.0 * boundCond.col(5) - 20.0 * boundCond.col(1)) * t1 +
-                                   (35.0 * boundCond.col(4) - 35.0 * boundCond.col(0));
+                nCoeffMat.col(0) = (boundCond.col(7) / 6.0 + boundCond.col(3) / 6.0) * t3 + (-2.0 * boundCond.col(6) + 2.0 * boundCond.col(2)) * t2 +
+                                   (10.0 * boundCond.col(5) + 10.0 * boundCond.col(1)) * t1 + (-20.0 * boundCond.col(4) + 20.0 * boundCond.col(0));
+                nCoeffMat.col(1) = (-0.5 * boundCond.col(7) - boundCond.col(3) / 1.5) * t3 + (6.5 * boundCond.col(6) - 7.5 * boundCond.col(2)) * t2 +
+                                   (-34.0 * boundCond.col(5) - 36.0 * boundCond.col(1)) * t1 + (70.0 * boundCond.col(4) - 70.0 * boundCond.col(0));
+                nCoeffMat.col(2) = (0.5 * boundCond.col(7) + boundCond.col(3)) * t3 + (-7.0 * boundCond.col(6) + 10.0 * boundCond.col(2)) * t2 +
+                                   (39.0 * boundCond.col(5) + 45.0 * boundCond.col(1)) * t1 + (-84.0 * boundCond.col(4) + 84.0 * boundCond.col(0));
+                nCoeffMat.col(3) = (-boundCond.col(7) / 6.0 - boundCond.col(3) / 1.5) * t3 + (2.5 * boundCond.col(6) - 5.0 * boundCond.col(2)) * t2 +
+                                   (-15.0 * boundCond.col(5) - 20.0 * boundCond.col(1)) * t1 + (35.0 * boundCond.col(4) - 35.0 * boundCond.col(0));
                 nCoeffMat.col(4) = boundCond.col(3) * t3 / 6.0;
                 nCoeffMat.col(5) = boundCond.col(2) * t2 / 2.0;
                 nCoeffMat.col(6) = boundCond.col(1) * t1;
@@ -102,20 +94,11 @@ namespace min_snap
         // Constructor from boundary condition and duration
         Piece(BoundaryCond bdCond, double dur) : boundCond(bdCond), duration(dur), synced(false) {}
 
-        inline int getDim() const
-        {
-            return TrajDim;
-        }
+        inline int getDim() const { return TrajDim; }
 
-        inline int getOrder() const
-        {
-            return TrajOrder;
-        }
+        inline int getOrder() const { return TrajOrder; }
 
-        inline double getDuration() const
-        {
-            return duration;
-        }
+        inline double getDuration() const { return duration; }
 
         // Get the position at time t in this piece
         inline Eigen::Vector3d getPos(double t)
@@ -174,10 +157,7 @@ namespace min_snap
         }
 
         // Get the boundary condition of this piece
-        inline const BoundaryCond &getBoundCond() const
-        {
-            return boundCond;
-        }
+        inline const BoundaryCond &getBoundCond() const { return boundCond; }
 
         // Get the coefficient matrix of the piece
         // Default arg chooses the natural coefficients
@@ -237,9 +217,8 @@ namespace min_snap
         {
             // Compute normalized squared vel norm polynomial coefficient matrix
             Eigen::MatrixXd nVelCoeffMat = getVelCoeffMat(true);
-            Eigen::VectorXd coeff = RootFinder::polySqr(nVelCoeffMat.row(0)) +
-                                    RootFinder::polySqr(nVelCoeffMat.row(1)) +
-                                    RootFinder::polySqr(nVelCoeffMat.row(2));
+            Eigen::VectorXd coeff =
+                RootFinder::polySqr(nVelCoeffMat.row(0)) + RootFinder::polySqr(nVelCoeffMat.row(1)) + RootFinder::polySqr(nVelCoeffMat.row(2));
             int N = coeff.size();
             int n = N - 1;
             for (int i = 0; i < N; i++)
@@ -265,16 +244,13 @@ namespace min_snap
                     r = 0.5 * (r + 1.0);
                 }
                 // Find all stationaries
-                std::set<double> candidates = RootFinder::solvePolynomial(coeff.head(N - 1), l, r,
-                                                                          FLT_EPSILON / duration);
+                std::set<double> candidates = RootFinder::solvePolynomial(coeff.head(N - 1), l, r, FLT_EPSILON / duration);
                 // Check boundary points and stationaries within duration
                 candidates.insert(0.0);
                 candidates.insert(1.0);
                 double maxVelRateSqr = -INFINITY;
                 double tempNormSqr;
-                for (std::set<double>::const_iterator it = candidates.begin();
-                     it != candidates.end();
-                     it++)
+                for (std::set<double>::const_iterator it = candidates.begin(); it != candidates.end(); it++)
                 {
                     if (0.0 <= *it && 1.0 >= *it)
                     {
@@ -292,9 +268,8 @@ namespace min_snap
         {
             // Compute normalized squared acc norm polynomial coefficient matrix
             Eigen::MatrixXd nAccCoeffMat = getAccCoeffMat(true);
-            Eigen::VectorXd coeff = RootFinder::polySqr(nAccCoeffMat.row(0)) +
-                                    RootFinder::polySqr(nAccCoeffMat.row(1)) +
-                                    RootFinder::polySqr(nAccCoeffMat.row(2));
+            Eigen::VectorXd coeff =
+                RootFinder::polySqr(nAccCoeffMat.row(0)) + RootFinder::polySqr(nAccCoeffMat.row(1)) + RootFinder::polySqr(nAccCoeffMat.row(2));
             int N = coeff.size();
             int n = N - 1;
             for (int i = 0; i < N; i++)
@@ -320,16 +295,13 @@ namespace min_snap
                     r = 0.5 * (r + 1.0);
                 }
                 // Find all stationaries
-                std::set<double> candidates = RootFinder::solvePolynomial(coeff.head(N - 1), l, r,
-                                                                          FLT_EPSILON / duration);
+                std::set<double> candidates = RootFinder::solvePolynomial(coeff.head(N - 1), l, r, FLT_EPSILON / duration);
                 // Check boundary points and stationaries within duration
                 candidates.insert(0.0);
                 candidates.insert(1.0);
                 double maxAccRateSqr = -INFINITY;
                 double tempNormSqr;
-                for (std::set<double>::const_iterator it = candidates.begin();
-                     it != candidates.end();
-                     it++)
+                for (std::set<double>::const_iterator it = candidates.begin(); it != candidates.end(); it++)
                 {
                     if (0.0 <= *it && 1.0 >= *it)
                     {
@@ -346,17 +318,15 @@ namespace min_snap
         inline bool checkMaxVelRate(double maxVelRate)
         {
             double sqrMaxVelRate = maxVelRate * maxVelRate;
-            if (getVel(0.0).squaredNorm() >= sqrMaxVelRate ||
-                getVel(duration).squaredNorm() >= sqrMaxVelRate)
+            if (getVel(0.0).squaredNorm() >= sqrMaxVelRate || getVel(duration).squaredNorm() >= sqrMaxVelRate)
             {
                 return false;
             }
             else
             {
                 Eigen::MatrixXd nVelCoeffMat = getVelCoeffMat(true);
-                Eigen::VectorXd coeff = RootFinder::polySqr(nVelCoeffMat.row(0)) +
-                                        RootFinder::polySqr(nVelCoeffMat.row(1)) +
-                                        RootFinder::polySqr(nVelCoeffMat.row(2));
+                Eigen::VectorXd coeff =
+                    RootFinder::polySqr(nVelCoeffMat.row(0)) + RootFinder::polySqr(nVelCoeffMat.row(1)) + RootFinder::polySqr(nVelCoeffMat.row(2));
                 // Convert the actual squared maxVelRate to a normalized one
                 double t2 = duration * duration;
                 coeff.tail<1>()(0) -= sqrMaxVelRate * t2;
@@ -369,17 +339,15 @@ namespace min_snap
         inline bool checkMaxAccRate(double maxAccRate)
         {
             double sqrMaxAccRate = maxAccRate * maxAccRate;
-            if (getAcc(0.0).squaredNorm() >= sqrMaxAccRate ||
-                getAcc(duration).squaredNorm() >= sqrMaxAccRate)
+            if (getAcc(0.0).squaredNorm() >= sqrMaxAccRate || getAcc(duration).squaredNorm() >= sqrMaxAccRate)
             {
                 return false;
             }
             else
             {
                 Eigen::MatrixXd nAccCoeffMat = getAccCoeffMat(true);
-                Eigen::VectorXd coeff = RootFinder::polySqr(nAccCoeffMat.row(0)) +
-                                        RootFinder::polySqr(nAccCoeffMat.row(1)) +
-                                        RootFinder::polySqr(nAccCoeffMat.row(2));
+                Eigen::VectorXd coeff =
+                    RootFinder::polySqr(nAccCoeffMat.row(0)) + RootFinder::polySqr(nAccCoeffMat.row(1)) + RootFinder::polySqr(nAccCoeffMat.row(2));
                 // Convert the actual squared maxAccRate to a normalized one
                 double t2 = duration * duration;
                 double t4 = t2 * t2;
@@ -401,8 +369,7 @@ namespace min_snap
         Trajectory() = default;
 
         // Constructor from boundary conditions and durations
-        Trajectory(const std::vector<BoundaryCond> &bdConds,
-                   const std::vector<double> &durs)
+        Trajectory(const std::vector<BoundaryCond> &bdConds, const std::vector<double> &durs)
         {
             int N = std::min(durs.size(), bdConds.size());
             pieces.reserve(N);
@@ -412,10 +379,7 @@ namespace min_snap
             }
         }
 
-        inline int getPieceNum() const
-        {
-            return pieces.size();
-        }
+        inline int getPieceNum() const { return pieces.size(); }
 
         // Get durations vector of all pieces
         inline Eigen::VectorXd getDurations() const
@@ -454,15 +418,9 @@ namespace min_snap
         }
 
         // Reload the operator[] to access the i-th piece
-        inline const Piece &operator[](int i) const
-        {
-            return pieces[i];
-        }
+        inline const Piece &operator[](int i) const { return pieces[i]; }
 
-        inline Piece &operator[](int i)
-        {
-            return pieces[i];
-        }
+        inline Piece &operator[](int i) { return pieces[i]; }
 
         inline void clear(void)
         {
@@ -470,25 +428,13 @@ namespace min_snap
             return;
         }
 
-        inline Pieces::const_iterator begin() const
-        {
-            return pieces.begin();
-        }
+        inline Pieces::const_iterator begin() const { return pieces.begin(); }
 
-        inline Pieces::const_iterator end() const
-        {
-            return pieces.end();
-        }
+        inline Pieces::const_iterator end() const { return pieces.end(); }
 
-        inline Pieces::iterator begin()
-        {
-            return pieces.begin();
-        }
+        inline Pieces::iterator begin() { return pieces.begin(); }
 
-        inline Pieces::iterator end()
-        {
-            return pieces.end();
-        }
+        inline Pieces::iterator end() { return pieces.end(); }
 
         inline void reserve(const int &n)
         {
@@ -523,10 +469,7 @@ namespace min_snap
             int N = getPieceNum();
             int idx;
             double dur;
-            for (idx = 0;
-                 idx < N &&
-                 t > (dur = pieces[idx].getDuration());
-                 idx++)
+            for (idx = 0; idx < N && t > (dur = pieces[idx].getDuration()); idx++)
             {
                 t -= dur;
             }
@@ -649,6 +592,29 @@ namespace min_snap
             }
             return feasible;
         }
+
+        inline std::vector<Eigen::MatrixXd> getPolMatrix(void)
+        {
+            Eigen::MatrixXd polMatrixX(getPieceNum(), TrajOrder + 1);
+            Eigen::MatrixXd polMatrixY(getPieceNum(), TrajOrder + 1);
+            Eigen::MatrixXd polMatrixZ(getPieceNum(), TrajOrder + 1);
+
+            for (int i = 0; i < getPieceNum(); i++)
+            {
+                auto piece_coeffs = pieces[i].getCoeffMat(); // 3 rows,8 cols
+
+                polMatrixX.block(i, 0, 1, TrajOrder + 1) = piece_coeffs.block(0, 0, 1, TrajOrder + 1);
+                polMatrixY.block(i, 0, 1, TrajOrder + 1) = piece_coeffs.block(1, 0, 1, TrajOrder + 1);
+                polMatrixZ.block(i, 0, 1, TrajOrder + 1) = piece_coeffs.block(2, 0, 1, TrajOrder + 1);
+            }
+
+            std::vector<Eigen::MatrixXd> polMatrix;
+            polMatrix.push_back(polMatrixX);
+            polMatrix.push_back(polMatrixY);
+            polMatrix.push_back(polMatrixZ);
+
+            return polMatrix;
+        }
     };
 
     // The banded system class is used for solving
@@ -714,15 +680,9 @@ namespace min_snap
         }
 
         // The band matrix is stored as suggested in "Matrix Computation"
-        inline const double &operator()(const int &i, const int &j) const
-        {
-            return offset[i - j + upperBw][j];
-        }
+        inline const double &operator()(const int &i, const int &j) const { return offset[i - j + upperBw][j]; }
 
-        inline double &operator()(const int &i, const int &j)
-        {
-            return offset[i - j + upperBw][j];
-        }
+        inline double &operator()(const int &i, const int &j) { return offset[i - j + upperBw][j]; }
 
         // This function conducts banded LU factorization in place
         // Note that the matrix "A" MUST NOT HAVE ZERO PIVOTS !!!
@@ -751,8 +711,7 @@ namespace min_snap
         // This function solves Ax=b, then stores x in b
         // The input b is required to be N*m, i.e.,
         // m vectors to be solved.
-        template <typename EIGENMAT>
-        inline void solve(EIGENMAT &b) const
+        template <typename EIGENMAT> inline void solve(EIGENMAT &b) const
         {
             int iM;
             for (int j = 0; j <= N - 1; j++)
@@ -811,20 +770,15 @@ namespace min_snap
         Eigen::VectorXd cj30, cj31, cj32;
 
     private:
-        inline double evalPieceObjective(const Eigen::Array3d &iP,
-                                         const Eigen::Array3d &iV,
-                                         const Eigen::Array3d &iA,
-                                         const Eigen::Array3d &iJ,
-                                         const Eigen::Array3d &fP,
-                                         const Eigen::Array3d &fV,
-                                         const Eigen::Array3d &fA,
-                                         const Eigen::Array3d &fJ,
+        inline double evalPieceObjective(const Eigen::Array3d &iP, const Eigen::Array3d &iV, const Eigen::Array3d &iA, const Eigen::Array3d &iJ,
+                                         const Eigen::Array3d &fP, const Eigen::Array3d &fV, const Eigen::Array3d &fA, const Eigen::Array3d &fJ,
                                          const double &duration) const
         {
             Eigen::VectorXd coeffsSnpObjective(7);
             coeffsSnpObjective(0) = 8.0 * (2.0 * iJ.square() + iJ * fJ + 2.0 * fJ.square()).sum();
             coeffsSnpObjective(1) = 120.0 * (iA * (2.0 * iJ + fJ) - fA * (iJ + 2.0 * fJ)).sum();
-            coeffsSnpObjective(2) = 240.0 * (5.0 * iA.square() - 7.0 * iA * fA + 5.0 * fA.square() + 4.0 * iJ * iV + 3.0 * fJ * iV + 3.0 * iJ * fV + 4.0 * fJ * fV).sum();
+            coeffsSnpObjective(2) =
+                240.0 * (5.0 * iA.square() - 7.0 * iA * fA + 5.0 * fA.square() + 4.0 * iJ * iV + 3.0 * fJ * iV + 3.0 * iJ * fV + 4.0 * fJ * fV).sum();
             coeffsSnpObjective(3) = 240.0 * (45.0 * iA * iV - 39.0 * fA * iV + 39.0 * iA * fV - 45.0 * fA * fV + 7.0 * (iJ + fJ) * (iP - fP)).sum();
             coeffsSnpObjective(4) = 2880.0 * (9.0 * iV.square() + 17.0 * iV * fV + 9.0 * fV.square() + 7.0 * (iA - fA) * (iP - fP)).sum();
             coeffsSnpObjective(5) = 100800.0 * ((iV + fV) * (iP - fP)).sum();
@@ -838,9 +792,7 @@ namespace min_snap
         }
 
     public:
-        inline void reset(const Eigen::Matrix<double, 3, 4> &headState,
-                          const Eigen::Matrix<double, 3, 4> &tailState,
-                          const int &pieceNum)
+        inline void reset(const Eigen::Matrix<double, 3, 4> &headState, const Eigen::Matrix<double, 3, 4> &tailState, const int &pieceNum)
         {
             N = pieceNum;
             Ps.resize(3, N + 1);
@@ -893,8 +845,7 @@ namespace min_snap
             return;
         }
 
-        inline void generate(const Eigen::Matrix3Xd &inPs,
-                             const Eigen::VectorXd &ts)
+        inline void generate(const Eigen::Matrix3Xd &inPs, const Eigen::VectorXd &ts)
         {
             T = ts;
             const Eigen::VectorXd &t1 = T;
@@ -965,9 +916,15 @@ namespace min_snap
                 A33(2, 2) = cj31(0);
 
                 invA = A33.inverse();
-                bl.row(0) = (-cv00(0) * Ps.col(0) - cv01(0) * Ps.col(1) - cv02(0) * Ps.col(2) - cv10(0) * VAJs.col(0) - cv20(0) * VAJs.col(1) - cv30(0) * VAJs.col(2) - cv12(0) * VAJs.col(6) - cv22(0) * VAJs.col(7) - cv32(0) * VAJs.col(8)).transpose();
-                bl.row(1) = (-ca00(0) * Ps.col(0) - ca01(0) * Ps.col(1) - ca02(0) * Ps.col(2) - ca10(0) * VAJs.col(0) - ca20(0) * VAJs.col(1) - ca30(0) * VAJs.col(2) - ca12(0) * VAJs.col(6) - ca22(0) * VAJs.col(7) - ca32(0) * VAJs.col(8)).transpose();
-                bl.row(2) = (-cj00(0) * Ps.col(0) - cj01(0) * Ps.col(1) - cj02(0) * Ps.col(2) - cj10(0) * VAJs.col(0) - cj20(0) * VAJs.col(1) - cj30(0) * VAJs.col(2) - cj12(0) * VAJs.col(6) - cj22(0) * VAJs.col(7) - cj32(0) * VAJs.col(8)).transpose();
+                bl.row(0) = (-cv00(0) * Ps.col(0) - cv01(0) * Ps.col(1) - cv02(0) * Ps.col(2) - cv10(0) * VAJs.col(0) - cv20(0) * VAJs.col(1) -
+                             cv30(0) * VAJs.col(2) - cv12(0) * VAJs.col(6) - cv22(0) * VAJs.col(7) - cv32(0) * VAJs.col(8))
+                                .transpose();
+                bl.row(1) = (-ca00(0) * Ps.col(0) - ca01(0) * Ps.col(1) - ca02(0) * Ps.col(2) - ca10(0) * VAJs.col(0) - ca20(0) * VAJs.col(1) -
+                             ca30(0) * VAJs.col(2) - ca12(0) * VAJs.col(6) - ca22(0) * VAJs.col(7) - ca32(0) * VAJs.col(8))
+                                .transpose();
+                bl.row(2) = (-cj00(0) * Ps.col(0) - cj01(0) * Ps.col(1) - cj02(0) * Ps.col(2) - cj10(0) * VAJs.col(0) - cj20(0) * VAJs.col(1) -
+                             cj30(0) * VAJs.col(2) - cj12(0) * VAJs.col(6) - cj22(0) * VAJs.col(7) - cj32(0) * VAJs.col(8))
+                                .transpose();
 
                 VAJs.block(0, 3, 3, 3) = (invA * bl).transpose();
             }
@@ -1013,12 +970,24 @@ namespace min_snap
                 A(3 * N - 4, 3 * N - 5) = cj21(N - 2);
                 A(3 * N - 4, 3 * N - 4) = cj31(N - 2);
 
-                b.row(0) = (-cv00(0) * Ps.col(0) - cv01(0) * Ps.col(1) - cv02(0) * Ps.col(2) - cv10(0) * VAJs.col(0) - cv20(0) * VAJs.col(1) - cv30(0) * VAJs.col(2)).transpose();
-                b.row(1) = (-ca00(0) * Ps.col(0) - ca01(0) * Ps.col(1) - ca02(0) * Ps.col(2) - ca10(0) * VAJs.col(0) - ca20(0) * VAJs.col(1) - ca30(0) * VAJs.col(2)).transpose();
-                b.row(2) = (-cj00(0) * Ps.col(0) - cj01(0) * Ps.col(1) - cj02(0) * Ps.col(2) - cj10(0) * VAJs.col(0) - cj20(0) * VAJs.col(1) - cj30(0) * VAJs.col(2)).transpose();
-                b.row(3 * N - 6) = (-cv00(N - 2) * Ps.col(N - 2) - cv01(N - 2) * Ps.col(N - 1) - cv02(N - 2) * Ps.col(N) - cv12(N - 2) * VAJs.col(3 * N) - cv22(N - 2) * VAJs.col(3 * N + 1) - cv32(N - 2) * VAJs.col(3 * N + 2)).transpose();
-                b.row(3 * N - 5) = (-ca00(N - 2) * Ps.col(N - 2) - ca01(N - 2) * Ps.col(N - 1) - ca02(N - 2) * Ps.col(N) - ca12(N - 2) * VAJs.col(3 * N) - ca22(N - 2) * VAJs.col(3 * N + 1) - ca32(N - 2) * VAJs.col(3 * N + 2)).transpose();
-                b.row(3 * N - 4) = (-cj00(N - 2) * Ps.col(N - 2) - cj01(N - 2) * Ps.col(N - 1) - cj02(N - 2) * Ps.col(N) - cj12(N - 2) * VAJs.col(3 * N) - cj22(N - 2) * VAJs.col(3 * N + 1) - cj32(N - 2) * VAJs.col(3 * N + 2)).transpose();
+                b.row(0) = (-cv00(0) * Ps.col(0) - cv01(0) * Ps.col(1) - cv02(0) * Ps.col(2) - cv10(0) * VAJs.col(0) - cv20(0) * VAJs.col(1) -
+                            cv30(0) * VAJs.col(2))
+                               .transpose();
+                b.row(1) = (-ca00(0) * Ps.col(0) - ca01(0) * Ps.col(1) - ca02(0) * Ps.col(2) - ca10(0) * VAJs.col(0) - ca20(0) * VAJs.col(1) -
+                            ca30(0) * VAJs.col(2))
+                               .transpose();
+                b.row(2) = (-cj00(0) * Ps.col(0) - cj01(0) * Ps.col(1) - cj02(0) * Ps.col(2) - cj10(0) * VAJs.col(0) - cj20(0) * VAJs.col(1) -
+                            cj30(0) * VAJs.col(2))
+                               .transpose();
+                b.row(3 * N - 6) = (-cv00(N - 2) * Ps.col(N - 2) - cv01(N - 2) * Ps.col(N - 1) - cv02(N - 2) * Ps.col(N) -
+                                    cv12(N - 2) * VAJs.col(3 * N) - cv22(N - 2) * VAJs.col(3 * N + 1) - cv32(N - 2) * VAJs.col(3 * N + 2))
+                                       .transpose();
+                b.row(3 * N - 5) = (-ca00(N - 2) * Ps.col(N - 2) - ca01(N - 2) * Ps.col(N - 1) - ca02(N - 2) * Ps.col(N) -
+                                    ca12(N - 2) * VAJs.col(3 * N) - ca22(N - 2) * VAJs.col(3 * N + 1) - ca32(N - 2) * VAJs.col(3 * N + 2))
+                                       .transpose();
+                b.row(3 * N - 4) = (-cj00(N - 2) * Ps.col(N - 2) - cj01(N - 2) * Ps.col(N - 1) - cj02(N - 2) * Ps.col(N) -
+                                    cj12(N - 2) * VAJs.col(3 * N) - cj22(N - 2) * VAJs.col(3 * N + 1) - cj32(N - 2) * VAJs.col(3 * N + 2))
+                                       .transpose();
 
                 for (int i = 1; i < N - 2; i++)
                 {
@@ -1072,9 +1041,8 @@ namespace min_snap
 
             for (int i = 0; i < N; i++)
             {
-                objective += evalPieceObjective(Ps.col(i), VAJs.col(3 * i), VAJs.col(3 * i + 1), VAJs.col(3 * i + 2),
-                                                Ps.col(i + 1), VAJs.col(3 * i + 3), VAJs.col(3 * i + 4), VAJs.col(3 * i + 5),
-                                                T(i));
+                objective += evalPieceObjective(Ps.col(i), VAJs.col(3 * i), VAJs.col(3 * i + 1), VAJs.col(3 * i + 2), Ps.col(i + 1),
+                                                VAJs.col(3 * i + 3), VAJs.col(3 * i + 4), VAJs.col(3 * i + 5), T(i));
             }
 
             return objective;
@@ -1107,7 +1075,9 @@ namespace min_snap
 
                 coeffsGradT(0) = -8.0 * (2.0 * iJ.square() + iJ * fJ + 2.0 * fJ.square()).sum();
                 coeffsGradT(1) = -240.0 * (iA * (2.0 * iJ + fJ) - fA * (iJ + 2.0 * fJ)).sum();
-                coeffsGradT(2) = -720.0 * (5.0 * iA.square() - 7.0 * iA * fA + 5.0 * fA.square() + 4.0 * iJ * iV + 3.0 * fJ * iV + 3.0 * iJ * fV + 4.0 * fJ * fV).sum();
+                coeffsGradT(2) =
+                    -720.0 *
+                    (5.0 * iA.square() - 7.0 * iA * fA + 5.0 * fA.square() + 4.0 * iJ * iV + 3.0 * fJ * iV + 3.0 * iJ * fV + 4.0 * fJ * fV).sum();
                 coeffsGradT(3) = -960.0 * (45.0 * iA * iV - 39.0 * fA * iV + 39.0 * iA * fV - 45.0 * fA * fV + 7.0 * (iJ + fJ) * (iP - fP)).sum();
                 coeffsGradT(4) = -14400.0 * (9.0 * iV.square() + 17.0 * iV * fV + 9.0 * fV.square() + 7.0 * (iA - fA) * (iP - fP)).sum();
                 coeffsGradT(5) = 604800.0 * ((iV + fV) * (iP - fP)).sum();
@@ -1126,10 +1096,13 @@ namespace min_snap
 
             for (int i = 1; i < N; i++)
             {
-                grad.col(i - 1) = 1680.0 * (-VAJs.col(3 * i - 1) / t4(i - 1) - VAJs.col(3 * i + 2) * (1.0 / t4(i - 1) - 1.0 / t4(i)) + VAJs.col(3 * i + 5) / t4(i)) +
-                                  20160.0 * (-VAJs.col(3 * i - 2) / t5(i - 1) + VAJs.col(3 * i + 1) * (1.0 / t5(i - 1) + 1.0 / t5(i)) - VAJs.col(3 * i + 4) / t5(i)) +
-                                  100800.0 * (-VAJs.col(3 * i - 3) / t6(i - 1) - VAJs.col(3 * i) * (1.0 / t6(i - 1) - 1.0 / t6(i)) + VAJs.col(3 * i + 3) / t6(i)) +
-                                  201600.0 * (-Ps.col(i - 1) / t7(i - 1) + Ps.col(i) * (1.0 / t7(i - 1) + 1.0 / t7(i)) - Ps.col(i + 1) / t7(i));
+                grad.col(i - 1) =
+                    1680.0 *
+                        (-VAJs.col(3 * i - 1) / t4(i - 1) - VAJs.col(3 * i + 2) * (1.0 / t4(i - 1) - 1.0 / t4(i)) + VAJs.col(3 * i + 5) / t4(i)) +
+                    20160.0 *
+                        (-VAJs.col(3 * i - 2) / t5(i - 1) + VAJs.col(3 * i + 1) * (1.0 / t5(i - 1) + 1.0 / t5(i)) - VAJs.col(3 * i + 4) / t5(i)) +
+                    100800.0 * (-VAJs.col(3 * i - 3) / t6(i - 1) - VAJs.col(3 * i) * (1.0 / t6(i - 1) - 1.0 / t6(i)) + VAJs.col(3 * i + 3) / t6(i)) +
+                    201600.0 * (-Ps.col(i - 1) / t7(i - 1) + Ps.col(i) * (1.0 / t7(i - 1) + 1.0 / t7(i)) - Ps.col(i + 1) / t7(i));
             }
 
             return grad;
