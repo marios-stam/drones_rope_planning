@@ -593,22 +593,37 @@ namespace min_snap
             return feasible;
         }
 
-        inline std::vector<Eigen::MatrixXd> getPolMatrix(void)
+        inline std::vector<Eigen::VectorXd> getPolMatrix(void)
         {
-            Eigen::MatrixXd polMatrixX(getPieceNum(), TrajOrder + 1);
-            Eigen::MatrixXd polMatrixY(getPieceNum(), TrajOrder + 1);
-            Eigen::MatrixXd polMatrixZ(getPieceNum(), TrajOrder + 1);
+            int rows = getPieceNum();
+            int cols = (TrajOrder + 1);
+            Eigen::VectorXd polMatrixX(rows * cols);
+            Eigen::VectorXd polMatrixY(rows * cols);
+            Eigen::VectorXd polMatrixZ(rows * cols);
 
             for (int i = 0; i < getPieceNum(); i++)
             {
+
                 auto piece_coeffs = pieces[i].getCoeffMat(); // 3 rows,8 cols
 
-                polMatrixX.block(i, 0, 1, TrajOrder + 1) = piece_coeffs.block(0, 0, 1, TrajOrder + 1);
-                polMatrixY.block(i, 0, 1, TrajOrder + 1) = piece_coeffs.block(1, 0, 1, TrajOrder + 1);
-                polMatrixZ.block(i, 0, 1, TrajOrder + 1) = piece_coeffs.block(2, 0, 1, TrajOrder + 1);
+                // rowwise().reverse() beacuse pyhton expect [t^0,t^1,t^2,t^3,t^4,t^5,t^6,t^7] and
+                // framework works with [t^7,t^6,t^5,t^4,t^3,t^2,t^1,t^0]
+                // set block of matric to segment of vector
+
+                polMatrixX.segment(i * 8, 8) = piece_coeffs.row(0).reverse();
+                polMatrixY.segment(i * 8, 8) = piece_coeffs.row(1).reverse();
+                polMatrixZ.segment(i * 8, 8) = piece_coeffs.row(2).reverse();
+
+                // polMatrixX.segment(i * 8, 8) = piece_coeffs.row(0);
+                // polMatrixY.segment(i * 8, 8) = piece_coeffs.row(1);
+                // polMatrixZ.segment(i * 8, 8) = piece_coeffs.row(2);
+
+                // polMatrixX.segment(i * 8, 8) = piece_coeffs.block(0, 0, 1, TrajOrder + 1); //.rowwise().reverse();
+                // polMatrixY.segment(i * 8, 8) = piece_coeffs.block(1, 0, 1, TrajOrder + 1); //.rowwise().reverse();
+                // polMatrixZ.segment(i * 8, 8) = piece_coeffs.block(2, 0, 1, TrajOrder + 1); //.rowwise().reverse();
             }
 
-            std::vector<Eigen::MatrixXd> polMatrix;
+            std::vector<Eigen::VectorXd> polMatrix;
             polMatrix.push_back(polMatrixX);
             polMatrix.push_back(polMatrixY);
             polMatrix.push_back(polMatrixZ);

@@ -64,6 +64,9 @@ VectorXd allocateTime(const MatrixXd &wayPs, double vel, double acc)
 
 min_snap::Trajectory generate_traj_from_path(const nav_msgs::Path &wp)
 {
+    int index = 0;
+    printf("Last pose  %f %f %f \n", wp.poses[index].pose.position.x, wp.poses[index].pose.position.y, wp.poses[index].pose.position.z);
+
     auto tc1 = std::chrono::high_resolution_clock::now();
     MatrixXd route;
     Matrix3d iS, fS;
@@ -126,32 +129,26 @@ min_snap::Trajectory generate_traj_from_path(const nav_msgs::Path &wp)
 void publish_pols(min_snap::Trajectory traj, int id)
 {
 
-    std::vector<Eigen::MatrixXd> pols = traj.getPolMatrix();
+    std::vector<Eigen::VectorXd> pols = traj.getPolMatrix();
     // matrix details
     // std::cout << "matrix[0] size : " << pols[0].rows() << " x " << pols[0].cols() << std::endl;
     int wps_number = pols[0].rows();
 
-    // vectorizing
-    pols[0].resize(pols[0].rows() * pols[0].cols(), 1);
-    pols[1].resize(pols[1].rows() * pols[1].cols(), 1);
-    pols[2].resize(pols[2].rows() * pols[2].cols(), 1);
-    VectorXd vecx = pols[0];
-    VectorXd vecy = pols[1];
-    VectorXd vecz = pols[2];
-
     execution::TrajectoryPolynomialPieceMarios traj_pol;
+    // cf_id
     traj_pol.cf_id = id;
 
-    for (int i = 0; i < vecx.size(); i++)
+    // pols
+    for (int i = 0; i < pols[0].size(); i++) // TODO:make it without for loop
     {
-        traj_pol.poly_x.push_back(vecx[i]);
-        traj_pol.poly_y.push_back(vecy[i]);
-        traj_pol.poly_z.push_back(vecz[i]);
+        traj_pol.poly_x.push_back(pols[0](i));
+        traj_pol.poly_y.push_back(pols[1](i));
+        traj_pol.poly_z.push_back(pols[2](i));
     }
 
+    // durations
     auto durations = traj.getDurations();
     traj_pol.durations.resize(durations.size());
-
     for (int i = 0; i < durations.size(); i++)
     {
         traj_pol.durations[i] = durations[i];
@@ -209,7 +206,7 @@ int main(int argc, char **argv)
     auto path1_sub = nh.subscribe("/drone1Path", 1, path_hande_callback1);
     // auto path2_sub = nh.subscribe("/drone2Path", 1, path_hande_callback2);
 
-    traj_polynomial_pub = nh.advertise<execution::TrajectoryPolynomialPieceMarios>("traj_polynomial", 1);
+    traj_polynomial_pub = nh.advertise<execution::TrajectoryPolynomialPieceMarios>("/piece_pol", 1);
 
     ros::spin();
 
