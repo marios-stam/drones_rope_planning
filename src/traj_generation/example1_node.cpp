@@ -9,14 +9,17 @@
 #include <string>
 #include <vector>
 
-#include <ros/ros.h>
-// include nav_msgs::Path
 #include <nav_msgs/Path.h>
+#include <ros/ros.h>
+// marios headers
+#include <execution/TrajectoryPolynomialPieceMarios.h>
 
-void generate_traj_from_path(const nav_msgs::Path &wp);
+min_snap::Trajectory generate_traj_from_path(const nav_msgs::Path &wp);
 using namespace std;
 using namespace ros;
 using namespace Eigen;
+
+ros::Publisher traj_polynomial_pub;
 
 VectorXd allocateTime(const MatrixXd &wayPs, double vel, double acc)
 {
@@ -59,7 +62,7 @@ VectorXd allocateTime(const MatrixXd &wayPs, double vel, double acc)
     return durations;
 }
 
-void generate_traj_from_path(const nav_msgs::Path &wp)
+min_snap::Trajectory generate_traj_from_path(const nav_msgs::Path &wp)
 {
     auto tc1 = std::chrono::high_resolution_clock::now();
     MatrixXd route;
@@ -93,11 +96,7 @@ void generate_traj_from_path(const nav_msgs::Path &wp)
     snapOpt.getTraj(minSnapTraj);
     auto tc2 = std::chrono::high_resolution_clock::now();
 
-    std::vector<Eigen::MatrixXd> pols = minSnapTraj.getPolMatrix();
-    // matrix details
-    std::cout << "matrix[0] size : " << pols[0].rows() << " x " << pols[0].cols() << std::endl;
-    auto dt = std::chrono::duration_cast<std::chrono::duration<double>>(tc2 - tc1).count();
-    std::cout << "min_snap generation time : " << dt * 1000 << " msec" << std::endl;
+    return minSnapTraj;
 
     bool TEST_GENERATION_CORRECTNESS = false;
     if (TEST_GENERATION_CORRECTNESS)
@@ -124,8 +123,64 @@ void generate_traj_from_path(const nav_msgs::Path &wp)
     }
 }
 
-void path_hande_callback1(const nav_msgs::Path &wp) { generate_traj_from_path(wp); }
-void path_hande_callback2(const nav_msgs::Path &wp) { generate_traj_from_path(wp); }
+void publish_pols(min_snap::Trajectory traj, int id)
+{
+
+    std::vector<Eigen::MatrixXd> pols = traj.getPolMatrix();
+    // matrix details
+    // std::cout << "matrix[0] size : " << pols[0].rows() << " x " << pols[0].cols() << std::endl;
+    int wps_number = pols[0].rows();
+
+    // vectorizing
+    pols[0].resize(pols[0].rows() * pols[0].cols(), 1);
+    pols[1].resize(pols[1].rows() * pols[1].cols(), 1);
+    pols[2].resize(pols[2].rows() * pols[2].cols(), 1);
+    VectorXd vecx = pols[0];
+    VectorXd vecy = pols[1];
+    VectorXd vecz = pols[2];
+
+    execution::TrajectoryPolynomialPieceMarios traj_pol;
+    traj_pol.cf_id = id;
+
+    for (int i = 0; i < vecx.size(); i++)
+    {
+        traj_pol.poly_x.push_back(vecx[i]);
+        traj_pol.poly_y.push_back(vecy[i]);
+        traj_pol.poly_z.push_back(vecz[i]);
+    }
+
+    auto durations = traj.getDurations();
+    traj_pol.durations.resize(durations.size());
+
+    for (int i = 0; i < durations.size(); i++)
+    {
+        traj_pol.durations[i] = durations[i];
+    }
+
+    traj_polynomial_pub.publish(traj_pol);
+}
+
+void path_hande_callback1(const nav_msgs::Path &wp)
+{
+    auto t0 = std::chrono::high_resolution_clock::now();
+    auto traj = generate_traj_from_path(wp);
+    auto t1 = std::chrono::high_resolution_clock::now();
+    publish_pols(traj, 0);
+    auto t2 = std::chrono::high_resolution_clock::now();
+
+    std::cout << "Time taken for generation: " << (float)std::chrono::duration_cast<std::chrono::microseconds>(t1 - t0).count() / 1000 << " msec"
+              << std::endl;
+    std::cout << "Time taken for publishing: " << (float)std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count() / 1000 << " msec"
+              << std::endl;
+    std::cout << "Total time taken: " << (float)std::chrono::duration_cast<std::chrono::microseconds>(t2 - t0).count() / 1000 << " msec" << std::endl;
+    std::cout << "======================================================================================\n";
+}
+
+void path_hande_callback2(const nav_msgs::Path &wp)
+{
+    auto traj = generate_traj_from_path(wp);
+    publish_pols(traj, 1);
+}
 
 int main(int argc, char **argv)
 {
@@ -153,6 +208,8 @@ int main(int argc, char **argv)
 
     auto path1_sub = nh.subscribe("/drone1Path", 1, path_hande_callback1);
     // auto path2_sub = nh.subscribe("/drone2Path", 1, path_hande_callback2);
+
+    traj_polynomial_pub = nh.advertise<execution::TrajectoryPolynomialPieceMarios>("traj_polynomial", 1);
 
     ros::spin();
 

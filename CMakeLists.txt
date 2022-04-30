@@ -26,6 +26,7 @@ find_package(catkin REQUIRED COMPONENTS
     roscpp
     std_msgs
     nav_msgs
+    execution
     
 )
 

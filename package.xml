@@ -33,6 +33,7 @@
   <build_depend>message_generation</build_depend>
   <exec_depend>message_runtime</exec_depend>
   <build_depend>nav_msgs</build_depend>
+  <build_depend>execution</build_depend>
 
   
   <depend>fcl</depend>
