@@ -3,6 +3,11 @@
 #include "../include/moving_obstacles.hpp"
 #include "ros/ros.h"
 
+// TODO: make parameters for:
+//  - fixing invalid start state distance
+//  - fixing invalid goal state distance
+//  - distance to goal resetting
+
 namespace problem_params
 {
     struct Bound
@@ -32,13 +37,23 @@ namespace problem_params
         MOVING_OBSTACLES
     };
 
+    struct RealTimeSettings
+    {
+        bool setting_new_start;
+        bool replan_only_if_not_valid;
+        float fix_invalid_start_dist;
+        float fix_invalid_goal_dist;
+        float distance_to_goal_resetting;
+        float replanning_interval;
+    };
+
     struct ProblemParams
     {
         // planning
         int planning_type;
 
         // realtime planning settings
-        bool setting_new_start;
+        RealTimeSettings realtime_settings;
 
         std::string planner_algorithm;
 

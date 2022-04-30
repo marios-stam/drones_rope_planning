@@ -69,6 +69,7 @@ def callback(path: Path):
 times = 0
 total_time = 0
 conf = []
+
 if __name__ == "__main__":
     rospy.init_node('realtime_interface')
 
@@ -79,11 +80,14 @@ if __name__ == "__main__":
 
     rospy.Subscriber("/obstacles_transforms", Path, callback)
 
-    rate = rospy.Rate(20)
+    # get ros parameter
+    planning_freq = rospy.get_param("/planning//real_time_settings/planning_frequency")
+
+    rate = rospy.Rate(planning_freq)
     while not rospy.is_shutdown():
         t0 = rospy.get_time()
         print("======================================================")
-        rospy.loginfo("Calling planning")
+        # rospy.loginfo("Calling planning")
         service_client()
         dt = rospy.get_time()-t0
         total_time += dt

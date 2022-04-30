@@ -4,8 +4,17 @@ rope_length: 1.4
 planning_type: "moving_obstacles" # static,moving_obstacles
 
 #real time planning settings
-setting_new_start: False
+real_time_settings: {
+    planning_frequency: 32,
+    setting_new_start: True,
+    replan_only_if_not_valid: True, # only replans if the current plan is not valid
+    fix_invalid_start_dist: 0.1,
+    fix_invalid_goal_dist: 0.1,
+    distance_to_goal_resetting: 1.0,
+    replanning_interval: 200.0, #msec
 
+  }
+#======================================
 calculate_new_path: True
 timeout: 0.6
 
@@ -18,7 +27,7 @@ timeout: 0.6
 env_mesh: "env-scene-ltu-experiment"
 
 #Planning
-val_check_resolution: 0.04
+val_check_resolution: 0.08
 range: 1
 use_mesh_improvement: True
 goal_type: "simple" #simple,samplable,symmetrical,multiple_goals
@@ -30,13 +39,13 @@ optimal_objective: { class: "None", threshold: 3 }
 
 safety_distances: {
     #horizontal and vertical distance offset for drones
-    drones_offsets: { horizontal: 0.05, vertical: 0.05 },
+    drones_offsets: { horizontal: 0.1, vertical: 0.05 },
 
     #horizontal and vertical distance offset for lowest point of catenary
     lowest_point: 0.0,
   }
 
-thickness: 0.2
+thickness: 0.4
 
 # start and goal
 start: { x: +0.0, y: 2.0, z: 0.75 }
@@ -60,4 +69,4 @@ planner_algorithm: "RRTConnect"
 # planner_algorithm: "KPIECE"
 
 simplify_path: True
-path_interpolation_points: 30
+path_interpolation_points: 20

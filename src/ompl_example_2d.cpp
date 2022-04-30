@@ -287,8 +287,23 @@ namespace ompl_rope_planning
 
     og::PathGeometric *planner::plan()
     {
+        pdef->fixInvalidInputStates(prob_params.realtime_settings.fix_invalid_start_dist, prob_params.realtime_settings.fix_invalid_goal_dist, 20);
+        // check if start is valid
+        if (!si->isValid(pdef->getStartState(0)))
+        {
+            throw std::runtime_error("Start state is invalid");
+        }
 
-        pdef->fixInvalidInputStates(0.2, 0.5, 20);
+        // check if pdef has start and goal states
+        std::vector<const ob::State *> input_states;
+        pdef->getInputStates(input_states);
+
+        printf("input_states.size: %d\n", input_states.size());
+        if (input_states.size() < 2)
+        {
+            throw std::runtime_error("This planner requires two states, a start and a goal state");
+        }
+
         // statistics
         static float max_planning_time = 0.0;
         pdef->clearSolutionPaths();
@@ -320,6 +335,8 @@ namespace ompl_rope_planning
             pdef->print(std::cout);
             printf("================================================================================\n");
         }
+
+        // planner_->getPlannerInputStates()
 
         float simpilfying_time, interpolating_time, saving_path_time, planning_time;
 

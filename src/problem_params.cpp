@@ -76,7 +76,12 @@ namespace problem_params
 
         pdef.obstacles_config = realtime_obstacles::load_cylinders_definition(nh);
 
-        ros::param::get("/planning/setting_new_start", pdef.setting_new_start);
+        ros::param::get("/planning/real_time_settings/setting_new_start", pdef.realtime_settings.setting_new_start);
+        ros::param::get("/planning/real_time_settings/replan_only_if_not_valid", pdef.realtime_settings.replan_only_if_not_valid);
+        ros::param::get("/planning/real_time_settings/fix_invalid_start_dist", pdef.realtime_settings.fix_invalid_start_dist);
+        ros::param::get("/planning/real_time_settings/fix_invalid_goal_dist", pdef.realtime_settings.fix_invalid_goal_dist);
+        ros::param::get("/planning/real_time_settings/distance_to_goal_resetting", pdef.realtime_settings.distance_to_goal_resetting);
+        ros::param::get("/planning/real_time_settings/replanning_interval", pdef.realtime_settings.replanning_interval);
 
         return pdef;
     }
@@ -88,7 +93,12 @@ namespace problem_params
         printf("\tPlanning type: %d\n", params.planning_type);
         if (params.planning_type == PlanningType::MOVING_OBSTACLES)
         {
-            printf("\t\tSetting new start:%d\n", params.setting_new_start);
+            printf("\t\tSetting new start:%d\n", params.realtime_settings.setting_new_start);
+            printf("\t\tReplan if not valid:%d\n", params.realtime_settings.replan_only_if_not_valid);
+            printf("\t\tFix invalid start dist:%d\n", params.realtime_settings.fix_invalid_start_dist);
+            printf("\t\tFix invalid goal dist:%d\n", params.realtime_settings.fix_invalid_goal_dist);
+            printf("\t\tDistance to goal resetting:%f\n", params.realtime_settings.distance_to_goal_resetting);
+            printf("\t\tReplanning interval:%f\n", params.realtime_settings.replanning_interval);
         }
 
         printf("\tTimeout: %f\n", params.timeout);
