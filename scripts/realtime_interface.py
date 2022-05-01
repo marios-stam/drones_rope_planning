@@ -92,6 +92,6 @@ if __name__ == "__main__":
         dt = rospy.get_time()-t0
         total_time += dt
         times += 1
-        print("Average time: ", total_time/times, "sec")
+        print("Average time of calling service: ", total_time/times, "sec")
 
         rate.sleep()

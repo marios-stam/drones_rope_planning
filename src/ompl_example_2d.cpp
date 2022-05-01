@@ -404,7 +404,6 @@ namespace ompl_rope_planning
                     unsigned int total_times = 0;
                     while ((ptc == false || atLeastOnce) && tryMore)
                     {
-                        // printf("total_times:%d \n", total_times++);
                         // if ((ptc == false || atLeastOnce) && si->getStateSpace()->isMetricSpace())
                         // {
                         //     bool metricTryMore = true;
@@ -427,19 +426,21 @@ namespace ompl_rope_planning
                         // // try to collapse close-by vertices
                         // if (ptc == false || atLeastOnce)
                         //     path_simplifier.collapseCloseVertices(*pth);
-
+                        printf("total_times:%d \n", total_times++);
+                        if (total_times > 3)
+                            break;
                         bool shortcut;
                         shortcut = path_simplifier.shortcutPath(*pth); // split path segments, not just vertices
                         shortcut = path_simplifier.shortcutPath(*pth); // split path segments, not just vertices
                         shortcut = path_simplifier.shortcutPath(*pth); // split path segments, not just vertices
 
-                        path_simplifier.smoothBSpline(*pth, 3, (*pth).length() / 100.0);
+                        // path_simplifier.smoothBSpline(*pth, 3, (*pth).length() / 100.0);
                         tryMore = path_simplifier.reduceVertices(*pth);
 
                         path_simplifier.collapseCloseVertices(*pth);
 
                         unsigned int times = 0;
-                        while ((ptc == false || atLeastOnce) && tryMore && ++times <= 5)
+                        while ((ptc == false || atLeastOnce) && tryMore && ++times <= 3)
                             tryMore = path_simplifier.reduceVertices(*pth);
                     }
                     /*

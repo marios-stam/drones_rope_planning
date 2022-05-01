@@ -93,7 +93,9 @@ min_snap::Trajectory generate_traj_from_path(const nav_msgs::Path &wp)
 
     iSS << iS, Eigen::MatrixXd::Zero(3, 1);
     fSS << fS, Eigen::MatrixXd::Zero(3, 1);
-    // ts = allocateTime(route, 3.0, 3.0);
+
+    ts = allocateTime(route, 3.0, 3.0); // TODO:Make that a parameter
+
     snapOpt.reset(iSS, fSS, route.cols() - 1);
     snapOpt.generate(route.block(0, 1, 3, waypoints_number - 2), ts);
     snapOpt.getTraj(minSnapTraj);

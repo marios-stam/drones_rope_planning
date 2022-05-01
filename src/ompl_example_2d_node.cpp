@@ -102,7 +102,7 @@ void set_new_start(bool &reset_start_state_to_initial)
         float dist_to_goal_threshold = 1;
         if (dist < dist_to_goal_threshold)
         {
-            printf("Start and goal are too close\n");
+            // printf("Start and goal are too close\n");
             reset_start_state_to_initial = true;
             new_start[0] = planner->prob_params.start_pos["x"];
             new_start[1] = planner->prob_params.start_pos["y"];
@@ -112,7 +112,7 @@ void set_new_start(bool &reset_start_state_to_initial)
     catch (tf::TransformException &ex)
     {
         printf("%s", ex.what());
-        printf("Using old start\n");
+        // printf("Using old start\n");
         // Its the first time and nothin has been published to the tree
         new_start[0] = old_start[0];
         new_start[1] = old_start[1];
@@ -230,7 +230,7 @@ bool planning_service(drones_rope_planning::PlanningRequest::Request &req, drone
     avg_time += planning_time;
     max_time = std::max(max_time, (float)planning_time);
 
-    // std::cout << "Time to plan: " << planning_time << " ms" << std::endl;
+    std::cout << "Time to plan: " << planning_time << " ms" << std::endl;
     std::cout << "Average time to plan: " << avg_time / replanning_times << " ms" << std::endl;
     // std::cout << "Max time to plan: " << max_time << " ms" << std::endl;
 
