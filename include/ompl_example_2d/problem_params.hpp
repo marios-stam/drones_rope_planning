@@ -37,6 +37,12 @@ namespace problem_params
         MOVING_OBSTACLES
     };
 
+    enum SimplifyingPath
+    {
+        FAST,
+        FULL
+    };
+
     struct RealTimeSettings
     {
         bool setting_new_start;
@@ -45,6 +51,7 @@ namespace problem_params
         float fix_invalid_goal_dist;
         float distance_to_goal_resetting;
         float replanning_interval;
+        int simplifying_path;
     };
 
     struct ProblemParams

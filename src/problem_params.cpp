@@ -83,6 +83,11 @@ namespace problem_params
         ros::param::get("/planning/real_time_settings/distance_to_goal_resetting", pdef.realtime_settings.distance_to_goal_resetting);
         ros::param::get("/planning/real_time_settings/replanning_interval", pdef.realtime_settings.replanning_interval);
 
+        std::map<std::string, int> simplifying_path_map = {{"full", SimplifyingPath::FULL}, {"fast", SimplifyingPath::FAST}};
+        std::string simplifying_path_str;
+        ros::param::get("/planning/real_time_settings/siplifying_path", simplifying_path_str);
+        pdef.realtime_settings.simplifying_path = simplifying_path_map[simplifying_path_str];
+
         return pdef;
     }
 
@@ -99,6 +104,9 @@ namespace problem_params
             printf("\t\tFix invalid goal dist:%d\n", params.realtime_settings.fix_invalid_goal_dist);
             printf("\t\tDistance to goal resetting:%f\n", params.realtime_settings.distance_to_goal_resetting);
             printf("\t\tReplanning interval:%f\n", params.realtime_settings.replanning_interval);
+
+            std::map<int, std::string> simplifying_path_map = {{SimplifyingPath::FULL, "full"}, {SimplifyingPath::FAST, "fast"}};
+            printf("\t\tSimplifying path:%s\n", simplifying_path_map[params.realtime_settings.simplifying_path]);
         }
 
         printf("\tTimeout: %f\n", params.timeout);

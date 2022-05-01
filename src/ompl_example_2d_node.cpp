@@ -142,7 +142,7 @@ bool check_prev_path_validity()
         // check state validity
         if (!planner->isStateValid(s))
         {
-            printf("Previous path is invalid\n");
+            // printf("Previous path is invalid\n");
             prev_path_is_valid = false;
             break;
         };
@@ -198,7 +198,7 @@ bool planning_service(drones_rope_planning::PlanningRequest::Request &req, drone
         }
         else
         {
-            ROS_INFO("No need to replan\n");
+            // printf("No need to replan\n");
             return true;
         }
     }
@@ -206,7 +206,7 @@ bool planning_service(drones_rope_planning::PlanningRequest::Request &req, drone
     // replanning
     time_of_replanning = ros::Time::now();
 
-    printf("Replanning\n");
+    // printf("Replanning\n");
     auto t03 = std::chrono::high_resolution_clock::now();
     og::PathGeometric *pth;
     try
@@ -252,7 +252,7 @@ bool planning_service(drones_rope_planning::PlanningRequest::Request &req, drone
 
     // print current ros time
     ros::Time current_time = ros::Time::now();
-    printf("%f \n", current_time.toSec());
+    // printf("%f \n", current_time.toSec());
     // std::cout << "=====================================================" << std::endl;
     return true;
 }
@@ -265,6 +265,10 @@ int main(int argc, char **argv)
     // main_fcl_checker_realtime_test();
     // main_realtime_planning(argc, argv);
 
+    if (ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Error))
+    {
+        ros::console::notifyLoggerLevelsChanged();
+    }
     // init ROS node
     ros::init(argc, argv, "ompl_example_2d");
 
