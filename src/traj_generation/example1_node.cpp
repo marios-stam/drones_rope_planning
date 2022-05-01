@@ -64,8 +64,8 @@ VectorXd allocateTime(const MatrixXd &wayPs, double vel, double acc)
 
 min_snap::Trajectory generate_traj_from_path(const nav_msgs::Path &wp)
 {
-    int index = 0;
-    printf("Last pose  %f %f %f \n", wp.poses[index].pose.position.x, wp.poses[index].pose.position.y, wp.poses[index].pose.position.z);
+    // int index = 0;
+    // printf("Last pose  %f %f %f \n", wp.poses[index].pose.position.x, wp.poses[index].pose.position.y, wp.poses[index].pose.position.z);
 
     auto tc1 = std::chrono::high_resolution_clock::now();
     MatrixXd route;
@@ -157,27 +157,25 @@ void publish_pols(min_snap::Trajectory traj, int id)
     traj_polynomial_pub.publish(traj_pol);
 }
 
-void path_hande_callback1(const nav_msgs::Path &wp)
+void publish_path_to_traj(const nav_msgs::Path &wp, int id)
 {
     auto t0 = std::chrono::high_resolution_clock::now();
     auto traj = generate_traj_from_path(wp);
     auto t1 = std::chrono::high_resolution_clock::now();
-    publish_pols(traj, 0);
+    publish_pols(traj, id);
     auto t2 = std::chrono::high_resolution_clock::now();
 
-    std::cout << "Time taken for generation: " << (float)std::chrono::duration_cast<std::chrono::microseconds>(t1 - t0).count() / 1000 << " msec"
-              << std::endl;
-    std::cout << "Time taken for publishing: " << (float)std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count() / 1000 << " msec"
-              << std::endl;
-    std::cout << "Total time taken: " << (float)std::chrono::duration_cast<std::chrono::microseconds>(t2 - t0).count() / 1000 << " msec" << std::endl;
-    std::cout << "======================================================================================\n";
+    // std::cout << "Time taken for generation: " << (float)std::chrono::duration_cast<std::chrono::microseconds>(t1 - t0).count() / 1000 << " msec"
+    //   << std::endl;
+    // std::cout << "Time taken for publishing: " << (float)std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count() / 1000 << " msec"
+    //   << std::endl;
+    std::cout << "Total time taken for generating trajectory " << id << ": "
+              << (float)std::chrono::duration_cast<std::chrono::microseconds>(t2 - t0).count() / 1000 << " msec" << std::endl;
 }
 
-void path_hande_callback2(const nav_msgs::Path &wp)
-{
-    auto traj = generate_traj_from_path(wp);
-    publish_pols(traj, 1);
-}
+void path_hande_callback1(const nav_msgs::Path &wp) { publish_path_to_traj(wp, 0); }
+
+void path_hande_callback2(const nav_msgs::Path &wp) { publish_path_to_traj(wp, 1); }
 
 int main(int argc, char **argv)
 {
@@ -204,7 +202,7 @@ int main(int argc, char **argv)
     double d0, d1;
 
     auto path1_sub = nh.subscribe("/drone1Path", 1, path_hande_callback1);
-    // auto path2_sub = nh.subscribe("/drone2Path", 1, path_hande_callback2);
+    auto path2_sub = nh.subscribe("/drone2Path", 1, path_hande_callback2);
 
     traj_polynomial_pub = nh.advertise<execution::TrajectoryPolynomialPieceMarios>("/piece_pol", 1);
 

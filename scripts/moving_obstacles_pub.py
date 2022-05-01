@@ -95,6 +95,8 @@ if __name__ == "__main__":
     pub = rospy.Publisher("/obstacles_transforms", Path, queue_size=1)
 
     # rospy.Subscriber("/obstacles_transforms_odometry", PoseStamped, callback)
+    last_reset = 0
+    center = [.5, 4]
     t = 0
     rate = rospy.Rate(28)  # hz
     while not rospy.is_shutdown():
@@ -111,17 +113,22 @@ if __name__ == "__main__":
         # path.poses[0].pose.position.y = np.random.uniform(3.5, 4.5)
         # input("Press Enter to continue...")
 
-        period = 6
+        period = 12
 
-        path.poses[0].pose.position.x = np.sin(2*np.pi*t/period)
-        path.poses[0].pose.position.y = 4+0.5*np.cos(2*np.pi*t/period)
+        # if t-last_reset > 3:
+        #     center = [np.random.uniform(-0.3, 0.3), np.random.uniform(3.8, 4.2)]
+        #     last_reset = t
+
+        path.poses[0].pose.position.x = center[0] + np.sin(2*np.pi*t/period)
+        path.poses[0].pose.position.y = center[1] + 0.5*np.cos(2*np.pi*t/period)
         # path.poses[0].pose.position.y = 4
         # path.poses[0].pose.position.z = 1+0.5*np.cos(2*np.pi*t/period)
 
-        path.poses[1].pose.position.x = -np.cos(2*np.pi*t/period)
-        # path.poses[0].pose.position.y = 4+0.5*np.sin(2*np.pi*t/period)
-        # path.poses[0].pose.position.y = 4
-        # path.poses[1].pose.position.z = 1-0.5*np.cos(2*np.pi*t/period)
+        if len(path.poses) > 1:
+            # path.poses[1].pose.position.x = -np.cos(2*np.pi*t/period / 2)
+            path.poses[1].pose.position.y = 4-np.cos(2*np.pi*t/period/2)
+            # path.poses[0].pose.position.y = 4
+            # path.poses[1].pose.position.z = 1-0.5*np.cos(2*np.pi*t/period)
 
         # print("t: ", t, " x: ", path.poses[0].pose.position.x, " y: ", path.poses[0].pose.position.y)
 

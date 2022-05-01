@@ -299,10 +299,10 @@ namespace ompl_rope_planning
         pdef->getInputStates(input_states);
 
         printf("input_states.size: %d\n", input_states.size());
-        if (input_states.size() < 2)
-        {
-            throw std::runtime_error("This planner requires two states, a start and a goal state");
-        }
+        // if (input_states.size() < 2)
+        // {
+        //     throw std::runtime_error("This planner requires two states, a start and a goal state");
+        // }
 
         // statistics
         static float max_planning_time = 0.0;
@@ -354,7 +354,10 @@ namespace ompl_rope_planning
             ob::PlannerTerminationCondition ptc(ob::timedPlannerTerminationCondition(prob_params.timeout));
 
             auto t0 = std::chrono::high_resolution_clock::now();
+            printf("Solving!\n");
             solved = planner_->solve(ptc);
+
+            printf("Solved!\n");
             std::cout << std::endl;
             auto dt = std::chrono::high_resolution_clock::now() - t0;
             auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(dt).count();
@@ -375,7 +378,7 @@ namespace ompl_rope_planning
 
             ob::PathPtr path = pdef->getSolutionPath();
             og::PathGeometric *pth = pdef->getSolutionPath()->as<og::PathGeometric>();
-
+            printf("Simplifying and interpolating\n");
             if (prob_params.simplify_path)
             {
                 auto t0 = std::chrono::high_resolution_clock::now();
@@ -386,6 +389,7 @@ namespace ompl_rope_planning
 
                 // path_simplifier.simplify(*pth, ptc, true);
                 path_simplifier.collapseCloseVertices(*pth);
+                path_simplifier.shortcutPath(*pth);
 
                 // path_simplifier.simplifyMax(*pth);
                 auto dt = std::chrono::high_resolution_clock::now() - t0;

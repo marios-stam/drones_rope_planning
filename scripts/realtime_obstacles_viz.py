@@ -52,8 +52,8 @@ class CylinderMarker(Marker):
         self.updatePose(pos, rot)
 
         scale_fac = 1
-        self.scale.x = radius  # radius axis
-        self.scale.y = radius  # radius axis
+        self.scale.x = radius-0.2  # radius axis smaller for safety
+        self.scale.y = radius-0.2  # radius axis smaller for safety
         self.scale.z = height
 
         self.color.r = 1.0

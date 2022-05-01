@@ -111,7 +111,7 @@ void set_new_start(bool &reset_start_state_to_initial)
     }
     catch (tf::TransformException &ex)
     {
-        ROS_ERROR("%s", ex.what());
+        printf("%s", ex.what());
         printf("Using old start\n");
         // Its the first time and nothin has been published to the tree
         new_start[0] = old_start[0];
@@ -142,8 +142,7 @@ bool check_prev_path_validity()
         // check state validity
         if (!planner->isStateValid(s))
         {
-
-            ROS_ERROR("Previous path is invalid\n");
+            printf("Previous path is invalid\n");
             prev_path_is_valid = false;
             break;
         };
@@ -216,7 +215,7 @@ bool planning_service(drones_rope_planning::PlanningRequest::Request &req, drone
     }
     catch (ompl::Exception &e)
     {
-        ROS_ERROR("%s", e.what());
+        printf("%s", e.what());
         return false;
     }
     auto dt3 = std::chrono::high_resolution_clock::now() - t03;
@@ -231,9 +230,9 @@ bool planning_service(drones_rope_planning::PlanningRequest::Request &req, drone
     avg_time += planning_time;
     max_time = std::max(max_time, (float)planning_time);
 
-    std::cout << "Time to plan: " << planning_time << " ms" << std::endl;
+    // std::cout << "Time to plan: " << planning_time << " ms" << std::endl;
     std::cout << "Average time to plan: " << avg_time / replanning_times << " ms" << std::endl;
-    std::cout << "Max time to plan: " << max_time << " ms" << std::endl;
+    // std::cout << "Max time to plan: " << max_time << " ms" << std::endl;
 
     nav_msgs::Path drone_path1, drone_path2;
 
@@ -254,7 +253,7 @@ bool planning_service(drones_rope_planning::PlanningRequest::Request &req, drone
     // print current ros time
     ros::Time current_time = ros::Time::now();
     printf("%f \n", current_time.toSec());
-    std::cout << "=====================================================" << std::endl;
+    // std::cout << "=====================================================" << std::endl;
     return true;
 }
 
