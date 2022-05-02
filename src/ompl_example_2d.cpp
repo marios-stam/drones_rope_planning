@@ -294,7 +294,7 @@ namespace ompl_rope_planning
         static float max_times[times] = {0, 0, 0, 0, 0};
         static int times_called = 0;
 
-        float dts_to_sec[times] = {0, 0, 0, 0, 0};
+        float dts_to_msec[times] = {0, 0, 0, 0, 0};
 
         auto t0 = ros::Time::now();
 
@@ -341,9 +341,9 @@ namespace ompl_rope_planning
         times_called++;
 
         auto dt4 = ros::Time::now() - t4;
-        dts_to_sec[4] = dt4.toSec();
-        sum_times[4] += dts_to_sec[4];
-        max_times[4] = std::max(max_times[4], dts_to_sec[4]);
+        dts_to_msec[4] = dt4.toSec() * 1000;
+        sum_times[4] += dts_to_msec[4];
+        max_times[4] = std::max(max_times[4], dts_to_msec[4]);
 
         // attempt to solve the problem within one second of planning time
         auto t1 = ros::Time::now();
@@ -364,10 +364,10 @@ namespace ompl_rope_planning
         } while (solved != ob::PlannerStatus::EXACT_SOLUTION);
 
         auto dt1 = ros::Time::now() - t1;
-        dts_to_sec[1] = dt1.toSec();
+        dts_to_msec[1] = dt1.toSec() * 1000;
 
-        sum_times[1] += dts_to_sec[1];
-        max_times[1] = std::max(max_times[1], dts_to_sec[1]);
+        sum_times[1] += dts_to_msec[1];
+        max_times[1] = std::max(max_times[1], dts_to_msec[1]);
 
         if (solved == ob::PlannerStatus::EXACT_SOLUTION)
         {
@@ -526,9 +526,9 @@ namespace ompl_rope_planning
             }
             auto dt2 = ros::Time::now() - t2;
 
-            dts_to_sec[2] = dt2.toSec();
-            sum_times[2] += dts_to_sec[2];
-            max_times[2] = std::max(max_times[2], dts_to_sec[2]);
+            dts_to_msec[2] = dt2.toSec() * 1000;
+            sum_times[2] += dts_to_msec[2];
+            max_times[2] = std::max(max_times[2], dts_to_msec[2]);
 
             auto t3 = ros::Time::now();
             if (prob_params.path_interpolation_points > 0)
@@ -539,9 +539,9 @@ namespace ompl_rope_planning
                 pth->interpolate(prob_params.path_interpolation_points);
             }
             auto dt3 = ros::Time::now() - t3;
-            dts_to_sec[3] = dt3.toSec();
-            sum_times[3] += dts_to_sec[3];
-            max_times[3] = std::max(max_times[3], dts_to_sec[3]);
+            dts_to_msec[3] = dt3.toSec() * 1000;
+            sum_times[3] += dts_to_msec[3];
+            max_times[3] = std::max(max_times[3], dts_to_msec[3]);
 
             // std::cout << "Final path :" << std::endl;
             // pth->printAsMatrix(std::cout);
@@ -556,22 +556,22 @@ namespace ompl_rope_planning
             // saving_path_time = std::chrono::duration_cast<std::chrono::milliseconds>(dt).count();
 
             auto dt0 = ros::Time::now() - t0;
-            dts_to_sec[0] = dt0.toSec();
-            sum_times[0] += dts_to_sec[0];
-            max_times[0] = std::max(max_times[0], dts_to_sec[0]);
+            dts_to_msec[0] = dt0.toSec() * 1000;
+            sum_times[0] += dts_to_msec[0];
+            max_times[0] = std::max(max_times[0], dts_to_msec[0]);
 
             bool print_times = true;
             if (print_times)
             {
-                printf("\t-plan->solve()  time->	 Current: %4f \tAverage : %4f msec \t max:%4f\n ", dts_to_sec[0], sum_times[0] / times_called,
+                printf("\t-plan->solve()  time->	 Current: %4f \tAverage : %4f msec \t max:%4f\n ", dts_to_msec[0], sum_times[0] / times_called,
                        max_times[0]);
-                printf("\t\t-Initialization time->  Current: %4f \tAverage : %4f msec \t max:%4f\n ", dts_to_sec[4], sum_times[4] / times_called,
+                printf("\t\t-Initialization time->  Current: %4f \tAverage : %4f msec \t max:%4f\n ", dts_to_msec[4], sum_times[4] / times_called,
                        max_times[4]);
-                printf("\t\t-planner->solve time->  Current: %4f \tAverage : %4f msec \t max:%4f\n ", dts_to_sec[1], sum_times[1] / times_called,
+                printf("\t\t-planner->solve time->  Current: %4f \tAverage : %4f msec \t max:%4f\n ", dts_to_msec[1], sum_times[1] / times_called,
                        max_times[1]);
-                printf("\t\t-Simplifying    time->  Current: %4f \tAverage : %4f msec \t max:%4f\n ", dts_to_sec[2], sum_times[2] / times_called,
+                printf("\t\t-Simplifying    time->  Current: %4f \tAverage : %4f msec \t max:%4f\n ", dts_to_msec[2], sum_times[2] / times_called,
                        max_times[2]);
-                printf("\t\t-Interpolate    time->  Current: %4f \tAverage : %4f msec \t max:%4f\n ", dts_to_sec[3], sum_times[3] / times_called,
+                printf("\t\t-Interpolate    time->  Current: %4f \tAverage : %4f msec \t max:%4f\n ", dts_to_msec[3], sum_times[3] / times_called,
                        max_times[3]);
             }
 
