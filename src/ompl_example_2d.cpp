@@ -361,12 +361,6 @@ namespace ompl_rope_planning
 
             // printf("Solving!\n");
             solved = planner_->solve(ptc);
-
-            // printf("Solved!\n");
-
-            // std::cout << "Planning time: " << duration << " ms" << std::endl;
-            // std::cout << "Max planning time: " << max_planning_time << " ms" << std::endl;
-
         } while (solved != ob::PlannerStatus::EXACT_SOLUTION);
 
         auto dt1 = std::chrono::high_resolution_clock::now() - t1;
@@ -646,9 +640,9 @@ namespace ompl_rope_planning
         total_time += dt.toSec() * 1000; // sum msecs
         counter++;
 
-        if ((counter % 2000) == 0)
+        if ((counter % 200) == 0)
         {
-            std::cout << "\r"; // print at the same line (update effect)
+            // std::cout << "\r"; // print at the same line (update effect)
 
             std::cout << "State Validation: " << counter << " calls " << total_time / 1000 << " secs, " << total_time / counter << " msecs/call, "
                       << counter * 1000.0 / total_time << " calls/sec" << std::flush;
@@ -709,13 +703,14 @@ namespace ompl_rope_planning
         return path_msg;
     }
 
-    void planner::convert_path_to_drones_paths(og::PathGeometric *pth, nav_msgs::Path &drone_pth1, nav_msgs::Path &drone_pth2)
+    inline void planner::convert_path_to_drones_paths(og::PathGeometric *pth, nav_msgs::Path &drone_pth1, nav_msgs::Path &drone_pth2)
     { // frames
-        std::string rb_path_frame_name = "rb_path";
-        std::string world_frame_name = "world";
+        auto t1 = std::chrono::high_resolution_clock::now();
+        const std::string rb_path_frame_name = "rb_path";
+        const std::string world_frame_name = "world";
 
         auto states = pth->getStates();
-        auto num_states = states.size();
+        int num_states = states.size();
 
         // cretae path for drone1
         drone_pth1.header.frame_id = world_frame_name;
@@ -742,46 +737,62 @@ namespace ompl_rope_planning
         tf2_ros::Buffer tf_buffer;
         tf2_ros::TransformListener tf2_listener(tf_buffer);
 
+        geometry_msgs::TransformStamped ts2;
+
+        ts2.header.stamp = ros::Time(0);
+        ts2.header.frame_id = world_frame_name;
+        ts2.child_frame_id = rb_path_frame_name;
+
+        tf2::Quaternion q;
+        float dt1 = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - t1).count();
+
+        printf("\nNumber of states: %d\n", num_states);
+        auto t0 = std::chrono::high_resolution_clock::now();
+
         for (auto i = 0; i < num_states; i++)
         {
 
-            auto state = states[i];
-            auto state_values = state->as<ob::RealVectorStateSpace::StateType>()->values;
+            auto state_values = states[i]->as<ob::RealVectorStateSpace::StateType>()->values;
 
             double yaw = state_values[3];
             double drones_dis = state_values[4];
             double drones_angle = state_values[5];
 
-            geometry_msgs::TransformStamped ts2; // My frames are named "base_link" and "leap_motion"
-            ts2.header.stamp = ros::Time(0);
-            ts2.header.frame_id = world_frame_name;
-            ts2.child_frame_id = rb_path_frame_name;
-
             ts2.transform.translation.x = state_values[0];
             ts2.transform.translation.y = state_values[1];
             ts2.transform.translation.z = state_values[2];
 
-            tf2::Quaternion q;
             q.setRPY(0, 0, yaw);
             ts2.transform.rotation = tf2::toMsg(q);
 
-            custom_robot_mesh->drones_formation_2_triangle_points(drones_dis, drones_angle);
-            custom_mesh::data2D V2D = custom_robot_mesh->get_V_2D();
+            // drones formation to drones positions
+            //  get the distance between the 2 drones
+            float r = drones_dis / 2;
+
+            // get the points of the triangle
+            auto p0 = Eigen::Vector2f(r * cos(drones_angle), r * sin(drones_angle));
+            auto p1 = Eigen::Vector2f(-r * cos(drones_angle), -r * sin(drones_angle));
 
             // drone 1
-            drone_pose1.pose.position.x = V2D.p0[0];
+            drone_pose1.pose.position.x = p0[0];
             drone_pose1.pose.position.y = 0;
-            drone_pose1.pose.position.z = V2D.p0[1];
+            drone_pose1.pose.position.z = p0[1];
+
             tf2::doTransform(drone_pose1, transformed_drone_pose1, ts2);
+
             drone_pth1.poses[i] = transformed_drone_pose1;
 
             // drone2
-            drone_pose2.pose.position.x = V2D.p1[0];
+            drone_pose2.pose.position.x = p1[0];
             drone_pose2.pose.position.y = 0;
-            drone_pose2.pose.position.z = V2D.p1[1];
+            drone_pose2.pose.position.z = p1[1];
             tf2::doTransform(drone_pose2, transformed_drone_pose2, ts2);
             drone_pth2.poses[i] = transformed_drone_pose2;
         }
+
+        float dt0 = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - t0).count();
+        printf("\t\tInitializing the  path took: %f usec\n", dt1);
+        printf("\t\tTransfrom rb_path to drones: %f usec\n", dt0);
     }
 
     ompl::base::StateSpacePtr planner::getSpace() { return space; }
