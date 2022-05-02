@@ -287,6 +287,18 @@ namespace ompl_rope_planning
 
     og::PathGeometric *planner::plan()
     {
+        printf("Calculating plan...\n");
+        // STATS
+        const int times = 5;
+        static float sum_times[times] = {0, 0, 0, 0, 0};
+        static float max_times[times] = {0, 0, 0, 0, 0};
+        static int times_called = 0;
+
+        float dts_to_sec[times] = {0, 0, 0, 0, 0};
+
+        auto t0 = std::chrono::high_resolution_clock::now();
+
+        auto t4 = std::chrono::high_resolution_clock::now();
         pdef->fixInvalidInputStates(prob_params.realtime_settings.fix_invalid_start_dist, prob_params.realtime_settings.fix_invalid_goal_dist, 20);
         // check if start is valid
         if (!si->isValid(pdef->getStartState(0)))
@@ -294,18 +306,6 @@ namespace ompl_rope_planning
             throw std::runtime_error("Start state is invalid");
         }
 
-        // check if pdef has start and goal states
-        std::vector<const ob::State *> input_states;
-        pdef->getInputStates(input_states);
-
-        // printf("input_states.size: %d\n", input_states.size());
-        // if (input_states.size() < 2)
-        // {
-        //     throw std::runtime_error("This planner requires two states, a start and a goal state");
-        // }
-
-        // statistics
-        static float max_planning_time = 0.0;
         pdef->clearSolutionPaths();
 
         planner_ = getPlanner(prob_params.planner_algorithm, prob_params.range);
@@ -338,37 +338,42 @@ namespace ompl_rope_planning
 
         // planner_->getPlannerInputStates()
 
-        float simpilfying_time, interpolating_time, saving_path_time, planning_time;
+        times_called++;
+
+        auto dt4 = std::chrono::high_resolution_clock::now() - t4;
+        dts_to_sec[4] = std::chrono::duration_cast<std::chrono::milliseconds>(dt4).count();
+        sum_times[4] += dts_to_sec[4];
+        max_times[4] = std::max(max_times[4], dts_to_sec[4]);
 
         // attempt to solve the problem within one second of planning time
+        auto t1 = std::chrono::high_resolution_clock::now();
+
         ob::PlannerStatus solved;
         do
         {
             // If planner is not reset
             // it is allowed  to continue work for more time on an unsolved problem
             // otherwise it will be reset and start from scratch
-
             //  plan->clear();
 
             // create termination condition
             ob::PlannerTerminationCondition ptc(ob::timedPlannerTerminationCondition(prob_params.timeout));
 
-            auto t0 = std::chrono::high_resolution_clock::now();
             // printf("Solving!\n");
             solved = planner_->solve(ptc);
 
             // printf("Solved!\n");
-            std::cout << std::endl;
-            auto dt = std::chrono::high_resolution_clock::now() - t0;
-            auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(dt).count();
-            // get maximum of 2 values
-            max_planning_time = std::max(max_planning_time, (float)duration);
-            planning_time = (float)duration;
 
             // std::cout << "Planning time: " << duration << " ms" << std::endl;
             // std::cout << "Max planning time: " << max_planning_time << " ms" << std::endl;
 
         } while (solved != ob::PlannerStatus::EXACT_SOLUTION);
+
+        auto dt1 = std::chrono::high_resolution_clock::now() - t1;
+        dts_to_sec[1] = std::chrono::duration_cast<std::chrono::milliseconds>(dt1).count();
+
+        sum_times[1] += dts_to_sec[1];
+        max_times[1] = std::max(max_times[1], dts_to_sec[1]);
 
         if (solved == ob::PlannerStatus::EXACT_SOLUTION)
         {
@@ -379,6 +384,7 @@ namespace ompl_rope_planning
             ob::PathPtr path = pdef->getSolutionPath();
             og::PathGeometric *pth = pdef->getSolutionPath()->as<og::PathGeometric>();
             // printf("Simplifying and interpolating\n");
+            auto t2 = std::chrono::high_resolution_clock::now();
             if (prob_params.simplify_path)
             {
                 auto t0 = std::chrono::high_resolution_clock::now();
@@ -389,11 +395,12 @@ namespace ompl_rope_planning
 
                 if (prob_params.realtime_settings.simplifying_path == problem_params::SimplifyingPath::FAST)
                 {
-                    // path_simplifier.shortcutPath(*pth);
-                    // path_simplifier.reduceVertices(*pth);
-                    // path_simplifier.collapseCloseVertices(*pth);
-                    // path_simplifier.reduceVertices(*pth);
+                    path_simplifier.shortcutPath(*pth);
+                    path_simplifier.reduceVertices(*pth);
+                    path_simplifier.collapseCloseVertices(*pth);
+                    path_simplifier.reduceVertices(*pth);
 
+                    /*
                     // path_simplifier.perturbPath(*pth, 0.2);
 
                     bool isMetric = si->getStateSpace()->isMetricSpace();
@@ -443,6 +450,7 @@ namespace ompl_rope_planning
                         while ((ptc == false || atLeastOnce) && tryMore && ++times <= 3)
                             tryMore = path_simplifier.reduceVertices(*pth);
                     }
+                    */
                     /*
                     auto path = *pth;
                     bool atLeastOnce = true;
@@ -521,20 +529,25 @@ namespace ompl_rope_planning
                 }
 
                 // path_simplifier.simplifyMax(*pth);
-                auto dt = std::chrono::high_resolution_clock::now() - t0;
-                simpilfying_time = std::chrono::duration_cast<std::chrono::milliseconds>(dt).count();
             }
+            auto dt2 = std::chrono::high_resolution_clock::now() - t2;
 
+            dts_to_sec[2] = std::chrono::duration_cast<std::chrono::milliseconds>(dt2).count();
+            sum_times[2] += dts_to_sec[2];
+            max_times[2] = std::max(max_times[2], dts_to_sec[2]);
+
+            auto t3 = std::chrono::high_resolution_clock::now();
             if (prob_params.path_interpolation_points > 0)
             {
                 // std::cout << "Interpolating path...\n";
                 // og::PathGeometric::InterpolationType interp_type = og::PathGeometric::CSPLINE;
                 // pth->interpolate(interp_type);
-                auto t0 = std::chrono::high_resolution_clock::now();
                 pth->interpolate(prob_params.path_interpolation_points);
-                auto dt = std::chrono::high_resolution_clock::now() - t0;
-                interpolating_time = std::chrono::duration_cast<std::chrono::milliseconds>(dt).count();
             }
+            auto dt3 = std::chrono::high_resolution_clock::now() - t3;
+            dts_to_sec[3] = std::chrono::duration_cast<std::chrono::milliseconds>(dt3).count();
+            sum_times[3] += dts_to_sec[3];
+            max_times[3] = std::max(max_times[3], dts_to_sec[3]);
 
             // std::cout << "Final path :" << std::endl;
             // pth->printAsMatrix(std::cout);
@@ -548,14 +561,24 @@ namespace ompl_rope_planning
             // auto dt = std::chrono::high_resolution_clock::now() - t0;
             // saving_path_time = std::chrono::duration_cast<std::chrono::milliseconds>(dt).count();
 
-            bool print_times = false;
+            auto dt0 = std::chrono::high_resolution_clock::now() - t0;
+            dts_to_sec[0] = std::chrono::duration_cast<std::chrono::milliseconds>(dt0).count();
+            sum_times[0] += dts_to_sec[0];
+            max_times[0] = std::max(max_times[0], dts_to_sec[0]);
+
+            bool print_times = true;
             if (print_times)
             {
-                std::cout << "Planning time: " << planning_time << " ms" << std::endl;
-                std::cout << "Max planning time: " << max_planning_time << " ms" << std::endl;
-                std::cout << "Simplifying time: " << simpilfying_time << " ms" << std::endl;
-                std::cout << "Interpolating time: " << interpolating_time << " ms" << std::endl;
-                // std::cout << "Saving path to file time: " << saving_path_time << " ms" << std::endl;
+                printf("\t-Whole planning time->  Current: %4f \tAverage : %4f msec \t max:%4f\n ", dts_to_sec[0], sum_times[0] / times_called,
+                       max_times[0]);
+                printf("\t\t-Initialization time->  Current: %4f \tAverage : %4f msec \t max:%4f\n ", dts_to_sec[4], sum_times[4] / times_called,
+                       max_times[4]);
+                printf("\t\t-planner->solve time->  Current: %4f \tAverage : %4f msec \t max:%4f\n ", dts_to_sec[1], sum_times[1] / times_called,
+                       max_times[1]);
+                printf("\t\t-Simplifying    time->  Current: %4f \tAverage : %4f msec \t max:%4f\n ", dts_to_sec[2], sum_times[2] / times_called,
+                       max_times[2]);
+                printf("\t\t-Interpolate    time->  Current: %4f \tAverage : %4f msec \t max:%4f\n ", dts_to_sec[3], sum_times[3] / times_called,
+                       max_times[3]);
             }
 
             path_ = pth;
@@ -782,4 +805,6 @@ namespace ompl_rope_planning
     }
 
     ompl::geometric::PathGeometric *planner::getPath() { return path_; }
+
+    ompl::base::SpaceInformationPtr planner::getSpaceInformation() { return si; }
 } // namespace drones_rope_planning

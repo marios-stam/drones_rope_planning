@@ -35,14 +35,13 @@ namespace og = ompl::geometric;
 ompl_rope_planning::planner *planner;
 ros::Publisher dyn_path_pub;
 ros::Publisher drone_path1_pub, drone_path2_pub;
-tf::TransformListener *listener;
+tf::StampedTransform drone1_tf, drone2_tf;
 
 std::vector<realtime_obstacles::CylinderDefinition> get_cylinders_def_vec(drones_rope_planning::PlanningRequest::Request &req)
 {
     std::vector<realtime_obstacles::CylinderDefinition> cylinders_def_vec;
 
     realtime_obstacles::CylinderDefinition cylinder_def;
-    auto t0 = std::chrono::high_resolution_clock::now();
     // printf("Start: %f %f %f\n", req.start_pos[0], req.start_pos[1], req.start_pos[2]);
     // printf("Goal: %f %f %f\n", req.goal_pos[0], req.goal_pos[1], req.goal_pos[2]);
 
@@ -64,7 +63,6 @@ std::vector<realtime_obstacles::CylinderDefinition> get_cylinders_def_vec(drones
 
         cylinders_def_vec.push_back(cylinder_def);
     }
-    auto dt = std::chrono::high_resolution_clock::now() - t0;
 
     return cylinders_def_vec;
 }
@@ -76,19 +74,14 @@ void set_new_start(bool &reset_start_state_to_initial)
 
     float new_start[6];
 
-    tf::StampedTransform transform, transform2;
-    listener->waitForTransform("/world", "/drone1Path", ros::Time(0), ros::Duration(0.1));
     try
     {
-        listener->lookupTransform("/world", "/drone1", ros::Time(0), transform);
-        listener->lookupTransform("/world", "/drone2", ros::Time(0), transform2);
-
-        new_start[0] = (transform.getOrigin().x() + transform2.getOrigin().x()) / 2;
-        new_start[1] = (transform.getOrigin().y() + transform2.getOrigin().y()) / 2;
-        new_start[2] = (transform.getOrigin().z() + transform2.getOrigin().z()) / 2;
-        float dx = transform.getOrigin().x() - transform2.getOrigin().x();
-        float dy = transform.getOrigin().y() - transform2.getOrigin().y();
-        float dz = transform.getOrigin().z() - transform2.getOrigin().z();
+        new_start[0] = (drone1_tf.getOrigin().x() + drone2_tf.getOrigin().x()) / 2;
+        new_start[1] = (drone1_tf.getOrigin().y() + drone2_tf.getOrigin().y()) / 2;
+        new_start[2] = (drone1_tf.getOrigin().z() + drone2_tf.getOrigin().z()) / 2;
+        float dx = drone1_tf.getOrigin().x() - drone2_tf.getOrigin().x();
+        float dy = drone1_tf.getOrigin().y() - drone2_tf.getOrigin().y();
+        float dz = drone1_tf.getOrigin().z() - drone2_tf.getOrigin().z();
         // calculate yaw
         new_start[3] = atan2(dy, dx);
 
@@ -136,7 +129,7 @@ bool check_prev_path_validity()
 
     bool prev_path_is_valid = true;
     auto states = prev_path->getStates();
-    for (int i = 0; i < states.size(); i++)
+    for (int i = 0; i < states.size(); i += 2) //+=2 for less checking --> faster
     {
         auto s = states[i];
         // check state validity
@@ -158,14 +151,27 @@ bool check_prev_path_validity()
 
 bool planning_service(drones_rope_planning::PlanningRequest::Request &req, drones_rope_planning::PlanningRequest::Response &res)
 {
-    // printf("Start: %f %f %f\n", req.start_pos[0], req.start_pos[1], req.start_pos[2]);
-    // printf("Goal: %f %f %f\n", req.goal_pos[0], req.goal_pos[1], req.goal_pos[2]);
+    printf("===============================================================\n");
+
+    // STATS
+    const auto times_num = 6;
+    static float sum_times[times_num] = {0, 0, 0, 0, 0};
+    static float max_times[times_num] = {0, 0, 0, 0, 0};
+    float times[times_num] = {0, 0, 0, 0, 0};
+
+    static int times_service_called = 0;
+    static auto planning_times = 0;
+
+    times_service_called++;
+
+    auto t0 = std::chrono::high_resolution_clock::now();
+    auto t1 = std::chrono::high_resolution_clock::now();
     std::vector<realtime_obstacles::CylinderDefinition> cylinders_def_vec = get_cylinders_def_vec(req);
 
-    auto t02 = std::chrono::high_resolution_clock::now();
     // printf("Setting the environment\n");
     planner->checker->as<fcl_checking_realtime::checker>()->updateEnvironmentTransforms(cylinders_def_vec);
-    auto dt2 = std::chrono::high_resolution_clock::now() - t02;
+
+    auto dt1 = std::chrono::high_resolution_clock::now() - t1;
 
     bool reset_start_state_to_initial = false;
 
@@ -179,13 +185,22 @@ bool planning_service(drones_rope_planning::PlanningRequest::Request &req, drone
     bool prev_path_is_valid = false;
     static auto time_of_replanning = ros::Time::now();
 
+    auto t2 = std::chrono::high_resolution_clock::now();
     if (planner->prob_params.realtime_settings.replan_only_if_not_valid == true)
     {
         // Return false because we want to plan anyway
         prev_path_is_valid = check_prev_path_validity();
     }
+    auto dt2 = std::chrono::high_resolution_clock::now() - t2;
 
     bool should_replan = reset_start_state_to_initial || !prev_path_is_valid;
+
+    // stats
+    sum_times[1] += std::chrono::duration_cast<std::chrono::milliseconds>(dt1).count();
+    sum_times[2] += std::chrono::duration_cast<std::chrono::milliseconds>(dt2).count();
+
+    max_times[1] = std::max(max_times[1], (float)std::chrono::duration_cast<std::chrono::milliseconds>(dt1).count());
+    max_times[2] = std::max(max_times[2], (float)std::chrono::duration_cast<std::chrono::milliseconds>(dt2).count());
 
     if (!should_replan)
     {
@@ -204,10 +219,10 @@ bool planning_service(drones_rope_planning::PlanningRequest::Request &req, drone
     }
 
     // replanning
+    auto t3 = std::chrono::high_resolution_clock::now();
     time_of_replanning = ros::Time::now();
 
     // printf("Replanning\n");
-    auto t03 = std::chrono::high_resolution_clock::now();
     og::PathGeometric *pth;
     try
     {
@@ -218,52 +233,57 @@ bool planning_service(drones_rope_planning::PlanningRequest::Request &req, drone
         printf("%s", e.what());
         return false;
     }
-    auto dt3 = std::chrono::high_resolution_clock::now() - t03;
+    auto dt3 = std::chrono::high_resolution_clock::now() - t3;
 
-    // STATS
-    static float avg_time = 0;
-    static float max_time = 0;
-    static int replanning_times = 0;
-    auto planning_time = std::chrono::duration_cast<std::chrono::milliseconds>(dt3).count();
-
-    replanning_times++;
-    avg_time += planning_time;
-    max_time = std::max(max_time, (float)planning_time);
-
-    std::cout << "Time to plan: " << planning_time << " ms" << std::endl;
-    std::cout << "Average time to plan: " << avg_time / replanning_times << " ms" << std::endl;
-    // std::cout << "Max time to plan: " << max_time << " ms" << std::endl;
-
+    auto t4 = std::chrono::high_resolution_clock::now();
+    // converting rigid body path to drone paths
     nav_msgs::Path drone_path1, drone_path2;
-
     planner->convert_path_to_drones_paths(pth, drone_path1, drone_path2);
+    auto dt4 = std::chrono::high_resolution_clock::now() - t4;
 
+    auto t5 = std::chrono::high_resolution_clock::now();
     drone_path1_pub.publish(drone_path1);
     drone_path2_pub.publish(drone_path2);
+    auto dt5 = std::chrono::high_resolution_clock::now() - t5;
 
-    bool print_times = false;
+    auto dt0 = std::chrono::high_resolution_clock::now() - t0;
 
-    if (print_times)
-    {
-        // std::cout << "Time to create cylinders: " << std::chrono::duration_cast<std::chrono::milliseconds>(dt).count() << " ms" << std::endl;
-        std::cout << "Time to update environment: " << std::chrono::duration_cast<std::chrono::milliseconds>(dt2).count() << " ms" << std::endl;
-        std::cout << "Time to plan: " << std::chrono::duration_cast<std::chrono::milliseconds>(dt3).count() << " ms" << std::endl;
-    }
+    // STATS
+    planning_times++;
 
-    // print current ros time
-    ros::Time current_time = ros::Time::now();
-    // printf("%f \n", current_time.toSec());
-    // std::cout << "=====================================================" << std::endl;
+    float dt_to_sec[times_num] = {
+        std::chrono::duration_cast<std::chrono::milliseconds>(dt0).count(), std::chrono::duration_cast<std::chrono::milliseconds>(dt1).count(),
+        std::chrono::duration_cast<std::chrono::milliseconds>(dt2).count(), std::chrono::duration_cast<std::chrono::milliseconds>(dt3).count(),
+        std::chrono::duration_cast<std::chrono::milliseconds>(dt4).count(), std::chrono::duration_cast<std::chrono::milliseconds>(dt5).count()};
+
+    sum_times[0] += dt_to_sec[0];
+    sum_times[1] += dt_to_sec[1];
+    sum_times[2] += dt_to_sec[2];
+    sum_times[3] += dt_to_sec[3];
+    sum_times[4] += dt_to_sec[4];
+    sum_times[5] += dt_to_sec[5];
+
+    max_times[0] = std::max(max_times[0], dt_to_sec[0]);
+    max_times[3] = std::max(max_times[3], dt_to_sec[3]);
+    max_times[4] = std::max(max_times[4], dt_to_sec[4]);
+    max_times[5] = std::max(max_times[5], dt_to_sec[5]);
+
+    printf("Total planning time->\t Current: %4f \tAverage: %4f msec \tMax: %4f msec\n", dt_to_sec[0], sum_times[0] / planning_times, max_times[0]);
+    printf("\t-Cylindr update time->\t Current: %4f \tAverage: %4f msec \tMax: %4f msec\n", dt_to_sec[1], sum_times[1] / times_service_called,
+           max_times[1]);
+    printf("\t-Prev_path_vlid time->\t Current: %4f \tAverage: %4f msec \tMax: %4f msec\n", dt_to_sec[2], sum_times[2] / times_service_called,
+           max_times[2]);
+    printf("\t-plan->solve()  time->\t Current: %4f \tAverage: %4f msec \tMax: %4f msec\n", dt_to_sec[3], sum_times[3] / planning_times,
+           max_times[3]);
+    printf("\t-RB to drones   time->\t Current: %4f \tAverage: %4f msec \tMax: %4f msec\n", dt_to_sec[4], sum_times[4] / planning_times,
+           max_times[4]);
+    printf("\t-Publish pths   time->\t Current: %4f \tAverage: %4f msec \tMax: %4f msec\n", dt_to_sec[5], sum_times[5] / planning_times,
+           max_times[5]);
     return true;
 }
 
 int main(int argc, char **argv)
 {
-    // diffeent mains
-    // main_static_planning(argc, argv);
-    // main_Cylinders_test();
-    // main_fcl_checker_realtime_test();
-    // main_realtime_planning(argc, argv);
 
     if (ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Error))
     {
@@ -276,7 +296,7 @@ int main(int argc, char **argv)
     ros::NodeHandle nodeHandle("~");
 
     // instantiate listener
-    listener = new tf::TransformListener();
+    auto listener = new tf::TransformListener();
 
     // initialize planner
     problem_params::ProblemParams prob_prms = problem_params::getProblemParams(nodeHandle);
@@ -302,5 +322,30 @@ int main(int argc, char **argv)
 
     ROS_INFO("Service ready!");
 
+    ros::Rate rate(10);
+
+    while (ros::ok())
+    {
+        try
+        {
+            listener->lookupTransform("/world", "/drone1", ros::Time(0), drone1_tf);
+            // printf("Drone1 Twist: %f, %f, %f\n", twist1.linear.x, twist1.linear.y, twist1.linear.z);
+        }
+        catch (tf::TransformException ex)
+        {
+        }
+
+        try
+        {
+            listener->lookupTransform("/world", "/drone2", ros::Time(0), drone2_tf);
+            // printf("Drone2 Twist: %f, %f, %f\n", twist2.linear.x, twist2.linear.y, twist2.linear.z);
+        }
+        catch (tf::TransformException ex)
+        {
+        }
+
+        ros::spinOnce();
+        rate.sleep();
+    }
     ros::spin();
 }

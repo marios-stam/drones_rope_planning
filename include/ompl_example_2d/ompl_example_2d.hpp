@@ -108,6 +108,8 @@ namespace ompl_rope_planning
 
         ompl::geometric::PathGeometric *getPath();
 
+        ompl::base::SpaceInformationPtr getSpaceInformation();
+
     private:
         // rope_length
         float L;
