@@ -164,14 +164,14 @@ bool planning_service(drones_rope_planning::PlanningRequest::Request &req, drone
 
     times_service_called++;
 
-    auto t0 = std::chrono::high_resolution_clock::now();
-    auto t1 = std::chrono::high_resolution_clock::now();
+    auto t0 = ros::Time::now();
+    auto t1 = ros::Time::now();
     std::vector<realtime_obstacles::CylinderDefinition> cylinders_def_vec = get_cylinders_def_vec(req);
 
     // printf("Setting the environment\n");
     planner->checker->as<fcl_checking_realtime::checker>()->updateEnvironmentTransforms(cylinders_def_vec);
 
-    auto dt1 = std::chrono::high_resolution_clock::now() - t1;
+    auto dt1 = ros::Time::now() - t1;
 
     bool reset_start_state_to_initial = false;
 
@@ -185,22 +185,15 @@ bool planning_service(drones_rope_planning::PlanningRequest::Request &req, drone
     bool prev_path_is_valid = false;
     static auto time_of_replanning = ros::Time::now();
 
-    auto t2 = std::chrono::high_resolution_clock::now();
+    auto t2 = ros::Time::now();
     if (planner->prob_params.realtime_settings.replan_only_if_not_valid == true)
     {
         // Return false because we want to plan anyway
         prev_path_is_valid = check_prev_path_validity();
     }
-    auto dt2 = std::chrono::high_resolution_clock::now() - t2;
+    auto dt2 = ros::Time::now() - t2;
 
     bool should_replan = reset_start_state_to_initial || !prev_path_is_valid;
-
-    // stats
-    sum_times[1] += std::chrono::duration_cast<std::chrono::milliseconds>(dt1).count();
-    sum_times[2] += std::chrono::duration_cast<std::chrono::milliseconds>(dt2).count();
-
-    max_times[1] = std::max(max_times[1], (float)std::chrono::duration_cast<std::chrono::milliseconds>(dt1).count());
-    max_times[2] = std::max(max_times[2], (float)std::chrono::duration_cast<std::chrono::milliseconds>(dt2).count());
 
     if (!should_replan)
     {
@@ -219,7 +212,7 @@ bool planning_service(drones_rope_planning::PlanningRequest::Request &req, drone
     }
 
     // replanning
-    auto t3 = std::chrono::high_resolution_clock::now();
+    auto t3 = ros::Time::now();
     time_of_replanning = ros::Time::now();
 
     // printf("Replanning\n");
@@ -233,51 +226,50 @@ bool planning_service(drones_rope_planning::PlanningRequest::Request &req, drone
         printf("%s", e.what());
         return false;
     }
-    auto dt3 = std::chrono::high_resolution_clock::now() - t3;
+    auto dt3 = ros::Time::now() - t3;
 
-    auto t4 = std::chrono::high_resolution_clock::now();
-    // converting rigid body path to drone paths
     nav_msgs::Path drone_path1, drone_path2;
+    auto t4 = ros::Time::now();
+    // converting rigid body path to drone paths
     planner->convert_path_to_drones_paths(pth, drone_path1, drone_path2);
-    auto dt4 = std::chrono::high_resolution_clock::now() - t4;
+    auto dt4 = ros::Time::now() - t4;
 
-    auto t5 = std::chrono::high_resolution_clock::now();
+    auto t5 = ros::Time::now();
     drone_path1_pub.publish(drone_path1);
     drone_path2_pub.publish(drone_path2);
-    auto dt5 = std::chrono::high_resolution_clock::now() - t5;
+    auto dt5 = ros::Time::now() - t5;
 
-    auto dt0 = std::chrono::high_resolution_clock::now() - t0;
+    auto dt0 = ros::Time::now() - t0;
 
     // STATS
     planning_times++;
 
-    float dt_to_sec[times_num] = {
-        std::chrono::duration_cast<std::chrono::milliseconds>(dt0).count(), std::chrono::duration_cast<std::chrono::milliseconds>(dt1).count(),
-        std::chrono::duration_cast<std::chrono::milliseconds>(dt2).count(), std::chrono::duration_cast<std::chrono::milliseconds>(dt3).count(),
-        std::chrono::duration_cast<std::chrono::milliseconds>(dt4).count(), std::chrono::duration_cast<std::chrono::milliseconds>(dt5).count()};
+    float dt_to_msec[times_num] = {dt0.toSec() * 1000.0, dt1.toSec() * 1000.0, dt2.toSec() * 1000.0,
+                                   dt3.toSec() * 1000.0, dt4.toSec() * 1000.0, dt5.toSec() * 1000.0};
+    sum_times[0] += dt_to_msec[0];
+    sum_times[1] += dt_to_msec[1];
+    sum_times[2] += dt_to_msec[2];
+    sum_times[3] += dt_to_msec[3];
+    sum_times[4] += dt_to_msec[4];
+    sum_times[5] += dt_to_msec[5];
 
-    sum_times[0] += dt_to_sec[0];
-    sum_times[1] += dt_to_sec[1];
-    sum_times[2] += dt_to_sec[2];
-    sum_times[3] += dt_to_sec[3];
-    sum_times[4] += dt_to_sec[4];
-    sum_times[5] += dt_to_sec[5];
+    max_times[0] = std::max(max_times[0], dt_to_msec[0]);
+    max_times[0] = std::max(max_times[1], dt_to_msec[1]);
+    max_times[0] = std::max(max_times[2], dt_to_msec[2]);
+    max_times[3] = std::max(max_times[3], dt_to_msec[3]);
+    max_times[4] = std::max(max_times[4], dt_to_msec[4]);
+    max_times[5] = std::max(max_times[5], dt_to_msec[5]);
 
-    max_times[0] = std::max(max_times[0], dt_to_sec[0]);
-    max_times[3] = std::max(max_times[3], dt_to_sec[3]);
-    max_times[4] = std::max(max_times[4], dt_to_sec[4]);
-    max_times[5] = std::max(max_times[5], dt_to_sec[5]);
-
-    printf("Total planning time->\t Current: %4f \tAverage: %4f msec \tMax: %4f msec\n", dt_to_sec[0], sum_times[0] / planning_times, max_times[0]);
-    printf("\t-Cylindr update time->\t Current: %4f \tAverage: %4f msec \tMax: %4f msec\n", dt_to_sec[1], sum_times[1] / times_service_called,
+    printf("Total planning time->\t Current: %4f \tAverage: %4f msec \tMax: %4f msec\n", dt_to_msec[0], sum_times[0] / planning_times, max_times[0]);
+    printf("\t-Cylindr update time->\t Current: %4f \tAverage: %4f msec \tMax: %4f msec\n", dt_to_msec[1], sum_times[1] / planning_times,
            max_times[1]);
-    printf("\t-Prev_path_vlid time->\t Current: %4f \tAverage: %4f msec \tMax: %4f msec\n", dt_to_sec[2], sum_times[2] / times_service_called,
+    printf("\t-Prev_path_vlid time->\t Current: %4f \tAverage: %4f msec \tMax: %4f msec\n", dt_to_msec[2], sum_times[2] / planning_times,
            max_times[2]);
-    printf("\t-plan->solve()  time->\t Current: %4f \tAverage: %4f msec \tMax: %4f msec\n", dt_to_sec[3], sum_times[3] / planning_times,
+    printf("\t-plan->solve()  time->\t Current: %4f \tAverage: %4f msec \tMax: %4f msec\n", dt_to_msec[3], sum_times[3] / planning_times,
            max_times[3]);
-    printf("\t-RB to drones   time->\t Current: %4f \tAverage: %4f msec \tMax: %4f msec\n", dt_to_sec[4], sum_times[4] / planning_times,
+    printf("\t-RB to drones   time->\t Current: %4f \tAverage: %4f msec \tMax: %4f msec\n", dt_to_msec[4], sum_times[4] / planning_times,
            max_times[4]);
-    printf("\t-Publish pths   time->\t Current: %4f \tAverage: %4f msec \tMax: %4f msec\n", dt_to_sec[5], sum_times[5] / planning_times,
+    printf("\t-Publish pths   time->\t Current: %4f \tAverage: %4f msec \tMax: %4f msec\n", dt_to_msec[5], sum_times[5] / planning_times,
            max_times[5]);
     return true;
 }

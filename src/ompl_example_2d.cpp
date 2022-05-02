@@ -296,9 +296,9 @@ namespace ompl_rope_planning
 
         float dts_to_sec[times] = {0, 0, 0, 0, 0};
 
-        auto t0 = std::chrono::high_resolution_clock::now();
+        auto t0 = ros::Time::now();
 
-        auto t4 = std::chrono::high_resolution_clock::now();
+        auto t4 = ros::Time::now();
         pdef->fixInvalidInputStates(prob_params.realtime_settings.fix_invalid_start_dist, prob_params.realtime_settings.fix_invalid_goal_dist, 20);
         // check if start is valid
         if (!si->isValid(pdef->getStartState(0)))
@@ -340,13 +340,13 @@ namespace ompl_rope_planning
 
         times_called++;
 
-        auto dt4 = std::chrono::high_resolution_clock::now() - t4;
-        dts_to_sec[4] = std::chrono::duration_cast<std::chrono::milliseconds>(dt4).count();
+        auto dt4 = ros::Time::now() - t4;
+        dts_to_sec[4] = dt4.toSec();
         sum_times[4] += dts_to_sec[4];
         max_times[4] = std::max(max_times[4], dts_to_sec[4]);
 
         // attempt to solve the problem within one second of planning time
-        auto t1 = std::chrono::high_resolution_clock::now();
+        auto t1 = ros::Time::now();
 
         ob::PlannerStatus solved;
         do
@@ -363,8 +363,8 @@ namespace ompl_rope_planning
             solved = planner_->solve(ptc);
         } while (solved != ob::PlannerStatus::EXACT_SOLUTION);
 
-        auto dt1 = std::chrono::high_resolution_clock::now() - t1;
-        dts_to_sec[1] = std::chrono::duration_cast<std::chrono::milliseconds>(dt1).count();
+        auto dt1 = ros::Time::now() - t1;
+        dts_to_sec[1] = dt1.toSec();
 
         sum_times[1] += dts_to_sec[1];
         max_times[1] = std::max(max_times[1], dts_to_sec[1]);
@@ -378,10 +378,10 @@ namespace ompl_rope_planning
             ob::PathPtr path = pdef->getSolutionPath();
             og::PathGeometric *pth = pdef->getSolutionPath()->as<og::PathGeometric>();
             // printf("Simplifying and interpolating\n");
-            auto t2 = std::chrono::high_resolution_clock::now();
+            auto t2 = ros::Time::now();
             if (prob_params.simplify_path)
             {
-                auto t0 = std::chrono::high_resolution_clock::now();
+                auto t0 = ros::Time::now();
                 // std::cout << "Simplifying path...\n";
                 og::PathSimplifier path_simplifier(si, pdef->getGoal());
 
@@ -524,13 +524,13 @@ namespace ompl_rope_planning
 
                 // path_simplifier.simplifyMax(*pth);
             }
-            auto dt2 = std::chrono::high_resolution_clock::now() - t2;
+            auto dt2 = ros::Time::now() - t2;
 
-            dts_to_sec[2] = std::chrono::duration_cast<std::chrono::milliseconds>(dt2).count();
+            dts_to_sec[2] = dt2.toSec();
             sum_times[2] += dts_to_sec[2];
             max_times[2] = std::max(max_times[2], dts_to_sec[2]);
 
-            auto t3 = std::chrono::high_resolution_clock::now();
+            auto t3 = ros::Time::now();
             if (prob_params.path_interpolation_points > 0)
             {
                 // std::cout << "Interpolating path...\n";
@@ -538,8 +538,8 @@ namespace ompl_rope_planning
                 // pth->interpolate(interp_type);
                 pth->interpolate(prob_params.path_interpolation_points);
             }
-            auto dt3 = std::chrono::high_resolution_clock::now() - t3;
-            dts_to_sec[3] = std::chrono::duration_cast<std::chrono::milliseconds>(dt3).count();
+            auto dt3 = ros::Time::now() - t3;
+            dts_to_sec[3] = dt3.toSec();
             sum_times[3] += dts_to_sec[3];
             max_times[3] = std::max(max_times[3], dts_to_sec[3]);
 
@@ -547,23 +547,23 @@ namespace ompl_rope_planning
             // pth->printAsMatrix(std::cout);
 
             // // save path to file
-            // auto t0 = std::chrono::high_resolution_clock::now();
+            // auto t0 = ros::Time::now();
             // std::ofstream myfile;
             // myfile.open("/home/marios/thesis_ws/src/drones_rope_planning/resources/paths/path.txt");
             // pth->printAsMatrix(myfile);
             // myfile.close();
-            // auto dt = std::chrono::high_resolution_clock::now() - t0;
+            // auto dt = ros::Time::now() - t0;
             // saving_path_time = std::chrono::duration_cast<std::chrono::milliseconds>(dt).count();
 
-            auto dt0 = std::chrono::high_resolution_clock::now() - t0;
-            dts_to_sec[0] = std::chrono::duration_cast<std::chrono::milliseconds>(dt0).count();
+            auto dt0 = ros::Time::now() - t0;
+            dts_to_sec[0] = dt0.toSec();
             sum_times[0] += dts_to_sec[0];
             max_times[0] = std::max(max_times[0], dts_to_sec[0]);
 
             bool print_times = true;
             if (print_times)
             {
-                printf("\t-Whole planning time->  Current: %4f \tAverage : %4f msec \t max:%4f\n ", dts_to_sec[0], sum_times[0] / times_called,
+                printf("\t-plan->solve()  time->	 Current: %4f \tAverage : %4f msec \t max:%4f\n ", dts_to_sec[0], sum_times[0] / times_called,
                        max_times[0]);
                 printf("\t\t-Initialization time->  Current: %4f \tAverage : %4f msec \t max:%4f\n ", dts_to_sec[4], sum_times[4] / times_called,
                        max_times[4]);
@@ -703,9 +703,8 @@ namespace ompl_rope_planning
         return path_msg;
     }
 
-    inline void planner::convert_path_to_drones_paths(og::PathGeometric *pth, nav_msgs::Path &drone_pth1, nav_msgs::Path &drone_pth2)
+    void planner::convert_path_to_drones_paths(og::PathGeometric *pth, nav_msgs::Path &drone_pth1, nav_msgs::Path &drone_pth2)
     { // frames
-        auto t1 = std::chrono::high_resolution_clock::now();
         const std::string rb_path_frame_name = "rb_path";
         const std::string world_frame_name = "world";
 
@@ -734,8 +733,8 @@ namespace ompl_rope_planning
         drone_pose2.header.frame_id = rb_path_frame_name;
         drone_pose2.pose.orientation = tf2::toMsg(tf2::Quaternion(0, 0, 0, 1));
 
-        tf2_ros::Buffer tf_buffer;
-        tf2_ros::TransformListener tf2_listener(tf_buffer);
+        // tf2_ros::Buffer tf_buffer;
+        // tf2_ros::TransformListener tf2_listener(tf_buffer);
 
         geometry_msgs::TransformStamped ts2;
 
@@ -744,10 +743,6 @@ namespace ompl_rope_planning
         ts2.child_frame_id = rb_path_frame_name;
 
         tf2::Quaternion q;
-        float dt1 = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - t1).count();
-
-        printf("\nNumber of states: %d\n", num_states);
-        auto t0 = std::chrono::high_resolution_clock::now();
 
         for (auto i = 0; i < num_states; i++)
         {
@@ -790,9 +785,9 @@ namespace ompl_rope_planning
             drone_pth2.poses[i] = transformed_drone_pose2;
         }
 
-        float dt0 = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - t0).count();
-        printf("\t\tInitializing the  path took: %f usec\n", dt1);
-        printf("\t\tTransfrom rb_path to drones: %f usec\n", dt0);
+        // printf("\t-RB to drones   time->\t Current: %4.2f msec \n", dt0.toSec() * 1000);
+        // printf("\t\tInitializing the  path took: %4.2f msec\n", dt1.toSec() * 1000);
+        // printf("\t\tTransfrom rb_path to drones: %4.2f msec\n", dt2.toSec() * 1000);
     }
 
     ompl::base::StateSpacePtr planner::getSpace() { return space; }
