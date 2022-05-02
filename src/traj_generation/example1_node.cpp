@@ -11,15 +11,19 @@
 
 #include <nav_msgs/Path.h>
 #include <ros/ros.h>
+#include <tf/transform_listener.h>
+
 // marios headers
 #include <execution/TrajectoryPolynomialPieceMarios.h>
 
-min_snap::Trajectory generate_traj_from_path(const nav_msgs::Path &wp);
+min_snap::Trajectory generate_traj_from_path(const nav_msgs::Path &wp, geometry_msgs::Twist init_vel);
 using namespace std;
 using namespace ros;
 using namespace Eigen;
 
+// Gloabl variables TODO: move to a class
 ros::Publisher traj_polynomial_pub;
+geometry_msgs::Twist twist1, twist2;
 
 VectorXd allocateTime(const MatrixXd &wayPs, double vel, double acc)
 {
@@ -62,7 +66,7 @@ VectorXd allocateTime(const MatrixXd &wayPs, double vel, double acc)
     return durations;
 }
 
-min_snap::Trajectory generate_traj_from_path(const nav_msgs::Path &wp)
+min_snap::Trajectory generate_traj_from_path(const nav_msgs::Path &wp, geometry_msgs::Twist init_vel)
 {
     // int index = 0;
     // printf("Last pose  %f %f %f \n", wp.poses[index].pose.position.x, wp.poses[index].pose.position.y, wp.poses[index].pose.position.z);
@@ -88,8 +92,16 @@ min_snap::Trajectory generate_traj_from_path(const nav_msgs::Path &wp)
         route.col(k) << pt(0), pt(1), pt(2);
     }
 
+    // The i-th column of "iSS/fSS" is a 3-dimensional specified (i-1)-order derivative.
+    // The initial/final position is  stored in the first column of iSS/fSS.
+    // The initial/final velocity is  stored in the first column of iSS/fSS.
+    // The initial/final acceleration is  stored in the first column of iSS/fSS.
+
     iS.col(0) << route.leftCols<1>();
     fS.col(0) << route.rightCols<1>();
+
+    // setting initial velocity
+    iS.col(1) << init_vel.linear.x, init_vel.linear.y, init_vel.linear.z;
 
     iSS << iS, Eigen::MatrixXd::Zero(3, 1);
     fSS << fS, Eigen::MatrixXd::Zero(3, 1);
@@ -161,8 +173,10 @@ void publish_pols(min_snap::Trajectory traj, int id)
 
 void publish_path_to_traj(const nav_msgs::Path &wp, int id)
 {
+    auto init_vel = id == 0 ? twist1 : twist2;
+
     auto t0 = std::chrono::high_resolution_clock::now();
-    auto traj = generate_traj_from_path(wp);
+    auto traj = generate_traj_from_path(wp, init_vel);
     auto t1 = std::chrono::high_resolution_clock::now();
     publish_pols(traj, id);
     auto t2 = std::chrono::high_resolution_clock::now();
@@ -171,8 +185,10 @@ void publish_path_to_traj(const nav_msgs::Path &wp, int id)
     //   << std::endl;
     // std::cout << "Time taken for publishing: " << (float)std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count() / 1000 << " msec"
     //   << std::endl;
-    std::cout << "Total time taken for generating trajectory " << id << ": "
-              << (float)std::chrono::duration_cast<std::chrono::microseconds>(t2 - t0).count() / 1000 << " msec" << std::endl;
+    // std::cout << "Total time taken for generating trajectory " << id << ": "
+    //   << (float)std::chrono::duration_cast<std::chrono::microseconds>(t2 - t0).count() / 1000 << " msec" << std::endl;
+    // auto vel = traj.getVel(0);
+    // std::cout << "Velocity of drone " << id << " at t=0: " << vel.x() << " " << vel.y() << " " << vel.z() << std::endl;
 }
 
 void path_hande_callback1(const nav_msgs::Path &wp) { publish_path_to_traj(wp, 0); }
@@ -197,7 +213,6 @@ int main(int argc, char **argv)
     iS.setZero();
     fS.setZero();
     Vector3d zeroVec(0.0, 0.0, 0.0);
-    Rate lp(1000);
     int groupSize = 10;
 
     std::chrono::high_resolution_clock::time_point tc0, tc1, tc2;
@@ -208,7 +223,37 @@ int main(int argc, char **argv)
 
     traj_polynomial_pub = nh.advertise<execution::TrajectoryPolynomialPieceMarios>("/piece_pol", 1);
 
-    ros::spin();
+    // transform listener
+    tf::TransformListener listener;
+    ros::Rate rate(10);
+
+    // set twists to zero
+    twist1.linear = geometry_msgs::Vector3();
+    twist2.linear = geometry_msgs::Vector3();
+
+    while (ros::ok())
+    {
+        try
+        {
+            listener.lookupTwist("/drone1", "/world", ros::Time(0), ros::Duration(0.1), twist1);
+            // printf("Drone1 Twist: %f, %f, %f\n", twist1.linear.x, twist1.linear.y, twist1.linear.z);
+        }
+        catch (tf::TransformException ex)
+        {
+        }
+
+        try
+        {
+            listener.lookupTwist("/drone2", "/world", ros::Time(0), ros::Duration(0.1), twist2);
+            // printf("Drone2 Twist: %f, %f, %f\n", twist2.linear.x, twist2.linear.y, twist2.linear.z);
+        }
+        catch (tf::TransformException ex)
+        {
+        }
+
+        ros::spinOnce();
+        rate.sleep();
+    }
 
     return 0;
 }

@@ -11,7 +11,7 @@ real_time_settings: {
     fix_invalid_start_dist: 0.1,
     fix_invalid_goal_dist: 0.1,
     distance_to_goal_resetting: 1.8,
-    replanning_interval: 30000.0, #msec
+    replanning_interval: 5000.0, #msec
 
     siplifying_path: "fast", #full,fast
 
