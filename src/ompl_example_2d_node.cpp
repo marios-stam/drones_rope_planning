@@ -118,7 +118,7 @@ void set_new_start(bool &reset_start_state_to_initial)
     planner->setStart(new_start);
 }
 
-bool check_prev_path_validity()
+bool check_prev_path_validity(int &non_valid_state_id)
 {
     ompl::geometric::PathGeometric *prev_path = planner->getPath();
 
@@ -129,12 +129,16 @@ bool check_prev_path_validity()
 
     bool prev_path_is_valid = true;
     auto states = prev_path->getStates();
-    for (int i = 0; i < states.size(); i += 2) //+=2 for less checking --> faster
+    static unsigned int start_odd = 0;
+    start_odd = start_odd == 0 ? 1 : 0;
+
+    for (int i = start_odd; i < states.size(); i += 2) //+=2 for less checking --> faster
     {
         auto s = states[i];
         // check state validity
         if (!planner->isStateValid(s))
         {
+            non_valid_state_id = i;
             // printf("Previous path is invalid\n");
             prev_path_is_valid = false;
             break;
@@ -157,7 +161,6 @@ bool planning_service(drones_rope_planning::PlanningRequest::Request &req, drone
     const auto times_num = 6;
     static float sum_times[times_num] = {0, 0, 0, 0, 0};
     static float max_times[times_num] = {0, 0, 0, 0, 0};
-    float times[times_num] = {0, 0, 0, 0, 0};
 
     static int times_service_called = 0;
     static auto planning_times = 0;
@@ -188,8 +191,9 @@ bool planning_service(drones_rope_planning::PlanningRequest::Request &req, drone
     auto t2 = ros::Time::now();
     if (planner->prob_params.realtime_settings.replan_only_if_not_valid == true)
     {
+        int non_valid_state_id;
         // Return false because we want to plan anyway
-        prev_path_is_valid = check_prev_path_validity();
+        prev_path_is_valid = check_prev_path_validity(non_valid_state_id);
     }
     auto dt2 = ros::Time::now() - t2;
 
@@ -254,8 +258,8 @@ bool planning_service(drones_rope_planning::PlanningRequest::Request &req, drone
     sum_times[5] += dt_to_msec[5];
 
     max_times[0] = std::max(max_times[0], dt_to_msec[0]);
-    max_times[0] = std::max(max_times[1], dt_to_msec[1]);
-    max_times[0] = std::max(max_times[2], dt_to_msec[2]);
+    max_times[1] = std::max(max_times[1], dt_to_msec[1]);
+    max_times[2] = std::max(max_times[2], dt_to_msec[2]);
     max_times[3] = std::max(max_times[3], dt_to_msec[3]);
     max_times[4] = std::max(max_times[4], dt_to_msec[4]);
     max_times[5] = std::max(max_times[5], dt_to_msec[5]);
