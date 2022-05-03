@@ -5,18 +5,19 @@ planning_type: "moving_obstacles" # static,moving_obstacles
 
 #real time planning settings
 real_time_settings: {
-    planning_frequency: 20,
+    planning_frequency: 18, #Hz
     setting_new_start: True,
     replan_only_if_not_valid: True, # only replans if the current plan is not valid
     fix_invalid_start_dist: 0.8,
     fix_invalid_goal_dist: 0.1,
     distance_to_goal_resetting: 1.8,
-    replanning_interval: 200.0, #msec
+    replanning_interval: 4000.0, #msec
 
     siplifying_path: "none", #full,fast,none
 
     time_allocation: { velocity: 10.0, acceleration: 8.0 },
   }
+
 #======================================
 calculate_new_path: True
 timeout: 0.2
@@ -31,7 +32,7 @@ env_mesh: "env-scene-ltu-experiment"
 
 #Planning
 val_check_resolution: 0.15
-range: 1.8
+range: 1.0
 use_mesh_improvement: True
 goal_type: "simple" #simple,samplable,symmetrical,multiple_goals
 

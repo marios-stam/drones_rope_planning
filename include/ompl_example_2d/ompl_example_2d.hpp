@@ -111,6 +111,8 @@ namespace ompl_rope_planning
 
         ompl::base::SpaceInformationPtr getSpaceInformation();
 
+        void simplifyPath(og::PathGeometric *pth);
+
     private:
         // rope_length
         float L;
@@ -138,6 +140,12 @@ namespace ompl_rope_planning
 
         std::vector<float> start_state_;
         std::vector<float> goal_state_;
+
+        void print_settings();
+
+        void save_path(og::PathGeometric *pth);
+
+        void interpolate_path(og::PathGeometric *pth);
     };
 
 }

@@ -210,7 +210,8 @@ bool planning_service(drones_rope_planning::PlanningRequest::Request &req, drone
         }
         else
         {
-            // printf("No need to replan\n");
+            // No need to replan but will try to simplify path
+
             return true;
         }
     }
