@@ -34,6 +34,8 @@ public:
 
     virtual bool check_collision(void) = 0;
 
+    virtual float get_distance(void) = 0;
+
     /** \brief Cast this instance to a desired type. */
     template <typename T> T *as() { return dynamic_cast<T *>(this); };
 

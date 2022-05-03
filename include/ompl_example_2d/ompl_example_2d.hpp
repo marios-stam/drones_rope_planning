@@ -56,6 +56,7 @@
 // Custom classes
 #include "../custom_mesh.hpp"
 #include "custom_goals.hpp"
+#include "custom_objectives.hpp"
 #include "fcl_checker_realtime.hpp"
 #include "optim_objectives.hpp"
 #include "problem_params.hpp"

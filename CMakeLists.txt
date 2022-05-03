@@ -143,7 +143,8 @@ file(GLOB ompl_example_2d_sources
     src/custom_mesh.cpp
     src/problem_params.cpp
     src/optim_objectives.cpp
-
+    src/custom_objectives.cpp
+    
     src/moving_obstacles.cpp
     
     #fcl_checkers
@@ -168,6 +169,8 @@ file(GLOB ompl_example_2d_headers
     include/ompl_example_2d/custom_goals.hpp
     include/ompl_example_2d/optim_objectives.hpp
 
+    include/ompl_example_2d/custom_objectives.hpp
+    
     include/moving_obstacles.hpp
 
     #fcl_checkers

@@ -40,11 +40,15 @@ namespace realtime_obstacles
 
         void set_cylinder_transform(int index, float pos[3], float q[4]);
 
+        Eigen::MatrixX3f get_cylinders_transforms();
+
         void get_collision_objects();
 
         bool collision_detection(fcl::CollisionObject<float> *robot);
 
         int get_cylinders_size();
+
+        float get_distance(fcl::CollisionObject<float> *robot);
 
     private:
         void create_collision_objects();
@@ -57,6 +61,10 @@ namespace realtime_obstacles
         // helping variables for collision checking
         fcl::CollisionResult<float> result;
         fcl::CollisionRequest<float> request;
+
+        // helping variables for distance  calculation
+        fcl::DistanceRequest<float> distance_request;
+        fcl::DistanceResult<float> distance_result;
 
         // keeps tracks of the changes in the cylinders made
         // std::vector<bool> cylinders_coll_object_updated;

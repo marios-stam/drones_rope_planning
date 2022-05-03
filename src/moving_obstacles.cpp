@@ -101,6 +101,20 @@ namespace realtime_obstacles
         collision_objects[index]->setQuatRotation(fcl::Quaternion<float>(q[0], q[1], q[2], q[3]));
     }
 
+    Eigen::MatrixX3f Cylinders::get_cylinders_transforms()
+    {
+        Eigen::MatrixX3f pos_matrix;
+        pos_matrix.resize(cylinders.size(), 3);
+
+        for (int i = 0; i < cylinders.size(); i++)
+        {
+            auto pos = collision_objects[i]->getTranslation();
+            pos_matrix.row(i) << pos[0], pos[1], pos[2];
+        }
+
+        return pos_matrix;
+    }
+
     bool Cylinders::collision_detection(fcl::CollisionObject<float> *robot)
     {
         for (int i = 0; i < collision_objects.size(); i++)
@@ -114,6 +128,21 @@ namespace realtime_obstacles
         }
 
         return false;
+    }
+
+    float Cylinders::get_distance(fcl::CollisionObject<float> *robot)
+    {
+        // find min distance
+        float min_distance = std::numeric_limits<float>::max();
+        for (int i = 0; i < collision_objects.size(); i++)
+        {
+            result.clear();
+            printf("Node types:%d ,%d\n", robot->getNodeType(), collision_objects[0]->getNodeType());
+            fcl::distance(robot, collision_objects[0], distance_request, distance_result);
+            min_distance = std::min(min_distance, distance_result.min_distance);
+        }
+
+        return min_distance;
     }
 
     std::vector<CylinderDefinition> load_cylinders_definition(ros::NodeHandle &nh)

@@ -35,7 +35,11 @@ namespace fcl_checking_realtime
 
         void update_env_obstacle_transform(int index, float pos[3], float q[4]);
 
+        Eigen::MatrixX3f getObstaclesTransforms();
+
         bool check_collision(void);
+
+        float get_distance(void);
 
     private:
         realtime_obstacles::Cylinders *env;

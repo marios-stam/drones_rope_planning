@@ -52,10 +52,19 @@ namespace fcl_checking_realtime
         env->set_cylinder_transform(index, pos, q);
     }
 
+    Eigen::MatrixX3f checker::getObstaclesTransforms() {
+        env->get_cylinders_transforms();
+    }
+
     bool checker::check_collision()
     {
         // use the collision detection function of the environment
         return env->collision_detection(robot_mesh->collision_object);
     }
 
+    float checker::get_distance()
+    {
+        // use the distance function of the environment
+        return env->get_distance(robot_mesh->collision_object);
+    }
 }

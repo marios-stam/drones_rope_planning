@@ -78,9 +78,12 @@ namespace ompl_rope_planning
         // ob::OptimizationObjectivePtr obj(new custom_objectives::RopeRelaxedObjective(si, prob_params.L));
         // pdef->setOptimizationObjective(obj);
 
+        printf("Setting optimization objective...\n");
+        pdef->setOptimizationObjective(getBalancedObjective(si, checker, custom_robot_mesh));
+
         // set own heuristic
-        auto obj = custom_objectives::custom_heuristic(si);
-        pdef->setOptimizationObjective(obj);
+        // auto obj = custom_objectives::custom_heuristic(si);
+        // pdef->setOptimizationObjective(obj);
 
         std::cout << "Initialized: " << std::endl;
     }
