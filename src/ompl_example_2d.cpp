@@ -517,9 +517,13 @@ namespace ompl_rope_planning
                     return valid || path.check();
                     */
                 }
-                else
+                else if (prob_params.realtime_settings.simplifying_path == problem_params::SimplifyingPath::FULL)
                 {
                     path_simplifier.simplify(*pth, ptc, false);
+                }
+                else
+                {
+                    // no simplyfing
                 }
 
                 // path_simplifier.simplifyMax(*pth);

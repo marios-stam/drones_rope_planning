@@ -1,4 +1,4 @@
-#include "traj_min_jerk.hpp"
+// #include "traj_min_jerk.hpp"
 #include "traj_min_snap.hpp"
 
 #include <chrono>
@@ -15,6 +15,8 @@
 
 // marios headers
 #include <execution/TrajectoryPolynomialPieceMarios.h>
+
+double time_alloc_vel, time_alloc_acc;
 
 min_snap::Trajectory generate_traj_from_path(const nav_msgs::Path &wp, geometry_msgs::Twist init_vel);
 using namespace std;
@@ -106,7 +108,7 @@ min_snap::Trajectory generate_traj_from_path(const nav_msgs::Path &wp, geometry_
     iSS << iS, Eigen::MatrixXd::Zero(3, 1);
     fSS << fS, Eigen::MatrixXd::Zero(3, 1);
 
-    ts = allocateTime(route, 3.0, 3.0); // TODO:Make that a parameter
+    ts = allocateTime(route, time_alloc_vel, time_alloc_acc); // TODO:Make that a parameter
 
     snapOpt.reset(iSS, fSS, route.cols() - 1);
     snapOpt.generate(route.block(0, 1, 3, waypoints_number - 2), ts);
@@ -200,8 +202,18 @@ int main(int argc, char **argv)
     ros::init(argc, argv, "example1_node");
     ros::NodeHandle nh("~");
 
-    min_jerk::JerkOpt jerkOpt;
-    min_jerk::Trajectory minJerkTraj;
+    try
+    {
+        ros::param::get("/planning/real_time_settings/time_allocation/velocity", time_alloc_vel);
+        ros::param::get("/planning/real_time_settings/time_allocation/acceleration", time_alloc_acc);
+    }
+    catch (const std::exception &e)
+    {
+        ROS_ERROR("%s", e.what());
+        printf("Could not load parameters,using default time allocation parameters.\n");
+        time_alloc_vel = 4.0;
+        time_alloc_acc = 4.0;
+    }
 
     min_snap::SnapOpt snapOpt;
     min_snap::Trajectory minSnapTraj;

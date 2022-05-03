@@ -40,7 +40,14 @@ namespace problem_params
     enum SimplifyingPath
     {
         FAST,
-        FULL
+        FULL,
+        NONE
+    };
+
+    struct time_allocation
+    {
+        double velocity;
+        double acceleration;
     };
 
     struct RealTimeSettings
@@ -52,6 +59,7 @@ namespace problem_params
         float distance_to_goal_resetting;
         float replanning_interval;
         int simplifying_path;
+        time_allocation time_alloc;
     };
 
     struct ProblemParams

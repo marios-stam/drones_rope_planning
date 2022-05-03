@@ -83,10 +83,15 @@ namespace problem_params
         ros::param::get("/planning/real_time_settings/distance_to_goal_resetting", pdef.realtime_settings.distance_to_goal_resetting);
         ros::param::get("/planning/real_time_settings/replanning_interval", pdef.realtime_settings.replanning_interval);
 
-        std::map<std::string, int> simplifying_path_map = {{"full", SimplifyingPath::FULL}, {"fast", SimplifyingPath::FAST}};
+        std::map<std::string, int> simplifying_path_map = {
+            {"full", SimplifyingPath::FULL}, {"fast", SimplifyingPath::FAST}, {"none", SimplifyingPath::NONE}};
+
         std::string simplifying_path_str;
         ros::param::get("/planning/real_time_settings/siplifying_path", simplifying_path_str);
         pdef.realtime_settings.simplifying_path = simplifying_path_map[simplifying_path_str];
+
+        ros::param::get("/planning/real_time_settings/time_allocation/velocity", pdef.realtime_settings.time_alloc.velocity);
+        ros::param::get("/planning/real_time_settings/time_allocation/acceleration", pdef.realtime_settings.time_alloc.acceleration);
 
         return pdef;
     }
@@ -105,8 +110,14 @@ namespace problem_params
             printf("\t\tDistance to goal resetting:%f\n", params.realtime_settings.distance_to_goal_resetting);
             printf("\t\tReplanning interval:%f\n", params.realtime_settings.replanning_interval);
 
-            std::map<int, std::string> simplifying_path_map = {{SimplifyingPath::FULL, "full"}, {SimplifyingPath::FAST, "fast"}};
+            std::map<int, std::string> simplifying_path_map = {
+                {SimplifyingPath::FULL, "full"}, {SimplifyingPath::FAST, "fast"}, {SimplifyingPath::NONE, "none"}};
+
             printf("\t\tSimplifying path:%s\n", simplifying_path_map[params.realtime_settings.simplifying_path]);
+
+            printf("\t\tTime allocation:\n");
+            printf("\t\t\tVelocity:%f\n", params.realtime_settings.time_alloc.velocity);
+            printf("\t\t\tAcceleration:%f\n", params.realtime_settings.time_alloc.acceleration);
         }
 
         printf("\tTimeout: %f\n", params.timeout);
