@@ -288,126 +288,111 @@ namespace ompl_rope_planning
         }
     }
 
-    void planner::simplifyPath(og::PathGeometric *pth)
+    bool planner::simplifyPath(og::PathGeometric *pth)
     {
-        if (prob_params.simplify_path)
+        if (!prob_params.simplify_path) // Maybe try to simplify either way?
         {
-            auto t0 = ros::Time::now();
-            // std::cout << "Simplifying path...\n";
-            og::PathSimplifier path_simplifier(si, pdef->getGoal());
+            return true;
+        }
 
-            ob::PlannerTerminationCondition ptc(ob::timedPlannerTerminationCondition(prob_params.timeout));
+        auto t0 = ros::Time::now();
+        og::PathSimplifier path_simplifier(si, pdef->getGoal());
 
-            if (prob_params.realtime_settings.simplifying_path == problem_params::SimplifyingPath::FAST)
+        ob::PlannerTerminationCondition ptc(ob::timedPlannerTerminationCondition(prob_params.timeout));
+
+        if (prob_params.realtime_settings.simplifying_path == problem_params::SimplifyingPath::FAST)
+        {
+            bool changes_made = false;
+
+            changes_made = changes_made || path_simplifier.shortcutPath(*pth);
+            changes_made = changes_made || path_simplifier.reduceVertices(*pth);
+            changes_made = changes_made || path_simplifier.collapseCloseVertices(*pth);
+            changes_made = changes_made || path_simplifier.reduceVertices(*pth);
+            if (changes_made)
             {
-                path_simplifier.shortcutPath(*pth);
-                path_simplifier.reduceVertices(*pth);
+                bool path_valid = pth->check();
+                return path_valid;
+            }
+            else
+            {
+                return true;
+            }
+
+            /*
+            // path_simplifier.perturbPath(*pth, 0.2);
+
+            bool isMetric = si->getStateSpace()->isMetricSpace();
+            printf("isMetric: %d\n", isMetric);
+
+            bool atLeastOnce = true;
+            bool tryMore = true, valid = true;
+            unsigned int total_times = 0;
+            while ((ptc == false || atLeastOnce) && tryMore)
+            {
+                // if ((ptc == false || atLeastOnce) && si->getStateSpace()->isMetricSpace())
+                // {
+                //     bool metricTryMore = true;
+                //     unsigned int times = 0;
+                //     do
+                //     {
+                //         bool shortcut = path_simplifier.shortcutPath(*pth); // split path segments, not just vertices
+
+                //         metricTryMore = shortcut;
+                //     } while ((ptc == false || atLeastOnce) && ++times <= 4 && metricTryMore);
+
+                //     // smooth the path with BSpline interpolation
+                //     if (ptc == false || atLeastOnce)
+                //         path_simplifier.smoothBSpline(*pth, 3, (*pth).length() / 100.0);
+                // }
+                // // try a randomized step of connecting vertices
+                // if (ptc == false || atLeastOnce)
+                //     tryMore = path_simplifier.reduceVertices(*pth);
+
+                // // try to collapse close-by vertices
+                // if (ptc == false || atLeastOnce)
+                //     path_simplifier.collapseCloseVertices(*pth);
+                printf("total_times:%d \n", total_times++);
+                if (total_times > 3)
+                    break;
+                bool shortcut;
+                shortcut = path_simplifier.shortcutPath(*pth); // split path segments, not just vertices
+                shortcut = path_simplifier.shortcutPath(*pth); // split path segments, not just vertices
+                shortcut = path_simplifier.shortcutPath(*pth); // split path segments, not just vertices
+
+                // path_simplifier.smoothBSpline(*pth, 3, (*pth).length() / 100.0);
+                tryMore = path_simplifier.reduceVertices(*pth);
+
                 path_simplifier.collapseCloseVertices(*pth);
-                path_simplifier.reduceVertices(*pth);
-                /*
-                // path_simplifier.perturbPath(*pth, 0.2);
 
-                bool isMetric = si->getStateSpace()->isMetricSpace();
-                printf("isMetric: %d\n", isMetric);
-
-                bool atLeastOnce = true;
-                bool tryMore = true, valid = true;
-                unsigned int total_times = 0;
-                while ((ptc == false || atLeastOnce) && tryMore)
-                {
-                    // if ((ptc == false || atLeastOnce) && si->getStateSpace()->isMetricSpace())
-                    // {
-                    //     bool metricTryMore = true;
-                    //     unsigned int times = 0;
-                    //     do
-                    //     {
-                    //         bool shortcut = path_simplifier.shortcutPath(*pth); // split path segments, not just vertices
-
-                    //         metricTryMore = shortcut;
-                    //     } while ((ptc == false || atLeastOnce) && ++times <= 4 && metricTryMore);
-
-                    //     // smooth the path with BSpline interpolation
-                    //     if (ptc == false || atLeastOnce)
-                    //         path_simplifier.smoothBSpline(*pth, 3, (*pth).length() / 100.0);
-                    // }
-                    // // try a randomized step of connecting vertices
-                    // if (ptc == false || atLeastOnce)
-                    //     tryMore = path_simplifier.reduceVertices(*pth);
-
-                    // // try to collapse close-by vertices
-                    // if (ptc == false || atLeastOnce)
-                    //     path_simplifier.collapseCloseVertices(*pth);
-                    printf("total_times:%d \n", total_times++);
-                    if (total_times > 3)
-                        break;
-                    bool shortcut;
-                    shortcut = path_simplifier.shortcutPath(*pth); // split path segments, not just vertices
-                    shortcut = path_simplifier.shortcutPath(*pth); // split path segments, not just vertices
-                    shortcut = path_simplifier.shortcutPath(*pth); // split path segments, not just vertices
-
-                    // path_simplifier.smoothBSpline(*pth, 3, (*pth).length() / 100.0);
+                unsigned int times = 0;
+                while ((ptc == false || atLeastOnce) && tryMore && ++times <= 3)
                     tryMore = path_simplifier.reduceVertices(*pth);
-
-                    path_simplifier.collapseCloseVertices(*pth);
-
-                    unsigned int times = 0;
-                    while ((ptc == false || atLeastOnce) && tryMore && ++times <= 3)
-                        tryMore = path_simplifier.reduceVertices(*pth);
-                }
-                */
-                /*
-                auto path = *pth;
-                bool atLeastOnce = true;
-                bool tryMore = true, valid = true;
-                while ((ptc == false || atLeastOnce) && tryMore)
+            }
+            */
+            /*
+            auto path = *pth;
+            bool atLeastOnce = true;
+            bool tryMore = true, valid = true;
+            while ((ptc == false || atLeastOnce) && tryMore)
+            {
+                // if the space is metric, we can do some additional smoothing
+                if ((ptc == false || atLeastOnce) && si_->getStateSpace()->isMetricSpace())
                 {
-                    // if the space is metric, we can do some additional smoothing
-                    if ((ptc == false || atLeastOnce) && si_->getStateSpace()->isMetricSpace())
-                    {
-                        bool metricTryMore = true;
-                        unsigned int times = 0;
-                        do
-                        {
-                            bool shortcut = path_simplifier.shortcutPath(path);          // split path segments, not just vertices
-                            bool better_goal = gsr_ ? findBetterGoal(path, ptc) : false; // Try to connect the path to a closer goal
-
-                            metricTryMore = shortcut || better_goal;
-                        } while ((ptc == false || atLeastOnce) && ++times <= 5 && metricTryMore);
-
-                        // smooth the path with BSpline interpolation
-                        if (ptc == false || atLeastOnce)
-                            smoothBSpline(path, 3, path.length() / 100.0);
-
-                        if (ptc == false || atLeastOnce)
-                        {
-                            // we always run this if the metric-space algorithms were run.  In non-metric spaces this does not work.
-                            const std::pair<bool, bool> &p = path.checkAndRepair(magic::MAX_VALID_SAMPLE_ATTEMPTS);
-                            if (!p.second)
-                            {
-                                valid = false;
-                                OMPL_WARN("Solution path may slightly touch on an invalid region of the state space");
-                            }
-                            else if (!p.first)
-                                OMPL_DEBUG("The solution path was slightly touching on an invalid region of the state space, but "
-                                           "it was "
-                                           "successfully fixed.");
-                        }
-                    }
-
-                    // try a randomized step of connecting vertices
-                    if (ptc == false || atLeastOnce)
-                        tryMore = reduceVertices(path);
-
-                    // try to collapse close-by vertices
-                    if (ptc == false || atLeastOnce)
-                        collapseCloseVertices(path);
-
-                    // try to reduce verices some more, if there is any point in doing so
+                    bool metricTryMore = true;
                     unsigned int times = 0;
-                    while ((ptc == false || atLeastOnce) && tryMore && ++times <= 5)
-                        tryMore = reduceVertices(path);
+                    do
+                    {
+                        bool shortcut = path_simplifier.shortcutPath(path);          // split path segments, not just vertices
+                        bool better_goal = gsr_ ? findBetterGoal(path, ptc) : false; // Try to connect the path to a closer goal
 
-                    if ((ptc == false || atLeastOnce) && si_->getStateSpace()->isMetricSpace())
+                        metricTryMore = shortcut || better_goal;
+                    } while ((ptc == false || atLeastOnce) && ++times <= 5 && metricTryMore);
+
+                    // smooth the path with BSpline interpolation
+                    if (ptc == false || atLeastOnce)
+                        smoothBSpline(path, 3, path.length() / 100.0);
+
+                    if (ptc == false || atLeastOnce)
                     {
                         // we always run this if the metric-space algorithms were run.  In non-metric spaces this does not work.
                         const std::pair<bool, bool> &p = path.checkAndRepair(magic::MAX_VALID_SAMPLE_ATTEMPTS);
@@ -417,27 +402,56 @@ namespace ompl_rope_planning
                             OMPL_WARN("Solution path may slightly touch on an invalid region of the state space");
                         }
                         else if (!p.first)
-                            OMPL_DEBUG("The solution path was slightly touching on an invalid region of the state space, but it "
-                                       "was "
+                            OMPL_DEBUG("The solution path was slightly touching on an invalid region of the state space, but "
+                                       "it was "
                                        "successfully fixed.");
                     }
-
-                    atLeastOnce = false;
                 }
-                return valid || path.check();
-                */
-            }
-            else if (prob_params.realtime_settings.simplifying_path == problem_params::SimplifyingPath::FULL)
-            {
-                path_simplifier.simplify(*pth, ptc, false);
-            }
-            else
-            {
-                // no simplyfing
-            }
 
-            // path_simplifier.simplifyMax(*pth);
+                // try a randomized step of connecting vertices
+                if (ptc == false || atLeastOnce)
+                    tryMore = reduceVertices(path);
+
+                // try to collapse close-by vertices
+                if (ptc == false || atLeastOnce)
+                    collapseCloseVertices(path);
+
+                // try to reduce verices some more, if there is any point in doing so
+                unsigned int times = 0;
+                while ((ptc == false || atLeastOnce) && tryMore && ++times <= 5)
+                    tryMore = reduceVertices(path);
+
+                if ((ptc == false || atLeastOnce) && si_->getStateSpace()->isMetricSpace())
+                {
+                    // we always run this if the metric-space algorithms were run.  In non-metric spaces this does not work.
+                    const std::pair<bool, bool> &p = path.checkAndRepair(magic::MAX_VALID_SAMPLE_ATTEMPTS);
+                    if (!p.second)
+                    {
+                        valid = false;
+                        OMPL_WARN("Solution path may slightly touch on an invalid region of the state space");
+                    }
+                    else if (!p.first)
+                        OMPL_DEBUG("The solution path was slightly touching on an invalid region of the state space, but it "
+                                   "was "
+                                   "successfully fixed.");
+                }
+
+                atLeastOnce = false;
+            }
+            return valid || path.check();
+            */
         }
+        else if (prob_params.realtime_settings.simplifying_path == problem_params::SimplifyingPath::FULL)
+        {
+            return path_simplifier.simplify(*pth, ptc, false);
+        }
+        else
+        {
+            // no simplyfing
+            return true;
+        }
+
+        // path_simplifier.simplifyMax(*pth);
     }
 
     void planner::print_settings()
@@ -477,7 +491,10 @@ namespace ompl_rope_planning
 
     og::PathGeometric *planner::plan()
     {
-        printf("Calculating plan...\n");
+        printf("Calculating plan with start: %f %f %f\n", pdef->getStartState(0)->as<ob::RealVectorStateSpace::StateType>()->values[0],
+               pdef->getStartState(0)->as<ob::RealVectorStateSpace::StateType>()->values[1],
+               pdef->getStartState(0)->as<ob::RealVectorStateSpace::StateType>()->values[2]);
+
         // STATS
         const int times = 5;
         static float sum_times[times] = {0, 0, 0, 0, 0};
@@ -580,7 +597,7 @@ namespace ompl_rope_planning
             sum_times[0] += dts_to_msec[0];
             max_times[0] = std::max(max_times[0], dts_to_msec[0]);
 
-            bool print_times = true;
+            bool print_times = false;
             if (print_times)
             {
                 printf("\t-plan->solve()  time->	 Current: %4f \tAverage : %4f msec \t max:%4f\n ", dts_to_msec[0], sum_times[0] / times_called,
@@ -833,6 +850,8 @@ namespace ompl_rope_planning
     }
 
     ompl::geometric::PathGeometric *planner::getPath() { return path_; }
+
+    void planner::setPath(ompl::geometric::PathGeometric *path) { path_ = path; }
 
     ompl::base::SpaceInformationPtr planner::getSpaceInformation() { return si; }
 } // namespace drones_rope_planning

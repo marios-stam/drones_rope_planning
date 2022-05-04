@@ -10,12 +10,12 @@ real_time_settings: {
     replan_only_if_not_valid: True, # only replans if the current plan is not valid
     fix_invalid_start_dist: 0.8,
     fix_invalid_goal_dist: 0.1,
-    distance_to_goal_resetting: 1.8,
-    replanning_interval: 4000.0, #msec
+    distance_to_goal_resetting: 1.0,
+    replanning_interval: 5000.0, #msec
 
-    siplifying_path: "none", #full,fast,none
+    siplifying_path: "fast", #full,fast,none
 
-    time_allocation: { velocity: 10.0, acceleration: 8.0 },
+    time_allocation: { velocity: 10.0, acceleration: 10.0 },
   }
 
 #======================================
@@ -31,7 +31,7 @@ timeout: 0.2
 env_mesh: "env-scene-ltu-experiment"
 
 #Planning
-val_check_resolution: 0.15
+val_check_resolution: 0.08
 range: 1.0
 use_mesh_improvement: True
 goal_type: "simple" #simple,samplable,symmetrical,multiple_goals

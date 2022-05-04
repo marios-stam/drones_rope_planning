@@ -69,6 +69,9 @@ std::vector<realtime_obstacles::CylinderDefinition> get_cylinders_def_vec(drones
 
 void set_new_start(bool &reset_start_state_to_initial)
 {
+    if (!planner->prob_params.realtime_settings.setting_new_start)
+        return;
+
     // set new start
     auto old_start = planner->getStartState();
 
@@ -76,6 +79,7 @@ void set_new_start(bool &reset_start_state_to_initial)
 
     try
     {
+        // setting new stat of the path the one that is now formed by the drones positions
         new_start[0] = (drone1_tf.getOrigin().x() + drone2_tf.getOrigin().x()) / 2;
         new_start[1] = (drone1_tf.getOrigin().y() + drone2_tf.getOrigin().y()) / 2;
         new_start[2] = (drone1_tf.getOrigin().z() + drone2_tf.getOrigin().z()) / 2;
@@ -92,10 +96,10 @@ void set_new_start(bool &reset_start_state_to_initial)
         auto goal = planner->getGoalState();
         float dist = sqrt(pow(new_start[0] - goal[0], 2) + pow(new_start[1] - goal[1], 2) + pow(new_start[2] - goal[2], 2));
 
-        float dist_to_goal_threshold = 1;
+        float dist_to_goal_threshold = planner->prob_params.realtime_settings.distance_to_goal_resetting;
         if (dist < dist_to_goal_threshold)
         {
-            // printf("Start and goal are too close\n");
+            printf("Start and goal are too close\n");
             reset_start_state_to_initial = true;
             new_start[0] = planner->prob_params.start_pos["x"];
             new_start[1] = planner->prob_params.start_pos["y"];
@@ -105,7 +109,7 @@ void set_new_start(bool &reset_start_state_to_initial)
     catch (tf::TransformException &ex)
     {
         printf("%s", ex.what());
-        // printf("Using old start\n");
+        printf("Using old start\n");
         // Its the first time and nothin has been published to the tree
         new_start[0] = old_start[0];
         new_start[1] = old_start[1];
@@ -118,9 +122,13 @@ void set_new_start(bool &reset_start_state_to_initial)
     planner->setStart(new_start);
 }
 
-bool check_prev_path_validity(int &non_valid_state_id)
+bool check_path_validity(ompl::geometric::PathGeometric *prev_path, int &non_valid_state_id)
 {
-    ompl::geometric::PathGeometric *prev_path = planner->getPath();
+    if (!planner->prob_params.realtime_settings.replan_only_if_not_valid)
+    {
+        // set at false in case we want to plan anyway and dont check about previous plan validity
+        return false;
+    }
 
     if (prev_path == nullptr)
     {
@@ -153,6 +161,40 @@ bool check_prev_path_validity(int &non_valid_state_id)
     return prev_path_is_valid;
 }
 
+int get_state_closer_to_current_drone_position(og::PathGeometric *path)
+{
+    auto states = path->getStates();
+
+    float curr_state[6];
+    curr_state[0] = (drone1_tf.getOrigin().x() + drone2_tf.getOrigin().x()) / 2;
+    curr_state[1] = (drone1_tf.getOrigin().y() + drone2_tf.getOrigin().y()) / 2;
+    curr_state[2] = (drone1_tf.getOrigin().z() + drone2_tf.getOrigin().z()) / 2;
+    float dx = drone1_tf.getOrigin().x() - drone2_tf.getOrigin().x();
+    float dy = drone1_tf.getOrigin().y() - drone2_tf.getOrigin().y();
+    float dz = drone1_tf.getOrigin().z() - drone2_tf.getOrigin().z();
+    // calculate yaw
+    curr_state[3] = atan2(dy, dx);
+
+    // TODO: calculate the appropriate one (iverse dynamic transform)
+    unsigned int min_index;
+    float min_dist = std::numeric_limits<float>::max();
+    for (int i = 0; i < path->getStateCount(); i++)
+    {
+        auto state = states[i]->as<ob::RealVectorStateSpace::StateType>()->values;
+
+        auto dist = sqrt(pow(state[0] - curr_state[0], 2) + pow(state[1] - curr_state[1], 2) + pow(state[2] - curr_state[2], 2) +
+                         pow(state[3] - curr_state[3], 2));
+
+        if (dist < min_dist)
+        {
+            min_dist = dist;
+            min_index = i;
+        }
+    }
+
+    return min_index;
+}
+
 bool planning_service(drones_rope_planning::PlanningRequest::Request &req, drones_rope_planning::PlanningRequest::Response &res)
 {
     printf("===============================================================\n");
@@ -169,50 +211,86 @@ bool planning_service(drones_rope_planning::PlanningRequest::Request &req, drone
 
     auto t0 = ros::Time::now();
     auto t1 = ros::Time::now();
-    std::vector<realtime_obstacles::CylinderDefinition> cylinders_def_vec = get_cylinders_def_vec(req);
 
-    // printf("Setting the environment\n");
+    // All variables used in the planning process
+    nav_msgs::Path drone_path1, drone_path2;
+    int non_valid_state_id;
+
+    // getting and updating cylinders transforms
+    std::vector<realtime_obstacles::CylinderDefinition> cylinders_def_vec = get_cylinders_def_vec(req);
     planner->checker->as<fcl_checking_realtime::checker>()->updateEnvironmentTransforms(cylinders_def_vec);
 
     auto dt1 = ros::Time::now() - t1;
 
     bool reset_start_state_to_initial = false;
 
-    if (planner->prob_params.realtime_settings.setting_new_start)
-    {
-        set_new_start(reset_start_state_to_initial);
-    }
-
-    // check if previous plan is valid after environment changes
-    // set at false in case we want to plan anyway and dont check about previous plan validity
-    bool prev_path_is_valid = false;
-    static auto time_of_replanning = ros::Time::now();
+    set_new_start(reset_start_state_to_initial);
 
     auto t2 = ros::Time::now();
-    if (planner->prob_params.realtime_settings.replan_only_if_not_valid == true)
-    {
-        int non_valid_state_id;
-        // Return false because we want to plan anyway
-        prev_path_is_valid = check_prev_path_validity(non_valid_state_id);
-    }
+    // check if previous plan is valid after environment changes
+    bool prev_path_is_valid = check_path_validity(planner->getPath(), non_valid_state_id);
     auto dt2 = ros::Time::now() - t2;
+
+    if (!prev_path_is_valid)
+        printf("Previous path is invalid\n");
 
     bool should_replan = reset_start_state_to_initial || !prev_path_is_valid;
 
+    static auto time_of_replanning = ros::Time::now();
     if (!should_replan)
     {
-        auto time_from_last_replanning = ros::Time::now() - time_of_replanning;
+        auto time_from_last_replanning = (ros::Time::now() - time_of_replanning).toSec();
+        float replanning_interval = planner->prob_params.realtime_settings.replanning_interval / 1000;
 
         // Interval of replanning while path maintains valid
-        if (time_from_last_replanning.toSec() > planner->prob_params.realtime_settings.replanning_interval / 1000)
+        if (time_from_last_replanning > replanning_interval)
         {
             should_replan = true;
         }
         else
         {
             // No need to replan but will try to simplify path
+            printf("No need to replan but will try to simplify path..\n");
 
-            return true;
+            ompl::geometric::PathGeometric *path = planner->getPath();
+
+            // deep copy path to old path
+            ompl::geometric::PathGeometric *old_path = new ompl::geometric::PathGeometric(*path);
+            // old_path.copyFrom(*path);
+
+            bool path_valid_after_simplify = planner->simplifyPath(planner->getPath());
+
+            printf("Path waypoints:%d\n", planner->getPath()->getStateCount());
+
+            printf("Path valid after simplify: %d\n", path_valid_after_simplify);
+
+            if (path_valid_after_simplify)
+            {
+                planner->interpolate_path(planner->getPath());
+
+                // chop path up to the points the drones are at the moment
+
+                int curr_index = get_state_closer_to_current_drone_position(planner->getPath());
+                curr_index = std::min(curr_index, 3); // sometimes it was chopping at 9(TODO: check why)
+                auto state_to_keep_after = planner->getPath()->getState(curr_index);
+                printf("Keeping all states after: %d\n", curr_index);
+
+                planner->getPath()->keepAfter(state_to_keep_after);
+
+                planner->convert_path_to_drones_paths(planner->getPath(), drone_path1, drone_path2);
+                drone_path1_pub.publish(drone_path1);
+                drone_path2_pub.publish(drone_path2);
+
+                return true;
+            }
+            else
+            {
+                planner->setPath(old_path);
+                printf("Path is set back to the old path before simplifying!\n");
+                bool result = planner->getPath()->check();
+                printf("Path is valid: %d\n", result);
+                return true;
+            }
         }
     }
 
@@ -233,7 +311,6 @@ bool planning_service(drones_rope_planning::PlanningRequest::Request &req, drone
     }
     auto dt3 = ros::Time::now() - t3;
 
-    nav_msgs::Path drone_path1, drone_path2;
     auto t4 = ros::Time::now();
     // converting rigid body path to drone paths
     planner->convert_path_to_drones_paths(pth, drone_path1, drone_path2);
@@ -246,7 +323,9 @@ bool planning_service(drones_rope_planning::PlanningRequest::Request &req, drone
 
     auto dt0 = ros::Time::now() - t0;
 
-    // STATS
+    return true;
+
+    // STATS  TODO:make ros parameter for printing the stats
     planning_times++;
 
     float dt_to_msec[times_num] = {dt0.toSec() * 1000.0, dt1.toSec() * 1000.0, dt2.toSec() * 1000.0,
@@ -276,7 +355,6 @@ bool planning_service(drones_rope_planning::PlanningRequest::Request &req, drone
            max_times[4]);
     printf("\t-Publish pths   time->\t Current: %4f \tAverage: %4f msec \tMax: %4f msec\n", dt_to_msec[5], sum_times[5] / planning_times,
            max_times[5]);
-    return true;
 }
 
 int main(int argc, char **argv)

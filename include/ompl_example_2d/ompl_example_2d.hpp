@@ -111,7 +111,11 @@ namespace ompl_rope_planning
 
         ompl::base::SpaceInformationPtr getSpaceInformation();
 
-        void simplifyPath(og::PathGeometric *pth);
+        bool simplifyPath(og::PathGeometric *pth);
+
+        void interpolate_path(og::PathGeometric *pth);
+
+        void setPath(ompl::geometric::PathGeometric *path);
 
     private:
         // rope_length
@@ -144,8 +148,6 @@ namespace ompl_rope_planning
         void print_settings();
 
         void save_path(og::PathGeometric *pth);
-
-        void interpolate_path(og::PathGeometric *pth);
     };
 
 }

@@ -15,7 +15,7 @@
 
     <!-- <node name="drones_vis_on_rb" pkg="drone_path_planning" type="drones_vis.py" /> -->
 
-    <node name="drones_vis_on_rb" pkg="execution" type="leader_traj_executor_position_controller_realtime.py"  />
+    <node name="drones_vis_on_rb" pkg="execution" type="leader_traj_executor_position_controller_realtime.py"   />
 
   	<!-- <node name="droneMarkerVis" pkg="3Dvisualization" type="droneMarkerVisMarios.py"  /> -->
 
@@ -23,11 +23,11 @@
 	
 
 	<!-- ============================= PLANNING ============================= -->
-	<node name="drones_rope_planning_node" pkg="drones_rope_planning"  type="drones_rope_planning_node"   output="screen"   />
+	<node name="drones_rope_planning_node" pkg="drones_rope_planning"  type="drones_rope_planning_node" output="screen" />
 	
 
 	<!-- ========================== POLS GENERATION ========================== -->
-	<node name="drones_pols_generator" pkg="drones_rope_planning" type="traj_generation_node"  />
+	<node name="drones_pols_generator" pkg="drones_rope_planning" type="traj_generation_node"   />
 
 	<!-- ======================= CATENARY CALCULATION ======================== -->
 	<!-- <node name="catenaries_listener" pkg="catenaries" type="catenaries_listener.py" /> -->
@@ -37,4 +37,6 @@
 		
     <!-- <node name="moving_obstacles_pub" pkg="drones_rope_planning"  type="moving_obstacles_pub.py"  /> -->
 
+	<!-- Enter the below if you want to open node in separate terminal window -->
+	<!-- launch-prefix="gnome-terminal - -command" -->
 </launch>

@@ -70,9 +70,8 @@ VectorXd allocateTime(const MatrixXd &wayPs, double vel, double acc)
 
 min_snap::Trajectory generate_traj_from_path(const nav_msgs::Path &wp, geometry_msgs::Twist init_vel)
 {
-    // int index = 0;
-    // printf("Last pose  %f %f %f \n", wp.poses[index].pose.position.x, wp.poses[index].pose.position.y, wp.poses[index].pose.position.z);
-
+    printf("Traj waypoints:%d\n", (int)wp.poses.size());
+    
     auto tc1 = std::chrono::high_resolution_clock::now();
     MatrixXd route;
     Matrix3d iS, fS;
