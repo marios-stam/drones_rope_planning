@@ -308,15 +308,17 @@ namespace ompl_rope_planning
             changes_made = changes_made || path_simplifier.reduceVertices(*pth);
             changes_made = changes_made || path_simplifier.collapseCloseVertices(*pth);
             changes_made = changes_made || path_simplifier.reduceVertices(*pth);
-            if (changes_made)
-            {
-                bool path_valid = pth->check();
-                return path_valid;
-            }
-            else
-            {
-                return true;
-            }
+            // if (changes_made)
+            // {
+            //     bool path_valid = pth->check();
+            //     return path_valid;
+            // }
+            // else
+            // {
+            //     return true;
+            // }
+
+            return pth->check();
 
             /*
             // path_simplifier.perturbPath(*pth, 0.2);
@@ -851,7 +853,7 @@ namespace ompl_rope_planning
 
     ompl::geometric::PathGeometric *planner::getPath() { return path_; }
 
-    void planner::setPath(ompl::geometric::PathGeometric *path) { path_ = path; }
+    void planner::setPath(ompl::geometric::PathGeometric *path) { path_ = new ompl::geometric::PathGeometric(*path); }
 
     ompl::base::SpaceInformationPtr planner::getSpaceInformation() { return si; }
 } // namespace drones_rope_planning

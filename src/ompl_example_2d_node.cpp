@@ -175,21 +175,31 @@ int get_state_closer_to_current_drone_position(og::PathGeometric *path)
     // calculate yaw
     curr_state[3] = atan2(dy, dx);
 
-    // TODO: calculate the appropriate one (iverse dynamic transform)
+    // TODO: calculate the appropriate one (inverse dynamic transform)
     unsigned int min_index;
     float min_dist = std::numeric_limits<float>::max();
     for (int i = 0; i < path->getStateCount(); i++)
     {
         auto state = states[i]->as<ob::RealVectorStateSpace::StateType>()->values;
 
-        auto dist = sqrt(pow(state[0] - curr_state[0], 2) + pow(state[1] - curr_state[1], 2) + pow(state[2] - curr_state[2], 2) +
-                         pow(state[3] - curr_state[3], 2));
+        // auto dist = sqrt(pow(state[0] - curr_state[0], 2) + pow(state[1] - curr_state[1], 2) + pow(state[2] - curr_state[2], 2) +
+        //  pow(state[3] - curr_state[3], 2));
+
+        // based only on position
+        auto dist = sqrt(pow(state[0] - curr_state[0], 2) + pow(state[1] - curr_state[1], 2) + pow(state[2] - curr_state[2], 2));
 
         if (dist < min_dist)
         {
             min_dist = dist;
             min_index = i;
         }
+    }
+
+    ROS_ERROR("Closer state distance: %f", min_dist);
+
+    if (min_dist > 0.8) // TODO:Make that a ROS param
+    {
+        return -1;
     }
 
     return min_index;
@@ -231,8 +241,7 @@ bool planning_service(drones_rope_planning::PlanningRequest::Request &req, drone
     bool prev_path_is_valid = check_path_validity(planner->getPath(), non_valid_state_id);
     auto dt2 = ros::Time::now() - t2;
 
-    if (!prev_path_is_valid)
-        printf("Previous path is invalid\n");
+    printf("Previous path valid: %d\n", prev_path_is_valid);
 
     bool should_replan = reset_start_state_to_initial || !prev_path_is_valid;
 
@@ -256,27 +265,34 @@ bool planning_service(drones_rope_planning::PlanningRequest::Request &req, drone
 
             // deep copy path to old path
             ompl::geometric::PathGeometric *old_path = new ompl::geometric::PathGeometric(*path);
-            // old_path.copyFrom(*path);
 
             bool path_valid_after_simplify = planner->simplifyPath(planner->getPath());
 
             printf("Path waypoints:%d\n", planner->getPath()->getStateCount());
 
-            printf("Path valid after simplify: %d\n", path_valid_after_simplify);
+            printf("Path valid after simplify: %d\n", planner->getPath()->check());
 
             if (path_valid_after_simplify)
             {
-                planner->interpolate_path(planner->getPath());
+                // planner->interpolate_path(planner->getPath()); //causing invalid path
 
                 // chop path up to the points the drones are at the moment
-
+                // printf("Path valididity before get_state_closer_to_current_drone_position: %d\n", planner->getPath()->check());
                 int curr_index = get_state_closer_to_current_drone_position(planner->getPath());
+                if (curr_index == -1)
+                    return true;
+
                 curr_index = std::min(curr_index, 3); // sometimes it was chopping at 9(TODO: check why)
                 auto state_to_keep_after = planner->getPath()->getState(curr_index);
-                printf("Keeping all states after: %d\n", curr_index);
+                // printf("Keeping all states after: %d\n", curr_index);
 
+                // printf("Path valididity before keeping after: %d\n", planner->getPath()->check());
                 planner->getPath()->keepAfter(state_to_keep_after);
+                // printf("Path valididity before interpolating: %d\n", planner->getPath()->check());
 
+                // planner->interpolate_path(planner->getPath());
+
+                // printf("Path valididity before publish: %d\n", planner->getPath()->check());
                 planner->convert_path_to_drones_paths(planner->getPath(), drone_path1, drone_path2);
                 drone_path1_pub.publish(drone_path1);
                 drone_path2_pub.publish(drone_path2);
