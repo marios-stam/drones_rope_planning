@@ -195,7 +195,7 @@ int get_state_closer_to_current_drone_position(og::PathGeometric *path)
         }
     }
 
-    ROS_ERROR("Closer state distance: %f", min_dist);
+    // ROS_ERROR("Closer state distance: %f", min_dist);
 
     if (min_dist > 0.8) // TODO:Make that a ROS param
     {

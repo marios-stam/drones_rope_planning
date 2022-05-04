@@ -23,11 +23,11 @@
 	
 
 	<!-- ============================= PLANNING ============================= -->
-	<node name="drones_rope_planning_node" pkg="drones_rope_planning"  type="drones_rope_planning_node" output="screen" />
+	<node name="drones_rope_planning_node" pkg="drones_rope_planning"  type="drones_rope_planning_node"  />
 	
 
 	<!-- ========================== POLS GENERATION ========================== -->
-	<node name="drones_pols_generator" pkg="drones_rope_planning" type="traj_generation_node"   />
+	<node name="drones_pols_generator" pkg="drones_rope_planning" type="traj_generation_node" output="screen"   />
 
 	<!-- ======================= CATENARY CALCULATION ======================== -->
 	<!-- <node name="catenaries_listener" pkg="catenaries" type="catenaries_listener.py" /> -->

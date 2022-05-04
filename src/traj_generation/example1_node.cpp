@@ -71,7 +71,7 @@ VectorXd allocateTime(const MatrixXd &wayPs, double vel, double acc)
 min_snap::Trajectory generate_traj_from_path(const nav_msgs::Path &wp, geometry_msgs::Twist init_vel)
 {
     printf("Traj waypoints:%d\n", (int)wp.poses.size());
-    
+
     auto tc1 = std::chrono::high_resolution_clock::now();
     MatrixXd route;
     Matrix3d iS, fS;
@@ -174,6 +174,12 @@ void publish_pols(min_snap::Trajectory traj, int id)
 
 void publish_path_to_traj(const nav_msgs::Path &wp, int id)
 {
+    if (wp.poses.size() <= 2)
+    {
+        ROS_ERROR("Waypoints number is less than 2.\n");
+        return;
+    }
+
     auto init_vel = id == 0 ? twist1 : twist2;
 
     auto t0 = std::chrono::high_resolution_clock::now();
