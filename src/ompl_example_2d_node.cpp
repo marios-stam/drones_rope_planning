@@ -277,9 +277,17 @@ bool planning_service(drones_rope_planning::PlanningRequest::Request &req, drone
         printf("Obstacle pos: %f %f %f\n", obs_pos.x(), obs_pos.y(), obs_pos.z());
         printf("Dstart: %f %f %f\n", dstart_pos.x(), dstart_pos.y(), dstart_pos.z());
 
-        float new_pos[6] = {start_pos.x() + dstart_pos.x(), start_pos.y() + dstart_pos.y(), start_pos.z(), start[3], start[4], start[5]};
-        planner->setStart(new_pos);
+        float new_pos[6] = {start_pos.x(), start_pos.y(), start_pos.z(), start[3], start[4], start[5]};
 
+        do
+        {
+            printf("Trying to reset new start \n");
+            new_pos[0] += dstart_pos.x();
+            new_pos[1] += dstart_pos.y();
+            new_pos[2] += dstart_pos.z();
+
+            planner->setStart(new_pos);
+        } while (!planner->isStateValidSimple(planner->getStartState()));
         // debug messages
         ROS_ERROR("Manual start state set to: %f, %f, %f", new_pos[0], new_pos[1], new_pos[2]);
     }

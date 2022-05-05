@@ -508,7 +508,16 @@ namespace ompl_rope_planning
         auto t0 = ros::Time::now();
 
         auto t4 = ros::Time::now();
-        pdef->fixInvalidInputStates(prob_params.realtime_settings.fix_invalid_start_dist, prob_params.realtime_settings.fix_invalid_goal_dist, 20);
+        static int times_fixed = 0;
+
+        // run it ony for a couple of times beacuse it crhashes otherwise TODO: fix it
+        if (times_fixed < 10)
+        {
+            bool res = pdef->fixInvalidInputStates(prob_params.realtime_settings.fix_invalid_start_dist,
+                                                   prob_params.realtime_settings.fix_invalid_goal_dist, 20);
+            if (res)
+                times_fixed++;
+        }
 
         // check if start is valid
         if (!si->isValid(pdef->getStartState(0)))
