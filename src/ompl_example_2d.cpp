@@ -692,6 +692,19 @@ namespace ompl_rope_planning
         return result;
     }
 
+    bool planner::isStateValidSimple(std::vector<float> state)
+    {
+        ob::ScopedState<> start_state(planner::space);
+        start_state->as<ob::RealVectorStateSpace::StateType>()->values[0] = state[0];
+        start_state->as<ob::RealVectorStateSpace::StateType>()->values[1] = state[1];
+        start_state->as<ob::RealVectorStateSpace::StateType>()->values[2] = state[2];
+        start_state->as<ob::RealVectorStateSpace::StateType>()->values[3] = state[3];
+        start_state->as<ob::RealVectorStateSpace::StateType>()->values[4] = state[4];
+        start_state->as<ob::RealVectorStateSpace::StateType>()->values[5] = state[5];
+
+        return isStateValid(start_state->as<ob::State>());
+    }
+
     drones_rope_planning::rigid_body_dynamic_path planner::convert_path_to_msg(og::PathGeometric *pth)
     {
         drones_rope_planning::rigid_body_dynamic_path path_msg;
@@ -839,6 +852,11 @@ namespace ompl_rope_planning
 
     void planner::setStart(float start[6])
     {
+        for (int i = 0; i < dim; i++)
+        {
+            start_state_[i] = start[i];
+        }
+
         ob::ScopedState<> start_state(planner::space);
         start_state->as<ob::RealVectorStateSpace::StateType>()->values[0] = start[0];
         start_state->as<ob::RealVectorStateSpace::StateType>()->values[1] = start[1];

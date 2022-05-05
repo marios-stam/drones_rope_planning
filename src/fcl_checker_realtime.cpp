@@ -52,9 +52,7 @@ namespace fcl_checking_realtime
         env->set_cylinder_transform(index, pos, q);
     }
 
-    Eigen::MatrixX3f checker::getObstaclesTransforms() {
-        env->get_cylinders_transforms();
-    }
+    Eigen::MatrixX3f checker::getObstaclesTransforms() { env->get_cylinders_transforms(); }
 
     bool checker::check_collision()
     {
@@ -66,5 +64,27 @@ namespace fcl_checking_realtime
     {
         // use the distance function of the environment
         return env->get_distance(robot_mesh->collision_object);
+    }
+
+    Eigen::Vector3f checker::get_pos_of_obstacle_nearest(Eigen::Vector3f pos)
+    {
+        Eigen::MatrixX3f tfs = env->get_cylinders_transforms();
+        Eigen::Vector3f nearest_pos;
+        float min_dist = std::numeric_limits<float>::max();
+
+        for (int i = 0; i < tfs.rows(); i++)
+        {
+            Eigen::Vector3f mlkia = tfs.row(i);
+            Eigen::Vector3f mlkia2 = pos - mlkia;
+
+            float dist = mlkia2.norm();
+            if (dist < min_dist)
+            {
+                min_dist = dist;
+                nearest_pos = tfs.row(i);
+            }
+        }
+
+        return nearest_pos;
     }
 }

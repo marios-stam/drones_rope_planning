@@ -94,6 +94,8 @@ namespace ompl_rope_planning
 
         bool isStateValid(const ompl::base::State *state_check);
 
+        bool isStateValidSimple(std::vector<float> state);
+
         fcl_checker_base *checker;
 
         void convert_path_to_drones_paths(og::PathGeometric *pth, nav_msgs::Path &drone_pth1, nav_msgs::Path &drone_pth2);

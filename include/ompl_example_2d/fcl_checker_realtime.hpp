@@ -41,6 +41,8 @@ namespace fcl_checking_realtime
 
         float get_distance(void);
 
+        Eigen::Vector3f get_pos_of_obstacle_nearest(Eigen::Vector3f pos);
+
     private:
         realtime_obstacles::Cylinders *env;
     };

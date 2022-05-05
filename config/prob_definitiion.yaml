@@ -6,12 +6,12 @@ planning_type: "moving_obstacles" # static,moving_obstacles
 #real time planning settings
 real_time_settings: {
     planning_frequency: 18, #Hz
-    setting_new_start: True,
+    setting_new_start: True, #When reach goal reset position to initial start
     replan_only_if_not_valid: True, # only replans if the current plan is not valid
-    fix_invalid_start_dist: 0.8,
+    fix_invalid_start_dist: 0.2,
     fix_invalid_goal_dist: 0.1,
     distance_to_goal_resetting: 1.0,
-    replanning_interval: 50000.0, #msec
+    replanning_interval: 2000.0, #msec
 
     siplifying_path: "fast", #full,fast,none
 
@@ -43,7 +43,7 @@ optimal_objective: { class: "None", threshold: 3 }
 
 safety_distances: {
     #horizontal and vertical distance offset for drones
-    drones_offsets: { horizontal: 0.2, vertical: 0.05 },
+    drones_offsets: { horizontal: 0.22, vertical: 0.05 },
 
     #horizontal and vertical distance offset for lowest point of catenary
     lowest_point: 0.0,

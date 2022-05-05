@@ -119,16 +119,19 @@ if __name__ == "__main__":
         #     center = [np.random.uniform(-0.3, 0.3), np.random.uniform(3.8, 4.2)]
         #     last_reset = t
 
-        path.poses[0].pose.position.x = center[0] + np.sin(2*np.pi*t/period)
-        path.poses[0].pose.position.y = center[1] + 0.5*np.cos(2*np.pi*t/period/2)
+        # path.poses[0].pose.position.x = center[0] + np.sin(2*np.pi*t/period)
+        path.poses[0].pose.position.x = -np.cos(2*np.pi*t/period)
+        # path.poses[0].pose.position.y = center[1] + 0.5*np.cos(2*np.pi*t/period/2)
         # path.poses[0].pose.position.y = 4
         # path.poses[0].pose.position.z = 1+0.5*np.cos(2*np.pi*t/period)
 
         if len(path.poses) > 1:
             # path.poses[1].pose.position.x = -np.cos(2*np.pi*t/period / 2)
-            path.poses[1].pose.position.y = 4-np.cos(2*np.pi*t/period/2)
-            # path.poses[0].pose.position.y = 4
+            # path.poses[1].pose.position.x = np.cos(2*np.pi*t/period)
+            # path.poses[1].pose.position.y = 3.5
+            # path.poses[1].pose.position.z = 0.8+0.4*np.cos(2*np.pi*t/period)
             # path.poses[1].pose.position.z = 1-0.5*np.cos(2*np.pi*t/period)
+            pass
 
         # print("t: ", t, " x: ", path.poses[0].pose.position.x, " y: ", path.poses[0].pose.position.y)
 

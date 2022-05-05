@@ -225,6 +225,7 @@ bool planning_service(drones_rope_planning::PlanningRequest::Request &req, drone
     // All variables used in the planning process
     nav_msgs::Path drone_path1, drone_path2;
     int non_valid_state_id;
+    static auto time_of_replanning = ros::Time::now();
 
     // getting and updating cylinders transforms
     std::vector<realtime_obstacles::CylinderDefinition> cylinders_def_vec = get_cylinders_def_vec(req);
@@ -241,11 +242,52 @@ bool planning_service(drones_rope_planning::PlanningRequest::Request &req, drone
     bool prev_path_is_valid = check_path_validity(planner->getPath(), non_valid_state_id);
     auto dt2 = ros::Time::now() - t2;
 
-    printf("Previous path valid: %d\n", prev_path_is_valid);
+    // check if new start is valid
+    bool new_start_valid = planner->isStateValidSimple(planner->getStartState());
+    printf("New start valid: %d\n", new_start_valid);
+
+    //
+    /*
+        If previous plan  not valid and  invalid state id is small->formation is close to the invalid state
+    */
+    unsigned int invalid_id_threshold = 2; // TODO:make that a ROS param
+    bool formation_close_to_invalid_state = !prev_path_is_valid && non_valid_state_id <= invalid_id_threshold;
+    if (formation_close_to_invalid_state || !new_start_valid)
+    {
+        // ROS_ERROR("Non valid state id: %d", non_valid_state_id);
+        ROS_ERROR("Manual resetting of start state");
+        // set new valid start manually beacuse fixing of ompl results to collision with the obstacle
+
+        // curent position of drones os already calculated from the set_new_start function
+        std::vector<float> start = planner->getStartState();
+        Eigen ::Vector3f start_pos(start[0], start[1], start[2]);
+
+        // get problematic obstacle position
+        auto obs_pos = planner->checker->as<fcl_checking_realtime::checker>()->get_pos_of_obstacle_nearest(start_pos);
+
+        // set new start away from the obstacle
+        float dx = start_pos.x() - obs_pos.x();
+        float dy = start_pos.y() - obs_pos.y();
+
+        Eigen::Vector3f dstart_pos(dx, dy, 0);
+        dstart_pos.normalize();
+        dstart_pos *= planner->prob_params.realtime_settings.fix_invalid_start_dist;
+
+        printf("Robot_start: %f %f %f\n", start_pos.x(), start_pos.y(), start_pos.z());
+        printf("Obstacle pos: %f %f %f\n", obs_pos.x(), obs_pos.y(), obs_pos.z());
+        printf("Dstart: %f %f %f\n", dstart_pos.x(), dstart_pos.y(), dstart_pos.z());
+
+        float new_pos[6] = {start_pos.x() + dstart_pos.x(), start_pos.y() + dstart_pos.y(), start_pos.z(), start[3], start[4], start[5]};
+        planner->setStart(new_pos);
+
+        // debug messages
+        ROS_ERROR("Manual start state set to: %f, %f, %f", new_pos[0], new_pos[1], new_pos[2]);
+    }
+
+    // printf("Previous path valid: %d\n", prev_path_is_valid);
 
     bool should_replan = reset_start_state_to_initial || !prev_path_is_valid;
 
-    static auto time_of_replanning = ros::Time::now();
     if (!should_replan)
     {
         auto time_from_last_replanning = (ros::Time::now() - time_of_replanning).toSec();
