@@ -10,6 +10,11 @@ namespace realtime_obstacles
         cylinders.resize(N);
         collision_objects.resize(N);
 
+        // velocity calculation
+        velocities.resize(N, 3);
+        prev_pos.setZero(N, 3);
+        times.setConstant(N, 1, ros::Time::now().toSec());
+
         loadCylinders(cylinders_def);
         create_collision_objects();
         update_cylinders_transforms(cylinders_def);
@@ -23,6 +28,10 @@ namespace realtime_obstacles
     {
         cylinders.resize(obs_number);
         collision_objects.resize(obs_number);
+
+        velocities.resize(obs_number, 3);
+        prev_pos.setZero(obs_number, 3);
+        times.setConstant(obs_number, 1, ros::Time::now().toSec());
 
         loadCylinders();
         create_collision_objects();
@@ -76,10 +85,19 @@ namespace realtime_obstacles
 
     void Cylinders::update_cylinders_transforms(std::vector<fcl::Transform3f> cylinders_transforms)
     {
+        float curr_time = ros::Time::now().toSec();
+
         for (int i = 0; i < cylinders_transforms.size(); i++)
         {
+            auto prev_position = collision_objects[i]->getTransform().translation(); // TODO: check if this is deep copy
+
             collision_objects[i]->setTransform(cylinders_transforms[i]);
+
+            velocities.row(i) = (cylinders_transforms[i].translation() - prev_position) / (curr_time - times(i));
+            printf("velocity2: %f %f %f\n", velocities(i, 0), velocities(i, 1), velocities(i, 2));
         }
+
+        times.setConstant(curr_time);
     }
 
     void Cylinders::update_cylinders_transforms(std::vector<CylinderDefinition> cylinders_def)
@@ -95,10 +113,24 @@ namespace realtime_obstacles
 
     void Cylinders::set_cylinder_transform(int index, float pos[3], float q[4])
     {
-        // printf("Setting index: %d at pos : %f %f %f \n", index, pos[0], pos[1], pos[2]);
+        // data for calcluating celocity in visualization
+        double curr_time = ros::Time::now().toSec();
+        auto prev_position = collision_objects[index]->getTransform().translation(); // TODO: check if this is deep copy
 
+        // setting transform
         collision_objects[index]->setTranslation(fcl::Vector3<float>(pos[0], pos[1], pos[2]));
         collision_objects[index]->setQuatRotation(fcl::Quaternion<float>(q[0], q[1], q[2], q[3]));
+
+        printf("previous time: %f\n", times(index));
+        printf("current time: %f\n", curr_time);
+        printf("Previous position: %f %f %f\n", prev_position[0], prev_position[1], prev_position[2]);
+        printf("Current position: %f %f %f\n", pos[0], pos[1], pos[2]);
+
+        // calcualting velocity and saving both it and time of saving
+        velocities.row(index) = (collision_objects[index]->getTransform().translation() - prev_position) / (curr_time - times(index));
+        printf("velocity : %f %f %f\n", velocities(index, 0), velocities(index, 1), velocities(index, 2));
+
+        times[index] = curr_time;
     }
 
     Eigen::MatrixX3f Cylinders::get_cylinders_transforms()
@@ -191,4 +223,9 @@ namespace realtime_obstacles
         // retunr the number of cylinders
         return cylinders.size();
     }
+
+    Eigen::Vector3f Cylinders::get_cylinder_velocity(int id) { return velocities.row(id); }
+
+    Eigen::Vector3f Cylinders::get_cylinder_position(int id) { return collision_objects[id]->getTranslation(); }
+
 } // namespace realtime_obstacles

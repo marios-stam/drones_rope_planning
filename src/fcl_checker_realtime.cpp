@@ -66,25 +66,31 @@ namespace fcl_checking_realtime
         return env->get_distance(robot_mesh->collision_object);
     }
 
-    Eigen::Vector3f checker::get_pos_of_obstacle_nearest(Eigen::Vector3f pos)
+    int checker::get_id_of_obstacle_nearest(Eigen::Vector3f pos)
     {
         Eigen::MatrixX3f tfs = env->get_cylinders_transforms();
-        Eigen::Vector3f nearest_pos;
+        unsigned int nearest_id = 0;
+
         float min_dist = std::numeric_limits<float>::max();
 
         for (int i = 0; i < tfs.rows(); i++)
         {
-            Eigen::Vector3f mlkia = tfs.row(i);
-            Eigen::Vector3f mlkia2 = pos - mlkia;
+            Eigen::Vector3f row_tf = tfs.row(i);
+            Eigen::Vector3f dvector = pos - row_tf;
 
-            float dist = mlkia2.norm();
+            float dist = dvector.norm();
             if (dist < min_dist)
             {
                 min_dist = dist;
-                nearest_pos = tfs.row(i);
+                nearest_id = i;
             }
         }
 
-        return nearest_pos;
+        return nearest_id;
     }
+
+    Eigen::Vector3f checker::get_velocity(int id) { return env->get_cylinder_velocity(id); }
+
+    Eigen::Vector3f checker::get_position(int id) { return env->get_cylinder_position(id); }
+
 }

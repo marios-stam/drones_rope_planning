@@ -50,6 +50,10 @@ namespace realtime_obstacles
 
         float get_distance(fcl::CollisionObject<float> *robot);
 
+        Eigen::Vector3f get_cylinder_velocity(int id);
+
+        Eigen::Vector3f get_cylinder_position(int id);
+
     private:
         void create_collision_objects();
 
@@ -65,6 +69,13 @@ namespace realtime_obstacles
         // helping variables for distance  calculation
         fcl::DistanceRequest<float> distance_request;
         fcl::DistanceResult<float> distance_result;
+
+        // Velocities calculation [x, y, z]
+        Eigen::MatrixX3f velocities;
+
+        Eigen::MatrixX3f prev_pos; // used only for calculation
+
+        Eigen::VectorXd times;
 
         // keeps tracks of the changes in the cylinders made
         // std::vector<bool> cylinders_coll_object_updated;

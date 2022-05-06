@@ -262,14 +262,27 @@ bool planning_service(drones_rope_planning::PlanningRequest::Request &req, drone
         std::vector<float> start = planner->getStartState();
         Eigen ::Vector3f start_pos(start[0], start[1], start[2]);
 
-        // get problematic obstacle position
-        auto obs_pos = planner->checker->as<fcl_checking_realtime::checker>()->get_pos_of_obstacle_nearest(start_pos);
+        // get problematic obstacle velocity
+        int obs_id = planner->checker->as<fcl_checking_realtime::checker>()->get_id_of_obstacle_nearest(start_pos);
+        auto obs_pos = planner->checker->as<fcl_checking_realtime::checker>()->get_position(obs_id);
+        auto obs_vel = planner->checker->as<fcl_checking_realtime::checker>()->get_velocity(obs_id);
 
-        // set new start away from the obstacle
-        float dx = start_pos.x() - obs_pos.x();
-        float dy = start_pos.y() - obs_pos.y();
+        printf("obs_vel=%f, %f, %f\n", obs_vel[0], obs_vel[1], obs_vel[2]);
+        // calculate the perpandcular vector to the velocity of the obstacle
+        Eigen::Vector3f vel_perp(-obs_vel[0], obs_vel[1], 0);
 
-        Eigen::Vector3f dstart_pos(dx, dy, 0);
+        // check if goal is in the half plane of the perpandicular vector
+        Eigen::Vector3f goal_pos(req.goal_pos[0], req.goal_pos[1], req.goal_pos[2]);
+        Eigen::Vector3f goal_to_obs = goal_pos - obs_pos;
+        float goal_to_obs_dot_vel_perp = goal_to_obs.dot(vel_perp);
+        bool goal_in_half_plane = goal_to_obs_dot_vel_perp > 0;
+
+        // if goal is in the half plane of the perpandicular vector reveverse it
+        if (!goal_in_half_plane)
+            vel_perp = -vel_perp;
+
+        Eigen::Vector3f dstart_pos(vel_perp[0], vel_perp[1], 0);
+
         dstart_pos.normalize();
         dstart_pos *= planner->prob_params.realtime_settings.fix_invalid_start_dist;
 
@@ -279,6 +292,7 @@ bool planning_service(drones_rope_planning::PlanningRequest::Request &req, drone
 
         float new_pos[6] = {start_pos.x(), start_pos.y(), start_pos.z(), start[3], start[4], start[5]};
 
+        unsigned int times_tried_to_fix = 0;
         do
         {
             printf("Trying to reset new start \n");
@@ -287,7 +301,8 @@ bool planning_service(drones_rope_planning::PlanningRequest::Request &req, drone
             new_pos[2] += dstart_pos.z();
 
             planner->setStart(new_pos);
-        } while (!planner->isStateValidSimple(planner->getStartState()));
+            times_tried_to_fix++;
+        } while (!planner->isStateValidSimple(planner->getStartState()) && times_tried_to_fix < 4);
         // debug messages
         ROS_ERROR("Manual start state set to: %f, %f, %f", new_pos[0], new_pos[1], new_pos[2]);
     }
