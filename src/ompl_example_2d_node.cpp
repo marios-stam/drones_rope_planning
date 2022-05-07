@@ -228,8 +228,7 @@ bool planning_service(drones_rope_planning::PlanningRequest::Request &req, drone
     static auto time_of_replanning = ros::Time::now();
 
     // getting and updating cylinders transforms
-    std::vector<realtime_obstacles::CylinderDefinition> cylinders_def_vec = get_cylinders_def_vec(req);
-    planner->checker->as<fcl_checking_realtime::checker>()->updateEnvironmentTransforms(cylinders_def_vec);
+    planner->checker->as<fcl_checking_realtime::checker>()->update_obstacles_config(req);
 
     auto dt1 = ros::Time::now() - t1;
 

@@ -40,6 +40,8 @@ namespace realtime_obstacles
 
         void set_cylinder_transform(int index, float pos[3], float q[4]);
 
+        void set_cylinder_velocities(int index, float linear[3], float angular[4]);
+
         Eigen::MatrixX3f get_cylinders_transforms();
 
         void get_collision_objects();
@@ -55,6 +57,8 @@ namespace realtime_obstacles
         Eigen::Vector3f get_cylinder_position(int id);
 
     private:
+        void resize_matrices(int obs_number);
+
         void create_collision_objects();
 
         std::vector<std::shared_ptr<fcl::Cylinder<float>>> cylinders;
@@ -72,10 +76,6 @@ namespace realtime_obstacles
 
         // Velocities calculation [x, y, z]
         Eigen::MatrixX3f velocities;
-
-        Eigen::MatrixX3f prev_pos; // used only for calculation
-
-        Eigen::VectorXd times;
 
         // keeps tracks of the changes in the cylinders made
         // std::vector<bool> cylinders_coll_object_updated;

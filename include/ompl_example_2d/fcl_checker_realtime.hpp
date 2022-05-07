@@ -17,6 +17,10 @@
 #include "fcl_checker_base.hpp"
 #include "fcl_mesh.hpp"
 
+// custom services and msgs
+#include <drones_rope_planning/CylinderObstacleData.h>
+#include <drones_rope_planning/PlanningRequest.h>
+
 namespace fcl_checking_realtime
 {
     class checker : public fcl_checker_base
@@ -34,6 +38,8 @@ namespace fcl_checking_realtime
         void updateEnvironmentTransforms(std::vector<realtime_obstacles::CylinderDefinition>);
 
         void update_env_obstacle_transform(int index, float pos[3], float q[4]);
+
+        void update_obstacles_config(drones_rope_planning::PlanningRequest::Request req);
 
         Eigen::MatrixX3f getObstaclesTransforms();
 

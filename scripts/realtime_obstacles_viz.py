@@ -9,7 +9,7 @@ from visualization_msgs.msg import Marker, MarkerArray
 from math import pi
 import tf
 from geometry_msgs.msg import PoseStamped
-from nav_msgs.msg import Path
+from nav_msgs.msg import Path, Odometry
 import rospkg
 
 
@@ -78,34 +78,37 @@ class CylinderMarker(Marker):
             self.pose.orientation = quatern
 
 
-def generate_obstacles_markers():
+def generate_obstacles_markers(obstacles_config):
     # load ros param
     N = rospy.get_param("/obstacles/cylinders_number")
-    obstacles_config = rospy.get_param("/obstacles/cylinders")
     print("obstacles_config: ", obstacles_config)
 
     for index, cyl in enumerate(obstacles_config):
         r = cyl['radius']
         h = cyl['height']
-        pos = [cyl['x'], cyl['y'], cyl['z']]
-        quatern = [0, 0, 0, 1]
+
+        # pos
+        try:
+            pos = [cyl['x'], cyl['y'], cyl['z']]
+        except:
+            pos = [0, 0, 0]
+
+        # orientation
+        roll = cyl['roll']
+        pitch = cyl['pitch']
+        yaw = 0
+        q = tf.transformations.quaternion_from_euler(roll, pitch, yaw)
+        quatern = [q[0], q[1], q[2], q[3]]
 
         cyls_marker_array.update(index, r, h, pos, quatern)
 
 
-def callback(path: Path):
+def callback(odom: Odometry, id: int):
 
-    for i, pose in enumerate(path.poses):
-        pose: PoseStamped
+    pos = [odom.pose.pose.position.x, odom.pose.pose.position.y, odom.pose.pose.position.z]
+    q = [odom.pose.pose.orientation.x, odom.pose.pose.orientation.y, odom.pose.pose.orientation.z, odom.pose.pose.orientation.w]
 
-        pos = [pose.pose.position.x, pose.pose.position.y, pose.pose.position.z]
-        q = [pose.pose.orientation.x, pose.pose.orientation.y, pose.pose.orientation.z, pose.pose.orientation.w]
-
-        cyls_marker_array.update(i, 0.1, 0.1, pos, q)
-
-    print("publishing markers:" + str(cyls_marker_array.markers[0].pose))
-
-    env_markers_pub.publish(cyls_marker_array)
+    cyls_marker_array.update(id, 0.1, 0.1, pos, q)
 
 
 if __name__ == "__main__":
@@ -115,8 +118,21 @@ if __name__ == "__main__":
 
     cyls_marker_array = EnvMarkersArray()
 
-    conf = generate_obstacles_markers()
+    obstacles_config = rospy.get_param("/obstacles/cylinders")
 
-    sub = rospy.Subscriber("/obstacles_transforms", Path, callback)
+    conf = generate_obstacles_markers(obstacles_config)
+    odom_names = [cyl["odom_name"] for cyl in obstacles_config]
+
+    for index, odom_name in enumerate(odom_names):
+        topic_name = "pixy/vicon/{}/{}/odom".format(odom_name, odom_name)
+
+        rospy.Subscriber(topic_name, Odometry, callback, callback_args=index)
+
+    f = 20
+    rate = rospy.Rate(f)
+    while not rospy.is_shutdown():
+        env_markers_pub.publish(cyls_marker_array)
+
+        rate.sleep()
 
     rospy.spin()

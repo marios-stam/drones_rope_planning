@@ -7,7 +7,7 @@
 	</group>
 	
 	<group ns="obstacles" >
-		<rosparam command="load" file="$(find drones_rope_planning)/config/cylinders_obstacles_sim.yaml" />
+		<rosparam command="load" file="$(find drones_rope_planning)/config/cylinders_obstacles.yaml" />
 	</group>
 	
 	<!-- ========================== VISUALIZATION ========================== -->
@@ -15,7 +15,6 @@
 
     <!-- <node name="drones_vis_on_rb" pkg="drone_path_planning" type="drones_vis.py" /> -->
 
-    <node name="drones_vis_on_rb" pkg="execution" type="leader_traj_executor_position_controller_realtime_sim.py"   />
 
   	<!-- <node name="droneMarkerVis" pkg="3Dvisualization" type="droneMarkerVisMarios.py"  /> -->
 
@@ -23,7 +22,7 @@
 	
 
 	<!-- ============================= PLANNING ============================= -->
-	<node name="drones_rope_planning_node" pkg="drones_rope_planning"  type="drones_rope_planning_node"   />
+	<node name="drones_rope_planning_node" pkg="drones_rope_planning"  type="drones_rope_planning_node" output="screen"  />
 	
 
 	<!-- ========================== POLS GENERATION ========================== -->
@@ -33,9 +32,13 @@
 	<!-- <node name="catenaries_listener" pkg="catenaries" type="catenaries_listener.py" /> -->
 
 	<!-- ======================== OBSTACLES INTERFACE ======================== -->
-    <node name="realtime_interface" pkg="drones_rope_planning"  type="realtime_interface_sim.py" output="screen"  />
-		
-    <!-- <node name="moving_obstacles_pub" pkg="drones_rope_planning"  type="moving_obstacles_pub.py"  /> -->
+    <node name="realtime_interface" pkg="drones_rope_planning"  type="realtime_interface.py"  />
+	
+	<!-- ======================== LEADER - FOLLOWER ======================== -->
+    <node name="leader_interface" pkg="execution" type="leader_traj_executor_position_controller_realtime.py"   />
+
+    <node name="follower_interface" pkg="execution" type="follower_traj_executor_position_controller_realtime.py"   />
+	
 
 	<!-- Enter the below if you want to open node in separate terminal window -->
 	<!-- launch-prefix="gnome-terminal - -command" -->

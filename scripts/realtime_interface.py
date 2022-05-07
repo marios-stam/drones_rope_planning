@@ -11,10 +11,13 @@ from geometry_msgs.msg import PoseStamped
 
 import rospkg
 
+from nav_msgs.msg import Odometry
+
 from drones_rope_planning.srv import PlanningRequest
 from drones_rope_planning.msg import CylinderObstacleData
 
 from nav_msgs.msg import Path
+from functools import partial
 
 
 def service_client():
@@ -34,7 +37,7 @@ def load_obstacles_config() -> list:
     and prepares it to be sent throyght the service.
 
     Returns:
-        list of CylinderObstacleData: The obstacles configuration.
+        list of type:[radius,height,odom_name]
     """
     # load ros param
     obstacles_config = rospy.get_param("/obstacles/cylinders")
@@ -42,43 +45,47 @@ def load_obstacles_config() -> list:
 
     cyl_config = []
     for index, cyl in enumerate(obstacles_config):
-        cylinder = CylinderObstacleData()
+        cyl_data = {}
+        cyl_data["radius"] = cyl["radius"]
+        cyl_data["height"] = cyl["height"]
+        cyl_data["odom_name"] = cyl["odom_name"]
 
-        cylinder.radius = cyl['radius']
-        cylinder.height = cyl['height']
-        cylinder.pos = [cyl['x'], cyl['y'], cyl['z']]
-
-        roll = cyl['roll'] * pi/180
-        pitch = cyl['pitch'] * pi/180
-        yaw = 0  # there is no point of a cylinder having yaw rotation
-        cylinder.quat = transformations.quaternion_from_euler(roll, pitch, yaw)
-
-        cyl_config.append(cylinder)
+        cyl_config.append(cyl_data)
 
     return cyl_config
 
 
-def callback(path: Path):
-    global conf
+def callback(odom: Odometry, id: int):
 
-    for i, pose in enumerate(path.poses):
-        conf[i].pos = [pose.pose.position.x, pose.pose.position.y, pose.pose.position.z]
-        conf[i].quat = [pose.pose.orientation.x, pose.pose.orientation.y, pose.pose.orientation.z, pose.pose.orientation.w]
+    config[id].pos = [odom.pose.pose.position.x, odom.pose.pose.position.y, odom.pose.pose.position.z]
+    config[id].quat = [odom.pose.pose.orientation.x, odom.pose.pose.orientation.y, odom.pose.pose.orientation.z, odom.pose.pose.orientation.w]
+
+    config[id].vel = [odom.twist.twist.linear.x, odom.twist.twist.linear.y, odom.twist.twist.linear.z]
+    config[id].ang_vel = [odom.twist.twist.angular.x, odom.twist.twist.angular.y, odom.twist.twist.angular.z]
 
 
 times = 0
 total_time = 0
-conf = []
+
+"""
+config: list of type:
+        [pos, quat, vel, ang_vel]
+    
+    It is used to store the current configuration of the environment obstacles
+    and to send it to the service.
+"""
+config = []
+
 
 if __name__ == "__main__":
     rospy.init_node('realtime_interface')
 
-    start = [0, 0, 0]
-    goal = [69, 69, 69]
-
     conf = load_obstacles_config()
 
-    rospy.Subscriber("/obstacles_transforms", Path, callback)
+    # create odometry subscribers
+    for index, cyl in enumerate(conf):
+        odom_name = cyl["odom_name"]
+        rospy.Subscriber(odom_name, Odometry, partial(callback, id=index))
 
     # get ros parameter
     planning_freq = rospy.get_param("/planning//real_time_settings/planning_frequency")

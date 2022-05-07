@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 # print working directory
 from cmath import cos, sin
+
+from sympy import Q
 from geometry_msgs.msg import TransformStamped, Quaternion
 import rospy
 from tf import TransformListener, transformations
@@ -9,7 +11,7 @@ from visualization_msgs.msg import Marker, MarkerArray
 from math import pi
 import tf
 from geometry_msgs.msg import PoseStamped
-
+from nav_msgs.msg import Odometry
 import rospkg
 
 from drones_rope_planning.srv import PlanningRequest
@@ -18,55 +20,42 @@ from drones_rope_planning.msg import CylinderObstacleData
 from nav_msgs.msg import Path
 
 
-def load_obstacles_config() -> list:
+def config_to_odoms() -> list:
     """
-    Loads the obstacles configuration from the rosparams
-    and prepares it to be sent throyght the service.
-
+    Converts the obstacles configuration to the odom names.
     Returns:
-        list of CylinderObstacleData: The obstacles configuration.
+        list of Odoms: [Odoms]
     """
-    # load ros param
     obstacles_config = rospy.get_param("/obstacles/cylinders")
     print("obstacles_config: ", obstacles_config)
 
-    cyl_config = []
-    for index, cyl in enumerate(obstacles_config):
-        cylinder = CylinderObstacleData()
+    odom_names = []
 
-        cylinder.radius = cyl['radius']
-        cylinder.height = cyl['height']
-        cylinder.pos = [cyl['x'], cyl['y'], cyl['z']]
+    odoms = []
+    for i in obstacles_config:
+        odom = Odometry()
+        odom.header.frame_id = "world"
+        odom.child_frame_id = i['odom_name']
 
-        roll = cyl['roll'] * pi/180
-        pitch = cyl['pitch']*pi/180
-        yaw = 0  # there is no point of a cylinder having yaw rotation
+        odom.pose.pose.position.x = i["x"]
+        odom.pose.pose.position.y = i["y"]
+        odom.pose.pose.position.z = i["z"]
 
-        cylinder.quat = transformations.quaternion_from_euler(roll, pitch, yaw)
+        roll = i["roll"] * pi / 180
+        pitch = i["pitch"] * pi / 180
+        yaw = 0
 
-        cyl_config.append(cylinder)
+        q = tf.transformations.quaternion_from_euler(roll, pitch, yaw)
 
-    return cyl_config
+        odom.pose.pose.orientation.x = q[0]
+        odom.pose.pose.orientation.y = q[1]
+        odom.pose.pose.orientation.z = q[2]
+        odom.pose.pose.orientation.w = q[3]
 
+        odoms.append(odom)
+        odom_names.append(i['odom_name'])
 
-def config_to_Path(conf: list) -> Path:
-    path = Path()
-    path.header.frame_id = "world"
-    path.poses = []
-    for i in conf:
-        pose = PoseStamped()
-        pose.pose.position.x = i.pos[0]
-        pose.pose.position.y = i.pos[1]
-        pose.pose.position.z = i.pos[2]
-
-        pose.pose.orientation.x = i.quat[0]
-        pose.pose.orientation.y = i.quat[1]
-        pose.pose.orientation.z = i.quat[2]
-        pose.pose.orientation.w = i.quat[3]
-
-        path.poses.append(pose)
-
-    return path
+    return odoms, odom_names
 
 
 def callback(pose: PoseStamped):
@@ -89,54 +78,33 @@ if __name__ == "__main__":
     """
     rospy.init_node('moving_obstacles_pub')
 
-    conf = load_obstacles_config()
-    path = config_to_Path(conf)
+    odoms, odoms_names = config_to_odoms()
 
-    pub = rospy.Publisher("/obstacles_transforms", Path, queue_size=1)
+    pubs = []
+    for i, name in enumerate(odoms_names):
+        topic_name = "pixy/vicon/{}/{}/odom".format(name, name)
+        pubs.append(rospy.Publisher(topic_name, Odometry, queue_size=10))
 
-    # rospy.Subscriber("/obstacles_transforms_odometry", PoseStamped, callback)
     last_reset = 0
     center = [.5, 4]
     t = 0
     rate = rospy.Rate(28)  # hz
     while not rospy.is_shutdown():
-        path.header.stamp = rospy.Time.now()
-
-        # if new_odom_received:
-        # rospy.loginfo(str(rospy.Time.now().to_sec()))
-        # path.poses[0].pose.position.x = pos[0]
-        # path.poses[0].pose.position.y = pos[1]
-        # pub.publish(path)
-        # new_odom_received = False
-
-        # path.poses[0].pose.position.x = np.random.uniform(-1, 1)
-        # path.poses[0].pose.position.y = np.random.uniform(3.5, 4.5)
-        # input("Press Enter to continue...")
+        odoms[0].header.stamp = rospy.Time.now()
+        odoms[1].header.stamp = rospy.Time.now()
 
         period = 8
 
-        # if t-last_reset > 3:
-        #     center = [np.random.uniform(-0.3, 0.3), np.random.uniform(3.8, 4.2)]
-        #     last_reset = t
+        odoms[0].pose.pose.position.x = -np.cos(2*np.pi*t/period)
 
-        # path.poses[0].pose.position.x = center[0] + np.sin(2*np.pi*t/period)
-        path.poses[0].pose.position.x = -np.cos(2*np.pi*t/period)
-        # path.poses[0].pose.position.y = center[1] + 0.5*np.cos(2*np.pi*t/period/2)
-        # path.poses[0].pose.position.y = 4
-        # path.poses[0].pose.position.z = 1+0.5*np.cos(2*np.pi*t/period)
-
-        if len(path.poses) > 1:
-            # path.poses[1].pose.position.x = -np.cos(2*np.pi*t/period / 2)
-            # path.poses[1].pose.position.x = np.cos(2*np.pi*t/period)
-            # path.poses[1].pose.position.y = 3.5
-            # path.poses[1].pose.position.z = 0.8+0.4*np.cos(2*np.pi*t/period)
-            # path.poses[1].pose.position.z = 1-0.5*np.cos(2*np.pi*t/period)
+        if len(odoms) > 1:
             pass
 
         # print("t: ", t, " x: ", path.poses[0].pose.position.x, " y: ", path.poses[0].pose.position.y)
 
         t += rate.sleep_dur.to_sec()
 
-        pub.publish(path)
+        for i in range(len(odoms)):
+            pubs[i].publish(odoms[i])
 
         rate.sleep()
