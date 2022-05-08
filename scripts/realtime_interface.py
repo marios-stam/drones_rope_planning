@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # print working directory
+import sys
 from geometry_msgs.msg import TransformStamped, Quaternion
 import rospy
 from tf import TransformListener, transformations
@@ -11,19 +12,15 @@ from geometry_msgs.msg import PoseStamped
 
 import rospkg
 
-from nav_msgs.msg import Odometry
-
 from drones_rope_planning.srv import PlanningRequest
 from drones_rope_planning.msg import CylinderObstacleData
 
-from nav_msgs.msg import Path
-from functools import partial
+from nav_msgs.msg import Path, Odometry
 
 
 def service_client():
     rospy.wait_for_service('/drones_rope_planning_node/ompl_realtime_planning')
     try:
-
         ompl_realtime_srv = rospy.ServiceProxy('/drones_rope_planning_node/ompl_realtime_planning', PlanningRequest)
         resp1 = ompl_realtime_srv(conf, start, goal)
 
@@ -37,56 +34,116 @@ def load_obstacles_config() -> list:
     and prepares it to be sent throyght the service.
 
     Returns:
-        list of type:[radius,height,odom_name]
+        list of CylinderObstacleData: The obstacles configuration.
     """
     # load ros param
     obstacles_config = rospy.get_param("/obstacles/cylinders")
     print("obstacles_config: ", obstacles_config)
 
+    # initialize velocities calculation
+    N = len(obstacles_config)
+    times.resize((N, 1))
+    velocities.resize((N, 3))
+    prev_pos.resize((N, 3))
+
+    # set iniitial values
+    prev_pos.fill(0)
+    velocities.fill(0)
+    times.fill(rospy.Time.now())
+
     cyl_config = []
+    odom_topics = []
     for index, cyl in enumerate(obstacles_config):
-        cyl_data = {}
-        cyl_data["radius"] = cyl["radius"]
-        cyl_data["height"] = cyl["height"]
-        cyl_data["odom_name"] = cyl["odom_name"]
+        cylinder = CylinderObstacleData()
 
-        cyl_config.append(cyl_data)
+        cylinder.radius = cyl['radius']
+        cylinder.height = cyl['height']
+        cylinder.pos = [0, 0, 0]
 
-    return cyl_config
+        roll = 0
+        pitch = 0
+        yaw = 0  # there is no point of a cylinder having yaw rotation
+        cylinder.quat = transformations.quaternion_from_euler(roll, pitch, yaw)
+
+        cylinder.vel = [0, 0, 0]
+        cylinder.angVel = [0, 0, 0]
+
+        cyl_config.append(cylinder)
+
+        odom_topics.append(cyl["odom_name"])
+
+    return cyl_config, odom_topics
 
 
-def callback(odom: Odometry, id: int):
+def callback_demo(odom: Odometry, i: int):
+    # global conf
+    curr_t = rospy.Time.now()
+    dt: rospy.Duration = curr_t - times[i][0]
 
-    config[id].pos = [odom.pose.pose.position.x, odom.pose.pose.position.y, odom.pose.pose.position.z]
-    config[id].quat = [odom.pose.pose.orientation.x, odom.pose.pose.orientation.y, odom.pose.pose.orientation.z, odom.pose.pose.orientation.w]
+    # set position and orientation to config
+    conf[i].pos = [odom.pose.pose.position.x,    odom.pose.pose.position.y, odom.pose.pose.position.z]
+    conf[i].quat = [odom.pose.pose.orientation.x, odom.pose.pose.orientation.y, odom.pose.pose.orientation.z, odom.pose.pose.orientation.w]
 
-    config[id].vel = [odom.twist.twist.linear.x, odom.twist.twist.linear.y, odom.twist.twist.linear.z]
-    config[id].ang_vel = [odom.twist.twist.angular.x, odom.twist.twist.angular.y, odom.twist.twist.angular.z]
+    # velocities and angular velocities
+    conf[i].vel = [odom.twist.twist.linear.x, odom.twist.twist.linear.y, odom.twist.twist.linear.z]
+    # conf[i].angVel = [odom.twist.twist.angular.x, odom.twist.twist.angular.y, odom.twist.twist.angular.z]
 
 
-times = 0
+def callback_sim(odom: Odometry, i: int):
+    # global conf
+    curr_t = rospy.Time.now()
+    dt: rospy.Duration = curr_t - times[i][0]
+
+    # set position and orientation to config
+    conf[i].pos = [odom.pose.pose.position.x,    odom.pose.pose.position.y, odom.pose.pose.position.z]
+    conf[i].quat = [odom.pose.pose.orientation.x, odom.pose.pose.orientation.y, odom.pose.pose.orientation.z, odom.pose.pose.orientation.w]
+
+    # calculate velocities
+    delta_pos = np.array(conf[i].pos) - prev_pos[i]
+    velocities[i] = delta_pos / dt.to_sec()
+
+    # save position for future calculations
+    prev_pos[i] = np.array(conf[i].pos)
+
+    # set velocities to config
+    conf[i].vel = velocities[i]
+    # conf[i].angVel=[0,0,0] TODO: not implemented yet
+
+    print(("Received odom for cyl: {} with pos: {}".format(i, conf[i].pos)))
+    times[i][0] = curr_t
+
+
+# GLOBAL VARIABLES
+times_service_called = 0
 total_time = 0
+conf = []
 
-"""
-config: list of type:
-        [pos, quat, vel, ang_vel]
-    
-    It is used to store the current configuration of the environment obstacles
-    and to send it to the service.
-"""
-config = []
+prev_pos = np.array([], dtype=np.float32)
+times = np.array([], dtype=rospy.Time)
+velocities = np.array([], dtype=np.float32)
 
 
 if __name__ == "__main__":
     rospy.init_node('realtime_interface')
 
-    conf = load_obstacles_config()
+    # get args
+    args = rospy.myargv(argv=sys.argv)
 
-    # create odometry subscribers
-    for index, cyl in enumerate(conf):
-        odom_name = cyl["odom_name"]
-        rospy.Subscriber(odom_name, Odometry, partial(callback, id=index))
+    if (args[1] == "simulation"):
+        callback = callback_sim
+    else:
+        callback = callback_demo
 
+    conf, odom_names = load_obstacles_config()
+
+    for id, name in enumerate(odom_names):
+        topic_name = "/pixy/vicon/{}/{}/odom".format(name, name)
+        print("Subscribing to: ", topic_name)
+        rospy.Subscriber(topic_name, Odometry, callback, callback_args=id)
+
+    # start and goal are not used currently but planning to be used in the future as a high level interface with the planner
+    start = [0, 0, 0]
+    goal = [0, 0, 0]
     # get ros parameter
     planning_freq = rospy.get_param("/planning//real_time_settings/planning_frequency")
 
@@ -98,7 +155,7 @@ if __name__ == "__main__":
         service_client()
         dt = rospy.get_time()-t0
         total_time += dt
-        times += 1
-        print("Average time of calling service: ", total_time/times, "sec")
+        times_service_called += 1
+        print("Average time of calling service: ", total_time/times_service_called, "sec")
 
         rate.sleep()

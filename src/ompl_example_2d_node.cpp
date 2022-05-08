@@ -254,7 +254,7 @@ bool planning_service(drones_rope_planning::PlanningRequest::Request &req, drone
     if (formation_close_to_invalid_state || !new_start_valid)
     {
         // ROS_ERROR("Non valid state id: %d", non_valid_state_id);
-        ROS_ERROR("Manual resetting of start state");
+        // ROS_ERROR("Manual resetting of start state");
         // set new valid start manually beacuse fixing of ompl results to collision with the obstacle
 
         // curent position of drones os already calculated from the set_new_start function
@@ -303,10 +303,13 @@ bool planning_service(drones_rope_planning::PlanningRequest::Request &req, drone
             times_tried_to_fix++;
         } while (!planner->isStateValidSimple(planner->getStartState()) && times_tried_to_fix < 4);
         // debug messages
-        ROS_ERROR("Manual start state set to: %f, %f, %f", new_pos[0], new_pos[1], new_pos[2]);
+        // ROS_ERROR("Manual start state set to: %f, %f, %f", new_pos[0], new_pos[1], new_pos[2]);
     }
 
     // printf("Previous path valid: %d\n", prev_path_is_valid);
+
+    if (!prev_path_is_valid)
+        ROS_ERROR("Previous path not valid");
 
     bool should_replan = reset_start_state_to_initial || !prev_path_is_valid;
 

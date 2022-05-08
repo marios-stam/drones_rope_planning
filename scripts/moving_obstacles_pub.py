@@ -37,15 +37,19 @@ def config_to_odoms() -> list:
         odom.header.frame_id = "world"
         odom.child_frame_id = i['odom_name']
 
-        odom.pose.pose.position.x = i["x"]
-        odom.pose.pose.position.y = i["y"]
-        odom.pose.pose.position.z = i["z"]
+        try:
+            pos = [i["x"], i["y"], i["z"]]
+            roll = i["roll"] * pi / 180
+            pitch = i["pitch"] * pi / 180
+            yaw = 0
+            q = tf.transformations.quaternion_from_euler(roll, pitch, yaw)
+        except:
+            pos = [0, 4, 0]
+            q = [0, 0, 0, 1]
 
-        roll = i["roll"] * pi / 180
-        pitch = i["pitch"] * pi / 180
-        yaw = 0
-
-        q = tf.transformations.quaternion_from_euler(roll, pitch, yaw)
+        odom.pose.pose.position.x = pos[0]
+        odom.pose.pose.position.y = pos[1]
+        odom.pose.pose.position.z = pos[2]
 
         odom.pose.pose.orientation.x = q[0]
         odom.pose.pose.orientation.y = q[1]

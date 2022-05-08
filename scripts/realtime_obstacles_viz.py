@@ -90,15 +90,16 @@ def generate_obstacles_markers(obstacles_config):
         # pos
         try:
             pos = [cyl['x'], cyl['y'], cyl['z']]
-        except:
-            pos = [0, 0, 0]
+            # orientation
+            roll = cyl['roll']
+            pitch = cyl['pitch']
+            yaw = 0
+            q = tf.transformations.quaternion_from_euler(roll, pitch, yaw)
+            quatern = [q[0], q[1], q[2], q[3]]
 
-        # orientation
-        roll = cyl['roll']
-        pitch = cyl['pitch']
-        yaw = 0
-        q = tf.transformations.quaternion_from_euler(roll, pitch, yaw)
-        quatern = [q[0], q[1], q[2], q[3]]
+        except:
+            pos = [0, 4, 0]
+            quatern = [0, 0, 0, 1]
 
         cyls_marker_array.update(index, r, h, pos, quatern)
 
