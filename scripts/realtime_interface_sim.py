@@ -14,7 +14,7 @@ import rospkg
 from drones_rope_planning.srv import PlanningRequest
 from drones_rope_planning.msg import CylinderObstacleData
 
-from nav_msgs.msg import Path
+from nav_msgs.msg import Path, Odometry
 
 
 def service_client():
@@ -51,6 +51,7 @@ def load_obstacles_config() -> list:
     times.fill(rospy.Time.now())
 
     cyl_config = []
+    odom_topics = []
     for index, cyl in enumerate(obstacles_config):
         cylinder = CylinderObstacleData()
 
@@ -67,31 +68,34 @@ def load_obstacles_config() -> list:
         cylinder.angVel = [0, 0, 0]
 
         cyl_config.append(cylinder)
-    return cyl_config
+
+        odom_topics.append(cyl["odom_name"])
+
+    return cyl_config, odom_topics
 
 
-def callback(path: Path):
-    global conf
-
+def callback(odom: Odometry, i: int):
+    # global conf
     curr_t = rospy.Time.now()
-    dt: rospy.Duration = curr_t - times[0][0]
-    for i, pose in enumerate(path.poses):
-        # set position and orientation to config
-        conf[i].pos = [pose.pose.position.x, pose.pose.position.y, pose.pose.position.z]
-        conf[i].quat = [pose.pose.orientation.x, pose.pose.orientation.y, pose.pose.orientation.z, pose.pose.orientation.w]
+    dt: rospy.Duration = curr_t - times[i][0]
 
-        # calculate velocities
-        delta_pos = np.array(conf[i].pos) - prev_pos[i]
-        velocities[i] = delta_pos / dt.to_sec()
+    # set position and orientation to config
+    conf[i].pos = [odom.pose.pose.position.x,    odom.pose.pose.position.y, odom.pose.pose.position.z]
+    conf[i].quat = [odom.pose.pose.orientation.x, odom.pose.pose.orientation.y, odom.pose.pose.orientation.z, odom.pose.pose.orientation.w]
 
-        # save position for future calculations
-        prev_pos[i] = np.array(conf[i].pos)
+    # calculate velocities
+    delta_pos = np.array(conf[i].pos) - prev_pos[i]
+    velocities[i] = delta_pos / dt.to_sec()
 
-        # set velocities to config
-        conf[i].vel = velocities[i]
-        # conf[i].angVel=[0,0,0] TODO: not implemented yet
+    # save position for future calculations
+    prev_pos[i] = np.array(conf[i].pos)
 
-    times.fill(curr_t)
+    # set velocities to config
+    conf[i].vel = velocities[i]
+    # conf[i].angVel=[0,0,0] TODO: not implemented yet
+
+    print(("Received odom for cyl: {} with pos: {}".format(i, conf[i].pos)))
+    times[i][0] = curr_t
 
 
 # GLOBAL VARIABLES
@@ -107,9 +111,12 @@ velocities = np.array([], dtype=np.float32)
 if __name__ == "__main__":
     rospy.init_node('realtime_interface')
 
-    conf = load_obstacles_config()
+    conf, odom_names = load_obstacles_config()
 
-    rospy.Subscriber("/obstacles_transforms", Path, callback)
+    for id, name in enumerate(odom_names):
+        topic_name = "/pixy/vicon/{}/{}/odom".format(name, name)
+        print("Subscribing to: ", topic_name)
+        rospy.Subscriber(topic_name, Odometry, callback, callback_args=id)
 
     # start and goal are not used currently but planning to be used in the future as a high level interface with the planner
     start = [0, 0, 0]

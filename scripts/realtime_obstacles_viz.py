@@ -108,6 +108,7 @@ def callback(odom: Odometry, id: int):
     pos = [odom.pose.pose.position.x, odom.pose.pose.position.y, odom.pose.pose.position.z]
     q = [odom.pose.pose.orientation.x, odom.pose.pose.orientation.y, odom.pose.pose.orientation.z, odom.pose.pose.orientation.w]
 
+    print("Received id {} with pos:{}".format(id, pos))
     cyls_marker_array.update(id, 0.1, 0.1, pos, q)
 
 
@@ -125,7 +126,7 @@ if __name__ == "__main__":
 
     for index, odom_name in enumerate(odom_names):
         topic_name = "pixy/vicon/{}/{}/odom".format(odom_name, odom_name)
-
+        print("Subscribing to topic: ", topic_name)
         rospy.Subscriber(topic_name, Odometry, callback, callback_args=index)
 
     f = 20

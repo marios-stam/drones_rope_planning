@@ -58,13 +58,6 @@ def config_to_odoms() -> list:
     return odoms, odom_names
 
 
-def callback(pose: PoseStamped):
-    global pos, new_odom_received
-
-    pos = [pose.pose.position.x, pose.pose.position.y, pose.pose.position.z]
-    new_odom_received = True
-
-
 # Global Variables
 pos = [0, 0, 0]
 new_odom_received = False
