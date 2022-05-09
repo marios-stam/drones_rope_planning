@@ -126,7 +126,7 @@ if __name__ == "__main__":
     odom_names = [cyl["odom_name"] for cyl in obstacles_config]
 
     for index, odom_name in enumerate(odom_names):
-        topic_name = "pixy/vicon/{}/{}/odom".format(odom_name, odom_name)
+        topic_name = "/pixy/vicon/{}/{}/odom".format(odom_name, odom_name)
         print("Subscribing to topic: ", topic_name)
         rospy.Subscriber(topic_name, Odometry, callback, callback_args=index)
 

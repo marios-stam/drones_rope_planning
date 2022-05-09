@@ -9,7 +9,9 @@
 	<group ns="obstacles" >
 		<rosparam command="load" file="$(find drones_rope_planning)/config/cylinders_obstacles_sim.yaml" />
 	</group>
-	
+
+	<param name="is_simulation"  value="1" />
+
 	<!-- ========================== VISUALIZATION ========================== -->
   	<node name="rviz" pkg="rviz" type="rviz" args="-d $(find drones_rope_planning)/launch/test.rviz" />
 
@@ -23,17 +25,17 @@
 	
 
 	<!-- ============================= PLANNING ============================= -->
-	<node name="drones_rope_planning_node" pkg="drones_rope_planning"  type="drones_rope_planning_node"   />
+	<node name="drones_rope_planning_node" pkg="drones_rope_planning"  type="drones_rope_planning_node"  output="screen" />
 	
 
 	<!-- ========================== POLS GENERATION ========================== -->
-	<node name="drones_pols_generator" pkg="drones_rope_planning" type="traj_generation_node"   />
+	<node name="drones_pols_generator" pkg="drones_rope_planning" type="traj_generation_node"/>
 
 	<!-- ======================= CATENARY CALCULATION ======================== -->
 	<!-- <node name="catenaries_listener" pkg="catenaries" type="catenaries_listener.py" /> -->
 
 	<!-- ======================== OBSTACLES INTERFACE ======================== -->
-    <node name="realtime_interface" pkg="drones_rope_planning"  type="realtime_interface.py" args="simulation"    />
+    <node name="realtime_interface" pkg="drones_rope_planning"  type="realtime_interface.py" />
 		
     <!-- <node name="moving_obstacles_pub" pkg="drones_rope_planning"  type="moving_obstacles_pub.py"  /> -->
 

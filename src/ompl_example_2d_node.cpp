@@ -35,7 +35,9 @@ namespace og = ompl::geometric;
 ompl_rope_planning::planner *planner;
 ros::Publisher dyn_path_pub;
 ros::Publisher drone_path1_pub, drone_path2_pub;
-tf::StampedTransform drone1_tf, drone2_tf;
+
+nav_msgs::OdometryPtr drone1_tf(new nav_msgs::Odometry);
+nav_msgs::OdometryPtr drone2_tf(new nav_msgs::Odometry);
 
 std::vector<realtime_obstacles::CylinderDefinition> get_cylinders_def_vec(drones_rope_planning::PlanningRequest::Request &req)
 {
@@ -80,12 +82,16 @@ void set_new_start(bool &reset_start_state_to_initial)
     try
     {
         // setting new stat of the path the one that is now formed by the drones positions
-        new_start[0] = (drone1_tf.getOrigin().x() + drone2_tf.getOrigin().x()) / 2;
-        new_start[1] = (drone1_tf.getOrigin().y() + drone2_tf.getOrigin().y()) / 2;
-        new_start[2] = (drone1_tf.getOrigin().z() + drone2_tf.getOrigin().z()) / 2;
-        float dx = drone1_tf.getOrigin().x() - drone2_tf.getOrigin().x();
-        float dy = drone1_tf.getOrigin().y() - drone2_tf.getOrigin().y();
-        float dz = drone1_tf.getOrigin().z() - drone2_tf.getOrigin().z();
+        float d1_pos[3] = {drone1_tf->pose.pose.position.x, drone1_tf->pose.pose.position.y, drone1_tf->pose.pose.position.z};
+        float d2_pos[3] = {drone2_tf->pose.pose.position.x, drone2_tf->pose.pose.position.y, drone2_tf->pose.pose.position.z};
+
+        new_start[0] = (d1_pos[0] + d2_pos[0]) / 2;
+        new_start[1] = (d1_pos[1] + d2_pos[1]) / 2;
+        new_start[2] = (d1_pos[2] + d2_pos[2]) / 2;
+        float dx = d1_pos[0] - d2_pos[0];
+        float dy = d1_pos[1] - d2_pos[1];
+        float dz = d1_pos[2] - d2_pos[2];
+
         // calculate yaw
         new_start[3] = atan2(dy, dx);
 
@@ -165,13 +171,17 @@ int get_state_closer_to_current_drone_position(og::PathGeometric *path)
 {
     auto states = path->getStates();
 
+    float d1_pos[3] = {drone1_tf->pose.pose.position.x, drone1_tf->pose.pose.position.y, drone1_tf->pose.pose.position.z};
+    float d2_pos[3] = {drone2_tf->pose.pose.position.x, drone2_tf->pose.pose.position.y, drone2_tf->pose.pose.position.z};
+
     float curr_state[6];
-    curr_state[0] = (drone1_tf.getOrigin().x() + drone2_tf.getOrigin().x()) / 2;
-    curr_state[1] = (drone1_tf.getOrigin().y() + drone2_tf.getOrigin().y()) / 2;
-    curr_state[2] = (drone1_tf.getOrigin().z() + drone2_tf.getOrigin().z()) / 2;
-    float dx = drone1_tf.getOrigin().x() - drone2_tf.getOrigin().x();
-    float dy = drone1_tf.getOrigin().y() - drone2_tf.getOrigin().y();
-    float dz = drone1_tf.getOrigin().z() - drone2_tf.getOrigin().z();
+    curr_state[0] = (d1_pos[0] + d2_pos[0]) / 2;
+    curr_state[1] = (d1_pos[1] + d2_pos[1]) / 2;
+    curr_state[2] = (d1_pos[2] + d2_pos[2]) / 2;
+    float dx = d1_pos[0] - d2_pos[0];
+    float dy = d1_pos[1] - d2_pos[1];
+    float dz = d1_pos[2] - d2_pos[2];
+
     // calculate yaw
     curr_state[3] = atan2(dy, dx);
 
@@ -440,13 +450,18 @@ bool planning_service(drones_rope_planning::PlanningRequest::Request &req, drone
            max_times[5]);
 }
 
+void leader_odom_callback(nav_msgs::OdometryConstPtr odom) { drone1_tf->pose = odom->pose; }
+
+void follower_odom_callback(nav_msgs::OdometryConstPtr odom) { drone2_tf->pose = odom->pose; }
+
 int main(int argc, char **argv)
 {
 
-    if (ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Error))
-    {
-        ros::console::notifyLoggerLevelsChanged();
-    }
+    // if (ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Error))
+    // {
+    //     ros::console::notifyLoggerLevelsChanged();
+    // }
+
     // init ROS node
     ros::init(argc, argv, "ompl_example_2d");
 
@@ -456,6 +471,7 @@ int main(int argc, char **argv)
     // instantiate listener
     auto listener = new tf::TransformListener();
 
+    printf("Ititializing...\n");
     // initialize planner
     problem_params::ProblemParams prob_prms = problem_params::getProblemParams(nodeHandle);
     planner = new ompl_rope_planning::planner(prob_prms);
@@ -470,6 +486,7 @@ int main(int argc, char **argv)
     planner->setStartGoal(start, goal);
 
     // create ros publishers
+    printf("Creating publishers\n");
     dyn_path_pub = nodeHandle.advertise<drones_rope_planning::rigid_body_dynamic_path>("/dynamicRigiBodyPath", 1);
 
     drone_path1_pub = nodeHandle.advertise<nav_msgs::Path>("/drone1Path", 1);
@@ -478,32 +495,74 @@ int main(int argc, char **argv)
     // create ros service
     ros::ServiceServer service = nodeHandle.advertiseService("ompl_realtime_planning", planning_service);
 
-    ROS_INFO("Service ready!");
+    // check if is in simulation mode
+    int is_simulation;
+    ros::param::get("/is_simulation", is_simulation);
 
-    ros::Rate rate(10);
-
-    while (ros::ok())
+    // check if string is equal
+    if (!is_simulation)
     {
-        try
-        {
-            listener->lookupTransform("/world", "/drone1", ros::Time(0), drone1_tf);
-            // printf("Drone1 Twist: %f, %f, %f\n", twist1.linear.x, twist1.linear.y, twist1.linear.z);
-        }
-        catch (tf::TransformException ex)
-        {
-        }
+        printf("Running in demo mode\n");
+        // load leader name from param
+        std::string leader_name, follower_name;
 
-        try
-        {
-            listener->lookupTransform("/world", "/drone2", ros::Time(0), drone2_tf);
-            // printf("Drone2 Twist: %f, %f, %f\n", twist2.linear.x, twist2.linear.y, twist2.linear.z);
-        }
-        catch (tf::TransformException ex)
-        {
-        }
+        ros::param::get("/cf_leader_name", leader_name);
+        ros::param::get("/cf_follower_name", follower_name);
 
-        ros::spinOnce();
-        rate.sleep();
+        // Drones odom subscribers
+        char leader_topic_name[60], follower_topic_name[60];
+
+        sprintf(leader_topic_name, "/pixy/vicon/%s/%s/odom", leader_name.c_str(), leader_name.c_str());
+        sprintf(follower_topic_name, "/pixy/vicon/%s/%s/odom", follower_name.c_str(), follower_name.c_str());
+
+        printf("Subscribing to %s and %s\n", leader_topic_name, follower_topic_name);
+
+        ros::Subscriber leader_sub = nodeHandle.subscribe(leader_topic_name, 1, leader_odom_callback);
+        ros::Subscriber follower_sub = nodeHandle.subscribe(follower_topic_name, 1, follower_odom_callback);
+        ROS_INFO("Service ready!");
+        ros::spin();
     }
-    ros::spin();
+    else
+    {
+        printf("Running in simulation mode\n");
+        ros::Rate rate(10);
+        tf::StampedTransform tf1, tf2;
+        ROS_INFO("Service ready!");
+
+        while (ros::ok())
+        {
+            try
+            {
+                listener->lookupTransform("/world", "/drone1", ros::Time(0), tf1);
+                geometry_msgs::Point p;
+                p.x = tf1.getOrigin().x();
+                p.y = tf1.getOrigin().y();
+                p.z = tf1.getOrigin().z();
+
+                drone1_tf->pose.pose.position = p;
+                // printf("Drone1 Twist: %f, %f, %f\n", twist1.linear.x, twist1.linear.y, twist1.linear.z);
+            }
+            catch (tf::TransformException ex)
+            {
+            }
+
+            try
+            {
+                listener->lookupTransform("/world", "/drone2", ros::Time(0), tf2);
+                geometry_msgs::Point p;
+                p.x = tf2.getOrigin().x();
+                p.y = tf2.getOrigin().y();
+                p.z = tf2.getOrigin().z();
+
+                drone2_tf->pose.pose.position = p;
+                // printf("Drone2 Twist: %f, %f, %f\n", twist2.linear.x, twist2.linear.y, twist2.linear.z);
+            }
+            catch (tf::TransformException ex)
+            {
+            }
+
+            ros::spinOnce();
+            rate.sleep();
+        }
+    }
 }

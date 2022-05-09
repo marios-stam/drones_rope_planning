@@ -127,11 +127,14 @@ if __name__ == "__main__":
     rospy.init_node('realtime_interface')
 
     # get args
-    args = rospy.myargv(argv=sys.argv)
+    # args = rospy.myargv(argv=sys.argv)
 
-    if (args[1] == "simulation"):
+    using_simulation = rospy.get_param("/is_simulation")
+    if (using_simulation):
+        # The configuration is in simulation mode
         callback = callback_sim
     else:
+        # The configuration is in demo mode
         callback = callback_demo
 
     conf, odom_names = load_obstacles_config()

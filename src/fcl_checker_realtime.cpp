@@ -104,11 +104,11 @@ namespace fcl_checking_realtime
 
             float vel[3] = {cyl.vel[0], cyl.vel[1], cyl.vel[2]};
             float angVel[3] = {cyl.angVel[0], cyl.angVel[1], cyl.angVel[2]};
-            printf("Updating obstacle %d\n", i);
-            printf("Pos: %f %f %f\n", pos[0], pos[1], pos[2]);
-            printf("Quat: %f %f %f %f\n", q[0], q[1], q[2], q[3]);
-            printf("Vel: %f %f %f\n", vel[0], vel[1], vel[2]);
-            printf("AngVel: %f %f %f\n", angVel[0], angVel[1], angVel[2]);
+            // printf("Updating obstacle %d\n", i);
+            // printf("Pos: %f %f %f\n", pos[0], pos[1], pos[2]);
+            // printf("Quat: %f %f %f %f\n", q[0], q[1], q[2], q[3]);
+            // printf("Vel: %f %f %f\n", vel[0], vel[1], vel[2]);
+            // printf("AngVel: %f %f %f\n", angVel[0], angVel[1], angVel[2]);
 
             env->set_cylinder_transform(i, pos, q);
             env->set_cylinder_velocities(i, vel, angVel);

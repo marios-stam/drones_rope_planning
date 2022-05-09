@@ -9,7 +9,9 @@
 #include <string>
 #include <vector>
 
+#include <nav_msgs/Odometry.h>
 #include <nav_msgs/Path.h>
+
 #include <ros/ros.h>
 #include <tf/transform_listener.h>
 
@@ -202,6 +204,10 @@ void path_hande_callback1(const nav_msgs::Path &wp) { publish_path_to_traj(wp, 0
 
 void path_hande_callback2(const nav_msgs::Path &wp) { publish_path_to_traj(wp, 1); }
 
+void leader_odom_callback(nav_msgs::OdometryConstPtr odom) { twist1 = odom->twist.twist; }
+
+void follower_odom_callback(nav_msgs::OdometryConstPtr odom) { twist2 = odom->twist.twist; }
+
 int main(int argc, char **argv)
 {
     ros::init(argc, argv, "example1_node");
@@ -248,28 +254,59 @@ int main(int argc, char **argv)
     twist1.linear = geometry_msgs::Vector3();
     twist2.linear = geometry_msgs::Vector3();
 
-    while (ros::ok())
+    /// check if is in simulation mode
+    int is_simulation;
+    ros::param::get("/is_simulation", is_simulation);
+
+    if (is_simulation)
     {
-        try
-        {
-            listener.lookupTwist("/drone1", "/world", ros::Time(0), ros::Duration(0.1), twist1);
-            // printf("Drone1 Twist: %f, %f, %f\n", twist1.linear.x, twist1.linear.y, twist1.linear.z);
-        }
-        catch (tf::TransformException ex)
-        {
-        }
+        ROS_INFO("Running in simulation mode.\n");
 
-        try
+        while (ros::ok())
         {
-            listener.lookupTwist("/drone2", "/world", ros::Time(0), ros::Duration(0.1), twist2);
-            // printf("Drone2 Twist: %f, %f, %f\n", twist2.linear.x, twist2.linear.y, twist2.linear.z);
-        }
-        catch (tf::TransformException ex)
-        {
-        }
+            try
+            {
+                listener.lookupTwist("/drone1", "/world", ros::Time(0), ros::Duration(0.1), twist1);
+                // printf("Drone1 Twist: %f, %f, %f\n", twist1.linear.x, twist1.linear.y, twist1.linear.z);
+            }
+            catch (tf::TransformException ex)
+            {
+            }
 
-        ros::spinOnce();
-        rate.sleep();
+            try
+            {
+                listener.lookupTwist("/drone2", "/world", ros::Time(0), ros::Duration(0.1), twist2);
+                // printf("Drone2 Twist: %f, %f, %f\n", twist2.linear.x, twist2.linear.y, twist2.linear.z);
+            }
+            catch (tf::TransformException ex)
+            {
+            }
+
+            ros::spinOnce();
+            rate.sleep();
+        }
+    }
+    else
+    {
+        printf("Running in demo mode\n");
+        // load leader name from param
+        std::string leader_name, follower_name;
+
+        ros::param::get("/cf_leader_name", leader_name);
+        ros::param::get("/cf_follower_name", follower_name);
+
+        // Drones odom subscribers
+        char leader_topic_name[60], follower_topic_name[60];
+
+        sprintf(leader_topic_name, "/pixy/vicon/%s/%s/odom", leader_name.c_str(), leader_name.c_str());
+        sprintf(follower_topic_name, "/pixy/vicon/%s/%s/odom", follower_name.c_str(), follower_name.c_str());
+
+        printf("Subscribing to %s and %s\n", leader_topic_name, follower_topic_name);
+
+        ros::Subscriber leader_sub = nh.subscribe(leader_topic_name, 1, leader_odom_callback);
+        ros::Subscriber follower_sub = nh.subscribe(follower_topic_name, 1, follower_odom_callback);
+
+        ros::spin();
     }
 
     return 0;
