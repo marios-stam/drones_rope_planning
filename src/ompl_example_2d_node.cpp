@@ -79,6 +79,7 @@ void set_new_start(bool &reset_start_state_to_initial)
 
     float new_start[6];
 
+    static bool reset_goal_to_initial = false;
     try
     {
         // setting new stat of the path the one that is now formed by the drones positions
@@ -103,13 +104,36 @@ void set_new_start(bool &reset_start_state_to_initial)
         float dist = sqrt(pow(new_start[0] - goal[0], 2) + pow(new_start[1] - goal[1], 2) + pow(new_start[2] - goal[2], 2));
 
         float dist_to_goal_threshold = planner->prob_params.realtime_settings.distance_to_goal_resetting;
-        if (dist < dist_to_goal_threshold)
+        if (dist < dist_to_goal_threshold && dist_to_goal_threshold > 0.0)
         {
             printf("Start and goal are too close\n");
             reset_start_state_to_initial = true;
-            new_start[0] = planner->prob_params.start_pos["x"];
-            new_start[1] = planner->prob_params.start_pos["y"];
-            new_start[2] = planner->prob_params.start_pos["z"];
+
+            // new_start[0] = planner->prob_params.start_pos["x"];
+            // new_start[1] = planner->prob_params.start_pos["y"];
+            // new_start[2] = planner->prob_params.start_pos["z"];
+
+            float new_goal[6];
+            if (reset_goal_to_initial)
+            {
+                // Formation is now at the initial start and set the goal to the initial goal
+                new_goal[0] = planner->prob_params.goal_pos["x"];
+                new_goal[1] = planner->prob_params.goal_pos["y"];
+                new_goal[2] = planner->prob_params.goal_pos["z"];
+            }
+            else
+            {
+                // Formation is now at the initial goal and set the goal to the initial start
+                new_goal[0] = planner->prob_params.start_pos["x"];
+                new_goal[1] = planner->prob_params.start_pos["y"];
+                new_goal[2] = planner->prob_params.start_pos["z"];
+            }
+            new_goal[3] = 0.0;
+            new_goal[4] = planner->prob_params.L * 0.5;
+            new_goal[5] = 0.0;
+
+            planner->setGoal(new_goal);
+            reset_goal_to_initial = !reset_goal_to_initial;
         }
     }
     catch (tf::TransformException &ex)

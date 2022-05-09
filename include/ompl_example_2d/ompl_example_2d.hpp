@@ -106,6 +106,8 @@ namespace ompl_rope_planning
 
         void setStart(float start[6]);
 
+        void setGoal(float goal[6]);
+
         std::vector<float> getStartState();
         std::vector<float> getGoalState();
 

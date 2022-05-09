@@ -10,7 +10,7 @@ real_time_settings: {
     replan_only_if_not_valid: True, # only replans if the current plan is not valid
     fix_invalid_start_dist: 0.2,
     fix_invalid_goal_dist: 0.1,
-    distance_to_goal_resetting: 1.0,
+    distance_to_goal_resetting: 0.5, #if it is 0 it will not reset at all
     replanning_interval: 2000.0, #msec
 
     siplifying_path: "fast", #full,fast,none

@@ -878,6 +878,31 @@ namespace ompl_rope_planning
         pdef->addStartState(start_state);
     }
 
+    void planner::setGoal(float goal[6])
+    {
+        for (int i = 0; i < dim; i++)
+        {
+            goal_state_[i] = goal[i];
+        }
+
+        printf("Simple goal\n");
+        // Add goal states
+        ob::GoalStates *goalStates(new ob::GoalStates(si));
+
+        ob::ScopedState<> goal_state(planner::space);
+        goal_state->as<ob::RealVectorStateSpace::StateType>()->values[0] = goal[0];
+        goal_state->as<ob::RealVectorStateSpace::StateType>()->values[1] = goal[1];
+        goal_state->as<ob::RealVectorStateSpace::StateType>()->values[2] = goal[2];
+        goal_state->as<ob::RealVectorStateSpace::StateType>()->values[3] = goal[3];
+        goal_state->as<ob::RealVectorStateSpace::StateType>()->values[4] = goal[4];
+        goal_state->as<ob::RealVectorStateSpace::StateType>()->values[5] = goal[5];
+
+        goalStates->addState(goal_state);
+
+        pdef->clearGoal();
+        pdef->setGoal(ob::GoalPtr(goalStates));
+    }
+
     ompl::geometric::PathGeometric *planner::getPath() { return path_; }
 
     void planner::setPath(ompl::geometric::PathGeometric *path) { path_ = new ompl::geometric::PathGeometric(*path); }
