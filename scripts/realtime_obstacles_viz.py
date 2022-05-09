@@ -52,8 +52,8 @@ class CylinderMarker(Marker):
         self.updatePose(pos, rot)
 
         scale_fac = 1
-        self.scale.x = radius-0.2  # radius axis smaller for safety
-        self.scale.y = radius-0.2  # radius axis smaller for safety
+        self.scale.x = radius
+        self.scale.y = radius
         self.scale.z = height
 
         self.color.r = 1.0
@@ -84,7 +84,7 @@ def generate_obstacles_markers(obstacles_config):
     print("obstacles_config: ", obstacles_config)
 
     for index, cyl in enumerate(obstacles_config):
-        r = cyl['radius']
+        r = cyl['radius']-0.4  # radius  smaller for safety
         h = cyl['height']
 
         # pos
@@ -107,7 +107,8 @@ def generate_obstacles_markers(obstacles_config):
 def callback(odom: Odometry, id: int):
 
     pos = [odom.pose.pose.position.x, odom.pose.pose.position.y, odom.pose.pose.position.z]
-    q = [odom.pose.pose.orientation.x, odom.pose.pose.orientation.y, odom.pose.pose.orientation.z, odom.pose.pose.orientation.w]
+    # q = [odom.pose.pose.orientation.x, odom.pose.pose.orientation.y, odom.pose.pose.orientation.z, odom.pose.pose.orientation.w]
+    q = [0, 0, 0, 1]
 
     print("Received id {} with pos:{}".format(id, pos))
     cyls_marker_array.update(id, 0.1, 0.1, pos, q)
@@ -134,7 +135,8 @@ if __name__ == "__main__":
     rate = rospy.Rate(f)
     while not rospy.is_shutdown():
         env_markers_pub.publish(cyls_marker_array)
-
+        print("Published markers array")
+        print(cyls_marker_array)
         rate.sleep()
 
     rospy.spin()

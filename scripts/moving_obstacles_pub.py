@@ -80,6 +80,8 @@ if __name__ == "__main__":
     pubs = []
     for i, name in enumerate(odoms_names):
         topic_name = "pixy/vicon/{}/{}/odom".format(name, name)
+
+        print("Creating publisher for topic: ", topic_name)
         pubs.append(rospy.Publisher(topic_name, Odometry, queue_size=10))
 
     last_reset = 0
@@ -88,13 +90,14 @@ if __name__ == "__main__":
     rate = rospy.Rate(28)  # hz
     while not rospy.is_shutdown():
         odoms[0].header.stamp = rospy.Time.now()
-        odoms[1].header.stamp = rospy.Time.now()
 
         period = 8
 
         odoms[0].pose.pose.position.x = -np.cos(2*np.pi*t/period)
 
         if len(odoms) > 1:
+            odoms[1].header.stamp = rospy.Time.now()
+
             pass
 
         # print("t: ", t, " x: ", path.poses[0].pose.position.x, " y: ", path.poses[0].pose.position.y)

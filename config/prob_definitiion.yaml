@@ -15,7 +15,7 @@ real_time_settings: {
 
     siplifying_path: "fast", #full,fast,none
 
-    time_allocation: { velocity: 10.0, acceleration: 10.0 },
+    time_allocation: { velocity: 3.0, acceleration: 2.0 },
   }
 
 #======================================

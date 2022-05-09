@@ -25,7 +25,7 @@
 	
 
 	<!-- ============================= PLANNING ============================= -->
-	<node name="drones_rope_planning_node" pkg="drones_rope_planning"  type="drones_rope_planning_node"  output="screen" />
+	<node name="drones_rope_planning_node" pkg="drones_rope_planning"  type="drones_rope_planning_node"   />
 	
 
 	<!-- ========================== POLS GENERATION ========================== -->
@@ -35,7 +35,7 @@
 	<!-- <node name="catenaries_listener" pkg="catenaries" type="catenaries_listener.py" /> -->
 
 	<!-- ======================== OBSTACLES INTERFACE ======================== -->
-    <node name="realtime_interface" pkg="drones_rope_planning"  type="realtime_interface.py" />
+    <node name="realtime_interface" pkg="drones_rope_planning"  type="realtime_interface.py" output="screen" />
 		
     <!-- <node name="moving_obstacles_pub" pkg="drones_rope_planning"  type="moving_obstacles_pub.py"  /> -->
 

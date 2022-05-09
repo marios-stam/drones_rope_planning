@@ -15,8 +15,10 @@
 	<param name="is_simulation" type="int"  value="1" if="$(arg load_params)"/> 
 
 	<!-- ========================== VISUALIZATION ========================== -->
-  	<node name="rviz" pkg="rviz" type="rviz" args="-d $(find drones_rope_planning)/launch/test.rviz" />
+  	<node name="rviz" pkg="rviz" type="rviz" args="-d $(find drones_rope_planning)/launch/test.rviz" if="$(arg load_params)" />
 
+  	<node name="rviz" pkg="rviz" type="rviz" args="-d $(find drones_rope_planning)/launch/demo_obs_avoid.rviz" unless="$(arg load_params)" />
+	
     <!-- <node name="drones_vis_on_rb" pkg="drone_path_planning" type="drones_vis.py" /> -->
 
 
@@ -26,7 +28,7 @@
 	
 
 	<!-- ============================= PLANNING ============================= -->
-	<node name="drones_rope_planning_node" pkg="drones_rope_planning"  type="drones_rope_planning_node" output="screen"	  />
+	<node name="drones_rope_planning_node" pkg="drones_rope_planning"  type="drones_rope_planning_node" />
 	
 
 	<!-- ========================== POLS GENERATION ========================== -->

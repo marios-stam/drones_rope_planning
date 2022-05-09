@@ -1,8 +1,7 @@
-cylinders_number: 2
+cylinders_number: 1
 #ALL ANGLES ARE IN DEGREES
 
-cylinders:
-  [
-    { radius: 0.3, height: 3.5, odom_name: "cylinder0" },
-    { radius: 0.3, height: 3.0, odom_name: "cylinder1" },
+cylinders: [
+    { radius: 0.6, height: 3.5, odom_name: "stik" },
+    # { radius: 0.3, height: 3.0, odom_name: "cylinder1" },
   ]

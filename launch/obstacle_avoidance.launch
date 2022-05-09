@@ -3,14 +3,14 @@
   	<!-- ================================ LEADER-FOLLOWER SETUP ================================ -->
 	
 	<!-- ================================ LEADER ================================ -->
-	<arg name="cf_leader_name" value="demo_crazyflie10" />
+	<arg name="cf_leader_name" value="demo_crazyflie1" />
 	<!-- initial reference -->
 	<arg name="cf_1_x" value="0  " /> 
 	<arg name="cf_1_y" value="4  " />
 	<arg name="cf_1_z" value="0.5" />
 
 	<!-- =============================== FOLLOWER =============================== -->
-	<arg name="cf_follower_name" value="demo_crazyflie9" />
+	<arg name="cf_follower_name" value="demo_crazyflie5" />
 	<!-- initial reference -->
   	<arg name="cf_2_x" value="-1" />
 	<arg name="cf_2_y" value=" 4" />
@@ -29,9 +29,11 @@
 	<param name="cf_follower_y" type="double" value="$(arg cf_2_y)" />
 	<param name="cf_follower_z" type="double" value="$(arg cf_2_z)" />
 
-  	<!-- ================================ /LEADER-FOLLOWER SETUP ================================ -->
+  	<!-- ======================================================================================= -->
 
-	<!-- ========================== ROS PARAMETERS ========================= -->
+
+
+	<!-- ==================================== ROS PARAMETERS =================================== -->
 	<group ns="planning" >
 		<rosparam command="load" file="$(find drones_rope_planning)/config/prob_definitiion.yaml" />
 	</group>
@@ -44,13 +46,14 @@
 	
 	<param name="is_simulation"  value="0"/> 
 
-	<!-- ========================== /ROS PARAMETERS ========================= -->
+  	<!-- ======================================================================================= -->
+
 
 	<group ns="cf_leader">
 		<node name="cf_controller" pkg="drones_control" type="hummingbird3_class.py"    args="$(arg cf_leader_name) 
 			$(arg cf_1_x) $(arg cf_1_y) $(arg cf_1_z)" />
 	
-		<node name="leader_interface" pkg="execution" type="leader_traj_executor_position_controller_realtime.py"   args="$(arg cf_leader_name)"  />
+		<node name="leader_interface" pkg="execution" type="leader_traj_executor_position_controller_realtime.py"   args="$(arg cf_leader_name)" output="screen"  />
 
 	</group>
 

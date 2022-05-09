@@ -506,6 +506,15 @@ int main(int argc, char **argv)
 
     float start[6] = {prob_prms.start_pos["x"], prob_prms.start_pos["y"], prob_prms.start_pos["z"], 0.0, L * 0.5, 0.0};
 
+    // Manually setting first drones odometry to start position of formations
+    drone1_tf->pose.pose.position.x = start[0] + 0.2; // not sure if sign is correct
+    drone1_tf->pose.pose.position.y = start[1];
+    drone1_tf->pose.pose.position.z = start[2];
+
+    drone2_tf->pose.pose.position.x = start[0] - 0.2; // not sure if sign is correct
+    drone2_tf->pose.pose.position.y = start[1];
+    drone2_tf->pose.pose.position.z = start[2];
+
     printf("Planning with goal : %f %f %f\n", goal[0], goal[1], goal[2]);
     planner->setStartGoal(start, goal);
 
@@ -589,4 +598,6 @@ int main(int argc, char **argv)
             rate.sleep();
         }
     }
+
+    ros::spin();
 }

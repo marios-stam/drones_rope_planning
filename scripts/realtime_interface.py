@@ -19,9 +19,10 @@ from nav_msgs.msg import Path, Odometry
 
 
 def service_client():
-    rospy.wait_for_service('/drones_rope_planning_node/ompl_realtime_planning')
+    rospy.wait_for_service(planning_service_name)
     try:
-        ompl_realtime_srv = rospy.ServiceProxy('/drones_rope_planning_node/ompl_realtime_planning', PlanningRequest)
+        print("Calling service...")
+        ompl_realtime_srv = rospy.ServiceProxy(planning_service_name, PlanningRequest)
         resp1 = ompl_realtime_srv(conf, start, goal)
 
     except rospy.ServiceException as e:
@@ -82,7 +83,8 @@ def callback_demo(odom: Odometry, i: int):
 
     # set position and orientation to config
     conf[i].pos = [odom.pose.pose.position.x,    odom.pose.pose.position.y, odom.pose.pose.position.z]
-    conf[i].quat = [odom.pose.pose.orientation.x, odom.pose.pose.orientation.y, odom.pose.pose.orientation.z, odom.pose.pose.orientation.w]
+    # conf[i].quat = [odom.pose.pose.orientation.x, odom.pose.pose.orientation.y, odom.pose.pose.orientation.z, odom.pose.pose.orientation.w]
+    conf[i].quat = [0, 0, 0, 1]
 
     # velocities and angular velocities
     conf[i].vel = [odom.twist.twist.linear.x, odom.twist.twist.linear.y, odom.twist.twist.linear.z]
@@ -148,13 +150,24 @@ if __name__ == "__main__":
     start = [0, 0, 0]
     goal = [0, 0, 0]
     # get ros parameter
-    planning_freq = rospy.get_param("/planning//real_time_settings/planning_frequency")
+    planning_freq = rospy.get_param("/planning/real_time_settings/planning_frequency")
+
+    print("Planning frequency: ", planning_freq)
+
+    # check if the service is available
+    planning_service_name = '/drones_rope_planning_node/ompl_realtime_planning'
+    try:
+        rospy.wait_for_service(planning_service_name, timeout=0.5)
+    except:
+        planning_service_name = "/planning"+planning_service_name
+        rospy.wait_for_service(planning_service_name, timeout=0.5)
 
     rate = rospy.Rate(planning_freq)
     while not rospy.is_shutdown():
         t0 = rospy.get_time()
         print("======================================================")
         # rospy.loginfo("Calling planning")
+        print("Calling planning")
         service_client()
         dt = rospy.get_time()-t0
         total_time += dt
