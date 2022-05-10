@@ -256,7 +256,22 @@ int main(int argc, char **argv)
 
     /// check if is in simulation mode
     int is_simulation;
-    ros::param::get("/is_simulation", is_simulation);
+    try
+    {
+        ros::param::get("/is_simulation", is_simulation);
+    }
+    catch (const std::exception &e)
+    {
+        ROS_ERROR("%s", e.what());
+        is_simulation = 0;
+        twist1.linear.x = 0.0;
+        twist1.linear.y = 0.0;
+        twist1.linear.z = 0.0;
+
+        twist2.linear.x = 0.0;
+        twist2.linear.y = 0.0;
+        twist2.linear.z = 0.0;
+    }
 
     if (is_simulation)
     {

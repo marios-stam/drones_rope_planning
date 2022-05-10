@@ -23,6 +23,7 @@
 
 	<node name="realtime_obstacles_vis" pkg="drones_rope_planning" type="realtime_obstacles_viz.py"    />
 	
+	<node name="trajectory_vis" pkg="execution" type="traj_visualization.py" output="screen"  />	
 
 	<!-- ============================= PLANNING ============================= -->
 	<node name="drones_rope_planning_node" pkg="drones_rope_planning"  type="drones_rope_planning_node"   />
@@ -31,11 +32,15 @@
 	<!-- ========================== POLS GENERATION ========================== -->
 	<node name="drones_pols_generator" pkg="drones_rope_planning" type="traj_generation_node"/>
 
+	<!-- <node name="pols_generator" pkg="drone_path_planning" type="drones_pols_generator_realtime.py" output="screen"/> -->
+
+
+
 	<!-- ======================= CATENARY CALCULATION ======================== -->
 	<!-- <node name="catenaries_listener" pkg="catenaries" type="catenaries_listener.py" /> -->
 
 	<!-- ======================== OBSTACLES INTERFACE ======================== -->
-    <node name="realtime_interface" pkg="drones_rope_planning"  type="realtime_interface.py" output="screen" />
+    <node name="realtime_interface" pkg="drones_rope_planning"  type="realtime_interface.py"  />
 		
     <!-- <node name="moving_obstacles_pub" pkg="drones_rope_planning"  type="moving_obstacles_pub.py"  /> -->
 

@@ -49,7 +49,7 @@
   	<!-- ======================================================================================= -->
 
 
-	<group ns="cf_leader">
+	<!-- <group ns="cf_leader">
 		<node name="cf_controller" pkg="drones_control" type="hummingbird3_class.py"    args="$(arg cf_leader_name) 
 			$(arg cf_1_x) $(arg cf_1_y) $(arg cf_1_z)" />
 	
@@ -62,12 +62,11 @@
 			$(arg cf_2_x) $(arg cf_2_y) $(arg cf_2_z) " />
   		
     	<node name="follower_interface" pkg="execution" type="follower_traj_executor_position_controller_realtime.py" args="$(arg cf_follower_name) $(arg cf_leader_name) "   />
-	</group>
+	</group> -->
 
 	<!-- ================================== PLANNING STUFFF ================================== -->
-
 	<group ns="planning" >
-		<include file="$(find drones_rope_planning)/launch/realtime_moving_obstacles_demo.launch">
+		<include file="$(find drones_rope_planning)/launch/realtime_moving_obstacles_demo_debug.launch">
 			 	<arg name="load_params"  value="0" />
 		</include>
 	</group>

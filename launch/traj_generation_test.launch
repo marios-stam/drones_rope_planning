@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<launch>	
+	<group ns="planning"  >
+		<rosparam command="load" file="$(find drones_rope_planning)/config/prob_definitiion.yaml" />
+	</group>
+	
+	<node name="drones_pols_generator" pkg="drones_rope_planning" type="traj_generation_node"   />
+
+
+	<node name="trajectory_vis" pkg="execution" type="traj_visualization.py"   />	
+
+	<node pkg="rosbag" type="play" name="player"  args="--clock /home/marios/thesis_ws/bags/05-10/traj_gen_test.bag"/>
+</launch>

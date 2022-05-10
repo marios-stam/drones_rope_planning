@@ -1,0 +1,47 @@
+<?xml version="1.0"?>
+<launch>
+	<arg name="load_params"  default="1" />
+
+	<!-- ========================== ROS PARAMETERS ========================= -->
+	<group ns="planning" if="$(arg load_params)" >
+		<rosparam command="load" file="$(find drones_rope_planning)/config/prob_definitiion.yaml" />
+	</group>
+	
+	<group ns="obstacles" if="$(arg load_params)" >
+		<rosparam command="load" file="$(find drones_rope_planning)/config/cylinders_obstacles.yaml" />
+	</group>
+
+	<!-- is_simulation=0 -> currently in demo mode -->
+	<param name="is_simulation" type="int"  value="1" if="$(arg load_params)"/> 
+
+	<!-- ========================== VISUALIZATION ========================== -->
+  	<!-- <node name="rviz" pkg="rviz" type="rviz" args="-d $(find drones_rope_planning)/launch/test.rviz" if="$(arg load_params)" /> -->
+
+  	<node name="rviz" pkg="rviz" type="rviz" args="-d $(find drones_rope_planning)/launch/demo_obs_avoid.rviz"  />
+	
+    <!-- <node name="drones_vis_on_rb" pkg="drone_path_planning" type="drones_vis.py" /> -->
+
+
+  	<!-- <node name="droneMarkerVis" pkg="3Dvisualization" type="droneMarkerVisMarios.py"  /> -->
+
+	<node name="realtime_obstacles_vis" pkg="drones_rope_planning" type="realtime_obstacles_viz.py"   />
+
+	<node name="trajectory_vis" pkg="execution" type="traj_visualization.py"   />	
+
+	<!-- ============================= PLANNING ============================= -->
+	<!-- <node name="drones_rope_planning_node" pkg="drones_rope_planning"  type="drones_rope_planning_node" /> -->
+	
+
+	<!-- ========================== POLS GENERATION ========================== -->
+	<!-- <node name="drones_pols_generator" pkg="drones_rope_planning" type="traj_generation_node"   /> -->
+
+	<!-- ======================= CATENARY CALCULATION ======================== -->
+	<!-- <node name="catenaries_listener" pkg="catenaries" type="catenaries_listener.py" /> -->
+
+	<!-- ======================== OBSTACLES INTERFACE ======================== --> 
+	<!-- Only use realtime_interface.py with different args -->
+    <!-- <node name="realtime_interface" pkg="drones_rope_planning"  type="realtime_interface.py"  /> -->
+	
+	<!-- Enter the below if you want to open node in separate terminal window -->
+	<!-- launch-prefix="gnome-terminal - -command" -->
+</launch>

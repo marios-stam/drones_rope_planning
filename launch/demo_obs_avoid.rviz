@@ -63,6 +63,8 @@ Visualization Manager:
           Value: true
         demo_crazyflie5/demo_crazyflie5:
           Value: true
+        stik/stik:
+          Value: true
         world:
           Value: true
       Marker Alpha: 1
@@ -70,12 +72,14 @@ Visualization Manager:
       Name: TF
       Show Arrows: false
       Show Axes: true
-      Show Names: true
+      Show Names: false
       Tree:
         world:
           demo_crazyflie1/demo_crazyflie1:
             {}
           demo_crazyflie5/demo_crazyflie5:
+            {}
+          stik/stik:
             {}
       Update Interval: 0
       Value: true
@@ -243,6 +247,15 @@ Visualization Manager:
         cylinders: true
       Queue Size: 100
       Value: true
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Marker Topic: /trajectories_viz
+      Name: Trajectories
+      Namespaces:
+        traj_0: true
+        traj_1: true
+      Queue Size: 100
+      Value: true
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
@@ -271,7 +284,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 8.796371459960938
+      Distance: 7.519476890563965
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -308,4 +321,4 @@ Window Geometry:
     collapsed: true
   Width: 1267
   X: 653
-  Y: 27
+  Y: 752
