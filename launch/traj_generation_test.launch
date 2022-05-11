@@ -6,8 +6,23 @@
 	
 	<node name="drones_pols_generator" pkg="drones_rope_planning" type="traj_generation_node"   />
 
+	<!-- <node name="drones_pols_generator" pkg="drones_rope_planning" type="jerk_traj_generation_node" /> -->
 
-	<node name="trajectory_vis" pkg="execution" type="traj_visualization.py"   />	
+  	<node name="rviz" pkg="rviz" type="rviz" args="-d $(find drones_rope_planning)/launch/demo_obs_avoid.rviz"  />
 
-	<node pkg="rosbag" type="play" name="player"  args="--clock /home/marios/thesis_ws/bags/05-10/traj_gen_test.bag"/>
+
+	<node name="trajectory_vis" pkg="execution" type="traj_visualization.py"    />	
+
+	<node name="references_vis" pkg="execution" type="visualize_references.py"  output="screen"   />	
+
+
+	<!-- <node pkg="rosbag" type="play" name="player"  args="- -clock /home/marios/thesis_ws/bags/05-10/traj_gen_test.bag"/>  -->
+
+
+    <node name="drones_vis_on_rb" pkg="execution" type="leader_traj_executor_position_controller_realtime_sim.py"   />
+
+	<node name="path_print" pkg="execution" type="path_printing.py"    />		
+
+
+
 </launch>

@@ -22,11 +22,15 @@
     <!-- <node name="drones_vis_on_rb" pkg="drone_path_planning" type="drones_vis.py" /> -->
 
 
-  	<!-- <node name="droneMarkerVis" pkg="3Dvisualization" type="droneMarkerVisMarios.py"  /> -->
+  	<node name="droneMarkerVis" pkg="3Dvisualization" type="droneMarkerVisMarios.py"    />
 
 	<node name="realtime_obstacles_vis" pkg="drones_rope_planning" type="realtime_obstacles_viz.py"   />
 
-	<node name="trajectory_vis" pkg="execution" type="traj_visualization.py"   />	
+	<node name="references_vis" pkg="execution" type="visualize_references.py"     />	
+
+	<node name="trajectory_vis" pkg="execution" type="traj_visualization.py"    />	
+
+
 
 	<!-- ============================= PLANNING ============================= -->
 	<!-- <node name="drones_rope_planning_node" pkg="drones_rope_planning"  type="drones_rope_planning_node" /> -->

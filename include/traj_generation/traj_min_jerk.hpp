@@ -29,8 +29,8 @@
 
 #include <Eigen/Eigen>
 
-#include <iostream>
 #include <cmath>
+#include <iostream>
 #include <vector>
 
 namespace min_jerk
@@ -69,14 +69,11 @@ namespace min_jerk
                 double t2 = t1 * t1;
 
                 // It maps boundary condition to normalized coefficient matrix
-                nCoeffMat.col(0) = 0.5 * (boundCond.col(5) - boundCond.col(2)) * t2 -
-                                   3.0 * (boundCond.col(1) + boundCond.col(4)) * t1 +
+                nCoeffMat.col(0) = 0.5 * (boundCond.col(5) - boundCond.col(2)) * t2 - 3.0 * (boundCond.col(1) + boundCond.col(4)) * t1 +
                                    6.0 * (boundCond.col(3) - boundCond.col(0));
-                nCoeffMat.col(1) = (-boundCond.col(5) + 1.5 * boundCond.col(2)) * t2 +
-                                   (8.0 * boundCond.col(1) + 7.0 * boundCond.col(4)) * t1 +
+                nCoeffMat.col(1) = (-boundCond.col(5) + 1.5 * boundCond.col(2)) * t2 + (8.0 * boundCond.col(1) + 7.0 * boundCond.col(4)) * t1 +
                                    15.0 * (-boundCond.col(3) + boundCond.col(0));
-                nCoeffMat.col(2) = (0.5 * boundCond.col(5) - 1.5 * boundCond.col(2)) * t2 -
-                                   (6.0 * boundCond.col(1) + 4.0 * boundCond.col(4)) * t1 +
+                nCoeffMat.col(2) = (0.5 * boundCond.col(5) - 1.5 * boundCond.col(2)) * t2 - (6.0 * boundCond.col(1) + 4.0 * boundCond.col(4)) * t1 +
                                    10.0 * (boundCond.col(3) - boundCond.col(0));
                 nCoeffMat.col(3) = 0.5 * boundCond.col(2) * t2;
                 nCoeffMat.col(4) = boundCond.col(1) * t1;
@@ -94,20 +91,11 @@ namespace min_jerk
         // Constructor from boundary condition and duration
         Piece(BoundaryCond bdCond, double dur) : boundCond(bdCond), duration(dur), synced(false) {}
 
-        inline int getDim() const
-        {
-            return TrajDim;
-        }
+        inline int getDim() const { return TrajDim; }
 
-        inline int getOrder() const
-        {
-            return TrajOrder;
-        }
+        inline int getOrder() const { return TrajOrder; }
 
-        inline double getDuration() const
-        {
-            return duration;
-        }
+        inline double getDuration() const { return duration; }
 
         // Get the position at time t in this piece
         inline Eigen::Vector3d getPos(double t)
@@ -166,10 +154,7 @@ namespace min_jerk
         }
 
         // Get the boundary condition of this piece
-        inline const BoundaryCond &getBoundCond() const
-        {
-            return boundCond;
-        }
+        inline const BoundaryCond &getBoundCond() const { return boundCond; }
 
         // Get the coefficient matrix of the piece
         // Default arg chooses the natural coefficients
@@ -229,9 +214,8 @@ namespace min_jerk
         {
             // Compute normalized squared vel norm polynomial coefficient matrix
             Eigen::MatrixXd nVelCoeffMat = getVelCoeffMat(true);
-            Eigen::VectorXd coeff = RootFinder::polySqr(nVelCoeffMat.row(0)) +
-                                    RootFinder::polySqr(nVelCoeffMat.row(1)) +
-                                    RootFinder::polySqr(nVelCoeffMat.row(2));
+            Eigen::VectorXd coeff =
+                RootFinder::polySqr(nVelCoeffMat.row(0)) + RootFinder::polySqr(nVelCoeffMat.row(1)) + RootFinder::polySqr(nVelCoeffMat.row(2));
             int N = coeff.size();
             int n = N - 1;
             for (int i = 0; i < N; i++)
@@ -257,16 +241,13 @@ namespace min_jerk
                     r = 0.5 * (r + 1.0);
                 }
                 // Find all stationaries
-                std::set<double> candidates = RootFinder::solvePolynomial(coeff.head(N - 1), l, r,
-                                                                          FLT_EPSILON / duration);
+                std::set<double> candidates = RootFinder::solvePolynomial(coeff.head(N - 1), l, r, FLT_EPSILON / duration);
                 // Check boundary points and stationaries within duration
                 candidates.insert(0.0);
                 candidates.insert(1.0);
                 double maxVelRateSqr = -INFINITY;
                 double tempNormSqr;
-                for (std::set<double>::const_iterator it = candidates.begin();
-                     it != candidates.end();
-                     it++)
+                for (std::set<double>::const_iterator it = candidates.begin(); it != candidates.end(); it++)
                 {
                     if (0.0 <= *it && 1.0 >= *it)
                     {
@@ -284,9 +265,8 @@ namespace min_jerk
         {
             // Compute normalized squared acc norm polynomial coefficient matrix
             Eigen::MatrixXd nAccCoeffMat = getAccCoeffMat(true);
-            Eigen::VectorXd coeff = RootFinder::polySqr(nAccCoeffMat.row(0)) +
-                                    RootFinder::polySqr(nAccCoeffMat.row(1)) +
-                                    RootFinder::polySqr(nAccCoeffMat.row(2));
+            Eigen::VectorXd coeff =
+                RootFinder::polySqr(nAccCoeffMat.row(0)) + RootFinder::polySqr(nAccCoeffMat.row(1)) + RootFinder::polySqr(nAccCoeffMat.row(2));
             int N = coeff.size();
             int n = N - 1;
             for (int i = 0; i < N; i++)
@@ -312,16 +292,13 @@ namespace min_jerk
                     r = 0.5 * (r + 1.0);
                 }
                 // Find all stationaries
-                std::set<double> candidates = RootFinder::solvePolynomial(coeff.head(N - 1), l, r,
-                                                                          FLT_EPSILON / duration);
+                std::set<double> candidates = RootFinder::solvePolynomial(coeff.head(N - 1), l, r, FLT_EPSILON / duration);
                 // Check boundary points and stationaries within duration
                 candidates.insert(0.0);
                 candidates.insert(1.0);
                 double maxAccRateSqr = -INFINITY;
                 double tempNormSqr;
-                for (std::set<double>::const_iterator it = candidates.begin();
-                     it != candidates.end();
-                     it++)
+                for (std::set<double>::const_iterator it = candidates.begin(); it != candidates.end(); it++)
                 {
                     if (0.0 <= *it && 1.0 >= *it)
                     {
@@ -338,17 +315,15 @@ namespace min_jerk
         inline bool checkMaxVelRate(double maxVelRate)
         {
             double sqrMaxVelRate = maxVelRate * maxVelRate;
-            if (getVel(0.0).squaredNorm() >= sqrMaxVelRate ||
-                getVel(duration).squaredNorm() >= sqrMaxVelRate)
+            if (getVel(0.0).squaredNorm() >= sqrMaxVelRate || getVel(duration).squaredNorm() >= sqrMaxVelRate)
             {
                 return false;
             }
             else
             {
                 Eigen::MatrixXd nVelCoeffMat = getVelCoeffMat(true);
-                Eigen::VectorXd coeff = RootFinder::polySqr(nVelCoeffMat.row(0)) +
-                                        RootFinder::polySqr(nVelCoeffMat.row(1)) +
-                                        RootFinder::polySqr(nVelCoeffMat.row(2));
+                Eigen::VectorXd coeff =
+                    RootFinder::polySqr(nVelCoeffMat.row(0)) + RootFinder::polySqr(nVelCoeffMat.row(1)) + RootFinder::polySqr(nVelCoeffMat.row(2));
                 // Convert the actual squared maxVelRate to a normalized one
                 double t2 = duration * duration;
                 coeff.tail<1>()(0) -= sqrMaxVelRate * t2;
@@ -361,17 +336,15 @@ namespace min_jerk
         inline bool checkMaxAccRate(double maxAccRate)
         {
             double sqrMaxAccRate = maxAccRate * maxAccRate;
-            if (getAcc(0.0).squaredNorm() >= sqrMaxAccRate ||
-                getAcc(duration).squaredNorm() >= sqrMaxAccRate)
+            if (getAcc(0.0).squaredNorm() >= sqrMaxAccRate || getAcc(duration).squaredNorm() >= sqrMaxAccRate)
             {
                 return false;
             }
             else
             {
                 Eigen::MatrixXd nAccCoeffMat = getAccCoeffMat(true);
-                Eigen::VectorXd coeff = RootFinder::polySqr(nAccCoeffMat.row(0)) +
-                                        RootFinder::polySqr(nAccCoeffMat.row(1)) +
-                                        RootFinder::polySqr(nAccCoeffMat.row(2));
+                Eigen::VectorXd coeff =
+                    RootFinder::polySqr(nAccCoeffMat.row(0)) + RootFinder::polySqr(nAccCoeffMat.row(1)) + RootFinder::polySqr(nAccCoeffMat.row(2));
                 // Convert the actual squared maxAccRate to a normalized one
                 double t2 = duration * duration;
                 double t4 = t2 * t2;
@@ -393,8 +366,7 @@ namespace min_jerk
         Trajectory() = default;
 
         // Constructor from boundary conditions and durations
-        Trajectory(const std::vector<BoundaryCond> &bdConds,
-                   const std::vector<double> &durs)
+        Trajectory(const std::vector<BoundaryCond> &bdConds, const std::vector<double> &durs)
         {
             int N = std::min(durs.size(), bdConds.size());
             pieces.reserve(N);
@@ -404,10 +376,7 @@ namespace min_jerk
             }
         }
 
-        inline int getPieceNum() const
-        {
-            return pieces.size();
-        }
+        inline int getPieceNum() const { return pieces.size(); }
 
         // Get durations vector of all pieces
         inline Eigen::VectorXd getDurations() const
@@ -446,15 +415,9 @@ namespace min_jerk
         }
 
         // Reload the operator[] to access the i-th piece
-        inline const Piece &operator[](int i) const
-        {
-            return pieces[i];
-        }
+        inline const Piece &operator[](int i) const { return pieces[i]; }
 
-        inline Piece &operator[](int i)
-        {
-            return pieces[i];
-        }
+        inline Piece &operator[](int i) { return pieces[i]; }
 
         inline void clear(void)
         {
@@ -462,25 +425,13 @@ namespace min_jerk
             return;
         }
 
-        inline Pieces::const_iterator begin() const
-        {
-            return pieces.begin();
-        }
+        inline Pieces::const_iterator begin() const { return pieces.begin(); }
 
-        inline Pieces::const_iterator end() const
-        {
-            return pieces.end();
-        }
+        inline Pieces::const_iterator end() const { return pieces.end(); }
 
-        inline Pieces::iterator begin()
-        {
-            return pieces.begin();
-        }
+        inline Pieces::iterator begin() { return pieces.begin(); }
 
-        inline Pieces::iterator end()
-        {
-            return pieces.end();
-        }
+        inline Pieces::iterator end() { return pieces.end(); }
 
         inline void reserve(const int &n)
         {
@@ -515,10 +466,7 @@ namespace min_jerk
             int N = getPieceNum();
             int idx;
             double dur;
-            for (idx = 0;
-                 idx < N &&
-                 t > (dur = pieces[idx].getDuration());
-                 idx++)
+            for (idx = 0; idx < N && t > (dur = pieces[idx].getDuration()); idx++)
             {
                 t -= dur;
             }
@@ -641,6 +589,58 @@ namespace min_jerk
             }
             return feasible;
         }
+
+        inline std::vector<Eigen::VectorXd> getPolMatrix(void)
+        {
+            int rows = getPieceNum();
+            // int cols = (TrajOrder + 1);
+            int cols = 8; // Because we use 8th order polynomial at the Crazyflie interface
+
+            Eigen::VectorXd polMatrixX(rows * cols);
+            Eigen::VectorXd polMatrixY(rows * cols);
+            Eigen::VectorXd polMatrixZ(rows * cols);
+
+            for (int i = 0; i < getPieceNum(); i++)
+            {
+
+                auto piece_coeffs = pieces[i].getCoeffMat(); // 3 rows,6 cols
+
+                // rowwise().reverse() beacuse pyhton expect [t^0,t^1,t^2,t^3,t^4,t^5,t^6,t^7] and
+                // framework works with [t^5,t^4,t^3,t^2,t^1,t^0]
+                // set block of matric to segment of vector
+
+                // create zero vector
+                Eigen::Vector2d zero_vec;
+                zero_vec.setZero();
+
+                printf("piece_coeffs.rows() = %d\n", piece_coeffs.rows());
+
+                polMatrixX.segment(i * 8, 2) = zero_vec;
+                polMatrixY.segment(i * 8, 2) = zero_vec;
+                polMatrixZ.segment(i * 8, 2) = zero_vec;
+
+                printf("Setting block of matrix\n");
+
+                polMatrixX.segment(i * 8 + 2, 6) = piece_coeffs.row(0).reverse();
+                polMatrixY.segment(i * 8 + 2, 6) = piece_coeffs.row(1).reverse();
+                polMatrixZ.segment(i * 8 + 2, 6) = piece_coeffs.row(2).reverse();
+
+                // polMatrixX.segment(i * 8, 8) = piece_coeffs.row(0);
+                // polMatrixY.segment(i * 8, 8) = piece_coeffs.row(1);
+                // polMatrixZ.segment(i * 8, 8) = piece_coeffs.row(2);
+
+                // polMatrixX.segment(i * 8, 8) = piece_coeffs.block(0, 0, 1, TrajOrder + 1); //.rowwise().reverse();
+                // polMatrixY.segment(i * 8, 8) = piece_coeffs.block(1, 0, 1, TrajOrder + 1); //.rowwise().reverse();
+                // polMatrixZ.segment(i * 8, 8) = piece_coeffs.block(2, 0, 1, TrajOrder + 1); //.rowwise().reverse();
+            }
+
+            std::vector<Eigen::VectorXd> polMatrix;
+            polMatrix.push_back(polMatrixX);
+            polMatrix.push_back(polMatrixY);
+            polMatrix.push_back(polMatrixZ);
+
+            return polMatrix;
+        }
     };
 
     // The banded system class is used for solving
@@ -706,15 +706,9 @@ namespace min_jerk
         }
 
         // The band matrix is stored as suggested in "Matrix Computation"
-        inline const double &operator()(const int &i, const int &j) const
-        {
-            return offset[i - j + upperBw][j];
-        }
+        inline const double &operator()(const int &i, const int &j) const { return offset[i - j + upperBw][j]; }
 
-        inline double &operator()(const int &i, const int &j)
-        {
-            return offset[i - j + upperBw][j];
-        }
+        inline double &operator()(const int &i, const int &j) { return offset[i - j + upperBw][j]; }
 
         // This function conducts banded LU factorization in place
         // Note that the matrix "A" MUST NOT HAVE ZERO PIVOTS !!!
@@ -743,8 +737,7 @@ namespace min_jerk
         // This function solves Ax=b, then stores x in b
         // The input b is required to be N*m, i.e.,
         // m vectors to be solved.
-        template <typename EIGENMAT>
-        inline void solve(EIGENMAT &b) const
+        template <typename EIGENMAT> inline void solve(EIGENMAT &b) const
         {
             int iM;
             for (int j = 0; j <= N - 1; j++)
@@ -795,13 +788,8 @@ namespace min_jerk
         Eigen::VectorXd ca20, ca21, ca22;
 
     private:
-        inline double evalPieceObjective(const Eigen::Array3d &iP,
-                                         const Eigen::Array3d &iV,
-                                         const Eigen::Array3d &iA,
-                                         const Eigen::Array3d &fP,
-                                         const Eigen::Array3d &fV,
-                                         const Eigen::Array3d &fA,
-                                         const double &duration) const
+        inline double evalPieceObjective(const Eigen::Array3d &iP, const Eigen::Array3d &iV, const Eigen::Array3d &iA, const Eigen::Array3d &fP,
+                                         const Eigen::Array3d &fV, const Eigen::Array3d &fA, const double &duration) const
         {
             Eigen::VectorXd coeffsJerObjective(5);
             coeffsJerObjective(0) = (9.0 * iA.square() - 6.0 * iA * fA + 9.0 * fA.square()).sum();
@@ -817,9 +805,7 @@ namespace min_jerk
         }
 
     public:
-        inline void reset(const Eigen::Matrix3d &headState,
-                          const Eigen::Matrix3d &tailState,
-                          const int &pieceNum)
+        inline void reset(const Eigen::Matrix3d &headState, const Eigen::Matrix3d &tailState, const int &pieceNum)
         {
             N = pieceNum;
             Ps.resize(3, N + 1);
@@ -854,8 +840,7 @@ namespace min_jerk
             return;
         }
 
-        inline void generate(const Eigen::Matrix3Xd &inPs,
-                             const Eigen::VectorXd &ts)
+        inline void generate(const Eigen::Matrix3Xd &inPs, const Eigen::VectorXd &ts)
         {
             T = ts;
             const Eigen::VectorXd &t1 = T;
@@ -903,8 +888,12 @@ namespace min_jerk
                 invA(1, 0) = -ca11(0);
                 invA(1, 1) = cv11(0);
                 invA /= invA(0, 0) * invA(1, 1) - invA(0, 1) * invA(1, 0);
-                bl.row(0) = (-cv00(0) * Ps.col(0) - cv01(0) * Ps.col(1) - cv02(0) * Ps.col(2) - cv10(0) * VAs.col(0) - cv20(0) * VAs.col(1) - cv12(0) * VAs.col(4) - cv22(0) * VAs.col(5)).transpose();
-                bl.row(1) = (-ca00(0) * Ps.col(0) - ca01(0) * Ps.col(1) - ca02(0) * Ps.col(2) - ca10(0) * VAs.col(0) - ca20(0) * VAs.col(1) - ca12(0) * VAs.col(4) - ca22(0) * VAs.col(5)).transpose();
+                bl.row(0) = (-cv00(0) * Ps.col(0) - cv01(0) * Ps.col(1) - cv02(0) * Ps.col(2) - cv10(0) * VAs.col(0) - cv20(0) * VAs.col(1) -
+                             cv12(0) * VAs.col(4) - cv22(0) * VAs.col(5))
+                                .transpose();
+                bl.row(1) = (-ca00(0) * Ps.col(0) - ca01(0) * Ps.col(1) - ca02(0) * Ps.col(2) - ca10(0) * VAs.col(0) - ca20(0) * VAs.col(1) -
+                             ca12(0) * VAs.col(4) - ca22(0) * VAs.col(5))
+                                .transpose();
 
                 VAs.block(0, 2, 3, 2) = (invA * bl).transpose();
             }
@@ -930,10 +919,16 @@ namespace min_jerk
                 A(2 * N - 3, 2 * N - 4) = ca11(N - 2);
                 A(2 * N - 3, 2 * N - 3) = ca21(N - 2);
 
-                b.row(0) = (-cv00(0) * Ps.col(0) - cv01(0) * Ps.col(1) - cv02(0) * Ps.col(2) - cv10(0) * VAs.col(0) - cv20(0) * VAs.col(1)).transpose();
-                b.row(1) = (-ca00(0) * Ps.col(0) - ca01(0) * Ps.col(1) - ca02(0) * Ps.col(2) - ca10(0) * VAs.col(0) - ca20(0) * VAs.col(1)).transpose();
-                b.row(2 * N - 4) = (-cv00(N - 2) * Ps.col(N - 2) - cv01(N - 2) * Ps.col(N - 1) - cv02(N - 2) * Ps.col(N) - cv12(N - 2) * VAs.col(2 * N) - cv22(N - 2) * VAs.col(2 * N + 1)).transpose();
-                b.row(2 * N - 3) = (-ca00(N - 2) * Ps.col(N - 2) - ca01(N - 2) * Ps.col(N - 1) - ca02(N - 2) * Ps.col(N) - ca12(N - 2) * VAs.col(2 * N) - ca22(N - 2) * VAs.col(2 * N + 1)).transpose();
+                b.row(0) =
+                    (-cv00(0) * Ps.col(0) - cv01(0) * Ps.col(1) - cv02(0) * Ps.col(2) - cv10(0) * VAs.col(0) - cv20(0) * VAs.col(1)).transpose();
+                b.row(1) =
+                    (-ca00(0) * Ps.col(0) - ca01(0) * Ps.col(1) - ca02(0) * Ps.col(2) - ca10(0) * VAs.col(0) - ca20(0) * VAs.col(1)).transpose();
+                b.row(2 * N - 4) = (-cv00(N - 2) * Ps.col(N - 2) - cv01(N - 2) * Ps.col(N - 1) - cv02(N - 2) * Ps.col(N) -
+                                    cv12(N - 2) * VAs.col(2 * N) - cv22(N - 2) * VAs.col(2 * N + 1))
+                                       .transpose();
+                b.row(2 * N - 3) = (-ca00(N - 2) * Ps.col(N - 2) - ca01(N - 2) * Ps.col(N - 1) - ca02(N - 2) * Ps.col(N) -
+                                    ca12(N - 2) * VAs.col(2 * N) - ca22(N - 2) * VAs.col(2 * N + 1))
+                                       .transpose();
 
                 for (int i = 1; i < N - 2; i++)
                 {
@@ -971,9 +966,8 @@ namespace min_jerk
 
             for (int i = 0; i < N; i++)
             {
-                objective += evalPieceObjective(Ps.col(i), VAs.col(2 * i), VAs.col(2 * i + 1),
-                                                Ps.col(i + 1), VAs.col(2 * i + 2), VAs.col(2 * i + 3),
-                                                T(i));
+                objective +=
+                    evalPieceObjective(Ps.col(i), VAs.col(2 * i), VAs.col(2 * i + 1), Ps.col(i + 1), VAs.col(2 * i + 2), VAs.col(2 * i + 3), T(i));
             }
 
             return objective;
@@ -1003,8 +997,7 @@ namespace min_jerk
 
                 coeffsGradT(0) = (-9.0 * iA.square() + 6.0 * iA * fA - 9.0 * fA.square()).sum();
                 coeffsGradT(1) = -48.0 * ((3.0 * iA - 2.0 * fA) * iV + (2.0 * iA - 3.0 * fA) * fV).sum();
-                coeffsGradT(2) = -72.0 * ((8.0 * iV.square() + 14.0 * iV * fV + 8.0 * fV.square()).sum() +
-                                          (5.0 * (iA - fA) * (iP - fP)).sum());
+                coeffsGradT(2) = -72.0 * ((8.0 * iV.square() + 14.0 * iV * fV + 8.0 * fV.square()).sum() + (5.0 * (iA - fA) * (iP - fP)).sum());
                 coeffsGradT(3) = -2880.0 * ((iV + fV) * (iP - fP)).sum();
                 coeffsGradT(4) = -3600.0 * (iP - fP).square().sum();
 
@@ -1021,9 +1014,10 @@ namespace min_jerk
 
             for (int i = 1; i < N; i++)
             {
-                grad.col(i - 1) = 120.0 * (-VAs.col(2 * i - 1) / t3(i - 1) + VAs.col(2 * i + 1) * (1.0 / t3(i - 1) + 1.0 / t3(i)) - VAs.col(2 * i + 3) / t3(i)) +
-                                  720.0 * (-VAs.col(2 * i - 2) / t4(i - 1) - VAs.col(2 * i) * (1.0 / t4(i - 1) - 1.0 / t4(i)) + VAs.col(2 * i + 2) / t4(i)) +
-                                  1440.0 * (-Ps.col(i - 1) / t5(i - 1) + Ps.col(i) * (1.0 / t5(i - 1) + 1.0 / t5(i)) - Ps.col(i + 1) / t5(i));
+                grad.col(i - 1) =
+                    120.0 * (-VAs.col(2 * i - 1) / t3(i - 1) + VAs.col(2 * i + 1) * (1.0 / t3(i - 1) + 1.0 / t3(i)) - VAs.col(2 * i + 3) / t3(i)) +
+                    720.0 * (-VAs.col(2 * i - 2) / t4(i - 1) - VAs.col(2 * i) * (1.0 / t4(i - 1) - 1.0 / t4(i)) + VAs.col(2 * i + 2) / t4(i)) +
+                    1440.0 * (-Ps.col(i - 1) / t5(i - 1) + Ps.col(i) * (1.0 / t5(i - 1) + 1.0 / t5(i)) - Ps.col(i + 1) / t5(i));
             }
 
             return grad;

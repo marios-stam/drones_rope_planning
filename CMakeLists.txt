@@ -217,6 +217,15 @@ add_executable(
   ${catkin_LIBRARIES}
 )
 
+add_executable(
+  jerk_traj_generation_node 
+  src/traj_generation/min_jerk_traj_generator.cpp
+  )
+
+  target_link_libraries(jerk_traj_generation_node
+  ${catkin_LIBRARIES}
+)
+
 # add_executable(
 #   ${PROJECT_NAME}_fcl_mesh
 #   src/fcl_mesh.cpp
