@@ -3,18 +3,18 @@
   	<!-- ================================ LEADER-FOLLOWER SETUP ================================ -->
 	
 	<!-- ================================ LEADER ================================ -->
-	<arg name="cf_leader_name" value="demo_crazyflie1" />
+	<arg name="cf_leader_name" value="crazyflie8" />
 	<!-- initial reference -->
 	<arg name="cf_1_x" value="0  " /> 
 	<arg name="cf_1_y" value="4  " />
-	<arg name="cf_1_z" value="0.5" />
+	<arg name="cf_1_z" value="1.0" />
 
 	<!-- =============================== FOLLOWER =============================== -->
 	<arg name="cf_follower_name" value="demo_crazyflie11" />
 	<!-- initial reference -->
   	<arg name="cf_2_x" value="-1" />
 	<arg name="cf_2_y" value=" 4" />
-	<arg name="cf_2_z" value=" 0.5" />
+	<arg name="cf_2_z" value=" 1.0" />
 	
 
 	<!-- Initialize global parameters -->
@@ -42,8 +42,11 @@
 		<rosparam command="load" file="$(find drones_rope_planning)/config/cylinders_obstacles.yaml" />
 	</group>
 	
-	<param name="waypoints_freq" type="double" value="40" />
-	
+	<param name="waypoints_freq" type="double" value="25" />
+
+	<param name="new_ref_dist_threshold" type="double" value="0.6" />
+
+
 	<param name="is_simulation"  value="0"/> 
 
   	<!-- ======================================================================================= -->
@@ -53,7 +56,7 @@
 		<node name="cf_controller" pkg="drones_control" type="hummingbird3_class.py"    args="$(arg cf_leader_name) 
 			$(arg cf_1_x) $(arg cf_1_y) $(arg cf_1_z)" />
 	
-		<node name="leader_interface" pkg="execution" type="leader_traj_executor_position_controller_realtime.py"   args="$(arg cf_leader_name)" output="screen"  />
+		<node name="leader_interface" pkg="execution" type="leader_traj_executor_position_controller_realtime.py"   args="$(arg cf_leader_name)"   />
 
 	</group>
 

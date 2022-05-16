@@ -22,14 +22,13 @@
     <!-- <node name="drones_vis_on_rb" pkg="drone_path_planning" type="drones_vis.py" /> -->
 
 
-  	<node name="droneMarkerVis" pkg="3Dvisualization" type="droneMarkerVisMarios.py"    />
+  	<node name="droneMarkerVis" pkg="3Dvisualization" type="droneMarkerVisMarios.py"   />
 
-	<node name="realtime_obstacles_vis" pkg="drones_rope_planning" type="realtime_obstacles_viz.py"   />
+	<!-- <node name="realtime_obstacles_vis" pkg="drones_rope_planning" type="realtime_obstacles_viz.py"   /> -->
 
 	<node name="references_vis" pkg="execution" type="visualize_references.py"     />	
 
-	<node name="trajectory_vis" pkg="execution" type="traj_visualization.py"    />	
-
+	<!-- <node name="trajectory_vis" pkg="execution" type="traj_visualization.py"    />	 -->
 
 
 	<!-- ============================= PLANNING ============================= -->
@@ -37,7 +36,7 @@
 	
 
 	<!-- ========================== POLS GENERATION ========================== -->
-	<!-- <node name="drones_pols_generator" pkg="drones_rope_planning" type="traj_generation_node"   /> -->
+	<!-- <node name="drones_pols_generator" pkg="drones_rope_planning" type="traj_generation_node" output="screen"   /> -->
 
 	<!-- ======================= CATENARY CALCULATION ======================== -->
 	<!-- <node name="catenaries_listener" pkg="catenaries" type="catenaries_listener.py" /> -->

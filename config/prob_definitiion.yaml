@@ -1,5 +1,5 @@
 visualization: True #TODO:icluse this option in launch file
-rope_length: 1.4
+rope_length: 1.2
 
 planning_type: "moving_obstacles" # static,moving_obstacles
 
@@ -15,7 +15,9 @@ real_time_settings: {
 
     siplifying_path: "fast", #full,fast,none
 
-    time_allocation: { velocity: 5.0, acceleration: 5 },
+    # time_allocation: { velocity: 7.0, acceleration: 8 },
+    # time_allocation: { velocity: 5.0, acceleration: 4 }, #kinda working
+    time_allocation: { velocity: 6.0, acceleration: 8 },
   }
 
 #======================================
@@ -59,8 +61,8 @@ goal: { x: +0.0, y: 6, z: 0.75 }
 # All ANGLES are in DEGREES
 bounds: {
     #x, y , z, yaw , drones_distance(% of L) , drones_angle
-    low: [-1.5, 0.5, 0.3, -180.0, 0.3, -60.0],
-    high: [1.5, 6.5, 2.0, 180.0, 0.95, 60.0],
+    low: [-1.5, 0.5, 0.3, -180.0, 0.5, -45.0],
+    high: [1.5, 6.5, 2.0, 180.0, 0.7, 45.0],
   }
 
 #planner algorithm

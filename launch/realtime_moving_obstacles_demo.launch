@@ -24,7 +24,7 @@
 
   	<!-- <node name="droneMarkerVis" pkg="3Dvisualization" type="droneMarkerVisMarios.py"  /> -->
 
-	<node name="realtime_obstacles_vis" pkg="drones_rope_planning" type="realtime_obstacles_viz.py"   />
+	<node name="realtime_obstacles_vis" pkg="drones_rope_planning" type="realtime_obstacles_viz.py"  output="screen" />
 	
 
 	<!-- ============================= PLANNING ============================= -->

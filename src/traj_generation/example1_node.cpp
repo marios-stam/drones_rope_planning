@@ -70,6 +70,147 @@ VectorXd allocateTime(const MatrixXd &wayPs, double vel, double acc)
     return durations;
 }
 
+VectorXd allocateTimeMarios(const MatrixXd &wayPs, double vel, double acc)
+{
+    int N = (int)(wayPs.cols()) - 1;
+    VectorXd durations(N);
+    if (N > 0)
+    {
+
+        Eigen::Vector3d p0, p1;
+        double dtxyz, D, acct, accd, dcct, dccd, t1, t2, t3;
+        for (int k = 0; k < N; k++)
+        {
+            p0 = wayPs.col(k);
+            p1 = wayPs.col(k + 1);
+            D = (p1 - p0).norm();
+
+            acct = vel / acc;
+            accd = (acc * acct * acct / 2);
+            dcct = vel / acc;
+            dccd = acc * dcct * dcct / 2;
+
+            if (D < accd)
+            {
+                t1 = sqrt(acc * D) / acc;
+                // t2 = (acc * t1) / acc;
+                // dtxyz = t1 + t2;
+                dtxyz = t1;
+            }
+            else
+            {
+                t1 = acct;
+                t2 = (D - accd) / vel;
+                // t3 = dcct;
+                // dtxyz = t1 + t2 + t3;
+                dtxyz = t1 + t2;
+            }
+
+            durations(k) = dtxyz;
+        }
+    }
+
+    return durations;
+}
+
+VectorXd allocateTimeSimple(const MatrixXd &wayPs, double vel, double acc)
+{
+    int N = (int)(wayPs.cols()) - 1;
+    VectorXd durations(N);
+    if (N > 0)
+    {
+
+        Eigen::Vector3d p0, p1;
+        double dtxyz, D, acct, accd, dcct, dccd, t1, t2, t3;
+        for (int k = 0; k < N; k++)
+        {
+            p0 = wayPs.col(k);
+            p1 = wayPs.col(k + 1);
+            D = (p1 - p0).norm();
+
+            dtxyz = D / vel;
+
+            durations(k) = dtxyz;
+        }
+    }
+
+    return durations;
+}
+
+VectorXd allocateTimeETH(const MatrixXd &wayPs, double v_max, double a_max)
+{
+    double const magic_fabian_constant = 6.5; // tuning parameter
+
+    int N = (int)(wayPs.cols()) - 1;
+    VectorXd durations(N);
+
+    if (N > 0)
+    {
+        Eigen::Vector3d p0, p1;
+        double dtxyz, distance, acct, accd, dcct, dccd, t1, t2, t3;
+        for (int k = 0; k < N; k++)
+        {
+            p0 = wayPs.col(k);
+            p1 = wayPs.col(k + 1);
+            distance = (p1 - p0).norm();
+
+            double t = distance / v_max * 2 * (1.0 + magic_fabian_constant * v_max / a_max * exp(-distance / v_max * 2));
+            durations(k) = t;
+        }
+    }
+    else
+    {
+        throw std::runtime_error("No waypoints");
+    }
+
+    return durations;
+}
+
+double computeTimeVelocityRamp(const Eigen::VectorXd &start, const Eigen::VectorXd &goal, double v_max, double a_max)
+{
+    const double distance = (start - goal).norm();
+    // Time to accelerate or decelerate to or from maximum velocity:
+    const double acc_time = v_max / a_max;
+    // Distance covered during complete acceleration or decelerate:
+    const double acc_distance = 0.5 * v_max * acc_time;
+    // Compute total segment time:
+    if (distance < 2.0 * acc_distance)
+    {
+        // Case 1: Distance too small to accelerate to maximum velocity.
+        return 2.0 * std::sqrt(distance / a_max);
+    }
+    else
+    {
+        // Case 2: Distance long enough to accelerate to maximum velocity.
+        return 2.0 * acc_time + (distance - 2.0 * acc_distance) / v_max;
+    }
+}
+
+VectorXd allocateTimeVelRamp(const MatrixXd &wayPs, double v_max, double a_max)
+{
+    double const magic_fabian_constant = 6.5; // tuning parameter
+
+    int N = (int)(wayPs.cols()) - 1;
+    VectorXd durations(N);
+    constexpr double kMinSegmentTime = 0.1;
+
+    if (N > 0)
+    {
+        Eigen::Vector3d p0, p1;
+        double dtxyz, distance, acct, accd, dcct, dccd, t1, t2, t3;
+        for (int k = 0; k < N; k++)
+        {
+            p0 = wayPs.col(k);
+            p1 = wayPs.col(k + 1);
+            double t = computeTimeVelocityRamp(p0, p1, v_max, a_max);
+            t = std::max(kMinSegmentTime, t);
+            durations(k) = t;
+        }
+    }
+
+    return durations;
+}
+
 min_snap::Trajectory generate_traj_from_path(const nav_msgs::Path &wp, geometry_msgs::Twist init_vel)
 {
     printf("Traj waypoints:%d\n", (int)wp.poses.size());
@@ -84,9 +225,9 @@ min_snap::Trajectory generate_traj_from_path(const nav_msgs::Path &wp, geometry_
     int waypoints_number = wp.poses.size();
 
     VectorXd ts = VectorXd::Ones(waypoints_number);
-    float total_time = 10;              // sec
-    float dur = total_time / ts.size(); // duration of each piece
-    ts *= dur;
+    // float total_time = 10;              // sec
+    // float dur = total_time / ts.size(); // duration of each piece
+    // ts *= dur;
 
     route.resize(3, wp.poses.size());
     for (int k = 0; k < (int)wp.poses.size(); k++)
@@ -109,10 +250,24 @@ min_snap::Trajectory generate_traj_from_path(const nav_msgs::Path &wp, geometry_
     iSS << iS, Eigen::MatrixXd::Zero(3, 1);
     fSS << fS, Eigen::MatrixXd::Zero(3, 1);
 
-    ts = allocateTime(route, time_alloc_vel, time_alloc_acc); // TODO:Make that a parameter
+    // ts = allocateTime(route, time_alloc_vel, time_alloc_acc);
+    auto ts_marios = allocateTimeMarios(route, time_alloc_vel, time_alloc_acc);
+    // ts = allocateTimeSimple(route, time_alloc_vel, time_alloc_acc);
+    // auto ts_vel_ramp = allocateTimeVelRamp(route, time_alloc_vel, time_alloc_acc);
+
+    // ts = allocateTimeETH(route, time_alloc_vel, time_alloc_acc);
+
+    // printf("ts_marios:\t ts:Vel Ramp\n");
+    // for (int k = 0; k < ts.size(); k++)
+    // {
+    //     printf("%f\t%f\n", ts_marios(k), ts_vel_ramp(k));
+    // }
+
+    // std::cout << "ts_marios duration:" << ts_marios.sum() << std::endl;
+    // std::cout << "=========================================================" << std::endl;
 
     snapOpt.reset(iSS, fSS, route.cols() - 1);
-    snapOpt.generate(route.block(0, 1, 3, waypoints_number - 2), ts);
+    snapOpt.generate(route.block(0, 1, 3, waypoints_number - 2), ts_marios);
     snapOpt.getTraj(minSnapTraj);
     auto tc2 = std::chrono::high_resolution_clock::now();
 
@@ -190,9 +345,11 @@ void publish_path_to_traj(const nav_msgs::Path &wp, int id)
     publish_pols(traj, id);
     auto t2 = std::chrono::high_resolution_clock::now();
 
-    // std::cout << "Time taken for generation: " << (float)std::chrono::duration_cast<std::chrono::microseconds>(t1 - t0).count() / 1000 << " msec"
+    // std::cout << "Time taken for generation: " << (float)std::chrono::duration_cast<std::chrono::microseconds>(t1 - t0).count() / 1000 << "
+    // msec"
     //   << std::endl;
-    // std::cout << "Time taken for publishing: " << (float)std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count() / 1000 << " msec"
+    // std::cout << "Time taken for publishing: " << (float)std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count() / 1000 << "
+    // msec"
     //   << std::endl;
     // std::cout << "Total time taken for generating trajectory " << id << ": "
     //   << (float)std::chrono::duration_cast<std::chrono::microseconds>(t2 - t0).count() / 1000 << " msec" << std::endl;
