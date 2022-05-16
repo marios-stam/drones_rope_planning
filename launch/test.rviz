@@ -8,6 +8,7 @@ Panels:
         - /Grid1
         - /TF1
         - /TF1/Frames1
+        - /MarkerArray2
       Splitter Ratio: 0.5
     Tree Height: 679
   - Class: rviz/Selection
@@ -241,6 +242,15 @@ Visualization Manager:
       Name: MarkerArray
       Namespaces:
         cylinders: true
+      Queue Size: 100
+      Value: true
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Marker Topic: /trajectories_viz
+      Name: MarkerArray
+      Namespaces:
+        traj_0: true
+        traj_1: true
       Queue Size: 100
       Value: true
   Enabled: true
