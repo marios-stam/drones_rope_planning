@@ -5,6 +5,8 @@
 		<rosparam command="load" file="$(find drones_rope_planning)/config/prob_definitiion.yaml" />
 	</group>
     
+    <param name="times" type="int" value="1" />
+
     <node pkg="drones_rope_planning" name="drones_rope_planning_node" type="drones_rope_planning_node" output="screen" />
     
 </launch>

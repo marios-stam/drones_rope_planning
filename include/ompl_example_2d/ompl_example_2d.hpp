@@ -78,7 +78,9 @@ namespace ompl_rope_planning
 
         void setBounds(void);
 
-        void plan(void);
+        float plan(void);
+
+        void plan(std::string planner_name);
 
         void replan(void);
 

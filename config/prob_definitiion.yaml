@@ -2,7 +2,7 @@ visualization: True #TODO:icluse this option in launch file
 rope_length: 1.4
 
 calculate_new_path: True
-timeout: 4
+timeout: 0.25
 
 # env_mesh: "env-scene-ltu-experiment-corridor-narrow-easy"
 # env_mesh: "env-scene-ltu-experiment-hole-inclined"
@@ -16,7 +16,7 @@ env_mesh: "env-scene-ltu-experiment"
 val_check_resolution: 0.045
 range: 1
 use_mesh_improvement: True
-goal_type: "samplable" #simple,samplable,symmetrical,multiple_goals
+goal_type: "simple" #simple,samplable,symmetrical,multiple_goals
 
 use_ground_collision_check: False
 
@@ -46,9 +46,9 @@ bounds: {
   }
 
 #planner algorithm
-planner_algorithm: "RRTstar"
-# planner_algorithm: "RRTConnect"
-# planner_algorithm: "RRT"
+# planner_algorithm: "RRTstar"
+# planner_algorithm:   "RRTConnect"
+planner_algorithm: "RRT"
 # planner_algorithm: "InformedRRTstar"
 # planner_algorithm: "PRM"
 # planner_algorithm: "LBKPIECE1"

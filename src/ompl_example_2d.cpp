@@ -308,7 +308,7 @@ namespace ompl_rope_planning
         }
     }
 
-    void planner::plan()
+    float planner::plan()
     {
         auto plan = getPlanner(prob_params.planner_algorithm, prob_params.range);
 
@@ -331,6 +331,100 @@ namespace ompl_rope_planning
 
         // attempt to solve the problem within one second of planning time
 
+        ob::PlannerStatus solved;
+        auto t0 = std::chrono::high_resolution_clock::now();
+
+        do
+        {
+            // If planner is not reset
+            // it is allowed  to continue work for more time on an unsolved problem
+            // otherwise it will be reset and start from scratch
+
+            //  plan->clear();
+
+            // create termination condition
+            ob::PlannerTerminationCondition ptc(ob::timedPlannerTerminationCondition(prob_params.timeout));
+
+            solved = plan->solve(ptc);
+            std::cout << std::endl;
+
+        } while (solved != ob::PlannerStatus::EXACT_SOLUTION);
+
+        auto dt = std::chrono::high_resolution_clock::now() - t0;
+        float time = std::chrono::duration_cast<std::chrono::milliseconds>(dt).count();
+        std::cout << "Planning time: " << time << " ms" << std::endl;
+
+        if (solved == ob::PlannerStatus::EXACT_SOLUTION)
+        {
+            // get the goal representation from the problem definition (not the same as the goal state)
+            // and inquire about the found path
+            std::cout << "Found exact solution :" << std::endl;
+
+            ob::PathPtr path = pdef->getSolutionPath();
+            og::PathGeometric *pth = pdef->getSolutionPath()->as<og::PathGeometric>();
+
+            if (prob_params.simplify_path)
+            {
+                std::cout << "Simplifying path...\n";
+                og::PathSimplifier path_simplifier(si, pdef->getGoal());
+
+                ob::PlannerTerminationCondition ptc(ob::timedPlannerTerminationCondition(prob_params.timeout));
+
+                path_simplifier.simplify(*pth, ptc, false);
+
+                // path_simplifier.simplifyMax(*pth);
+            }
+
+            if (prob_params.path_interpolation_points > 0)
+            {
+                std::cout << "Interpolating path...\n";
+                // og::PathGeometric::InterpolationType interp_type = og::PathGeometric::CSPLINE;
+                // pth->interpolate(interp_type);
+
+                pth->interpolate(prob_params.path_interpolation_points);
+            }
+
+            std::cout << "Finale path :" << std::endl;
+            pth->printAsMatrix(std::cout);
+
+            // save path to file
+            std::ofstream myfile;
+            myfile.open("/home/marios/thesis_ws/src/drones_rope_planning/resources/paths/path.txt");
+            pth->printAsMatrix(myfile);
+            myfile.close();
+        }
+        else
+        {
+            std::cout << "No solution found" << std::endl;
+        }
+
+        return time;
+    }
+
+    void planner::plan(std::string planner_name)
+    {
+        pdef->clearSolutionPaths();
+
+        auto plan = getPlanner(planner_name, prob_params.range);
+
+        // set the problem we are trying to solve for the planner
+        printf("Setting  problem definition...\n");
+        plan->setProblemDefinition(pdef);
+
+        // perform setup steps for the planner
+        printf("Setting  planner up...\n");
+        plan->setup();
+
+        // print the settings for this space
+        printf("============================ OMPL SPACE SETTINGS: ============================\n");
+        si->printSettings(std::cout);
+
+        // print the problem settings
+        printf("============================ OMPL PROBLEM SETTINGS: ============================\n");
+        pdef->print(std::cout);
+        printf("================================================================================\n");
+
+        // attempt to solve the problem within one second of planning time
         ob::PlannerStatus solved;
         do
         {
