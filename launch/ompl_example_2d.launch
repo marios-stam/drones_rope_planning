@@ -9,6 +9,6 @@
 		<rosparam command="load" file="$(find drones_rope_planning)/config/cylinders_obstacles.yaml" />
 	</group>
 
-    <node pkg="drones_rope_planning" name="drones_rope_planning_node" type="drones_rope_planning_node" output="screen" />
+    <node pkg="drones_rope_planning" name="drones_rope_planning_node" type="planning_offline_node" output="screen" />
     
 </launch>

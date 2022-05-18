@@ -204,9 +204,15 @@ target_link_libraries(${PROJECT_NAME}_library
 
 ## Declare a cpp executable
 add_executable(
-  ${PROJECT_NAME}_node
-  src/ompl_example_2d_node.cpp
+  planning_realtime_node
+  src/planning_realtime_node.cpp
 )
+
+add_executable(
+  planning_offline_node
+  src/planning_offline_node.cpp
+)
+
 
 add_executable(
   traj_generation_node 
@@ -236,9 +242,8 @@ add_executable(
 #   src/fcl_checker.cpp
 # )
 
-add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-# add_dependencies(${PROJECT_NAME} ompl_example_2d_generate_messages_cpp ${catkin_EXPORTED_TARGETS})
-target_link_libraries(${PROJECT_NAME}_node
+add_dependencies(planning_realtime_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(planning_realtime_node
    ${PROJECT_NAME}_library
   ${catkin_LIBRARIES}
   ompl
@@ -247,9 +252,22 @@ target_link_libraries(${PROJECT_NAME}_node
   ${OCTOMAP_LIBRARIES}
   ${fcl_LIBRARIES}
   fcl
-  # try to comment line above and uncomment line below if problems with linking to ompl library
+  # try to comment line above and uncomment line below if problems with linking to ompl lcmkibrary
 #   ${OMPL_LIBRARIES}
 )
+
+add_dependencies(planning_offline_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(planning_offline_node
+   ${PROJECT_NAME}_library
+  ${catkin_LIBRARIES}
+  ompl
+  boost_serialization
+  ${PCL_LIBRARIES}
+  ${OCTOMAP_LIBRARIES}
+  ${fcl_LIBRARIES}
+  fcl
+)
+
 
 # target_link_libraries(${PROJECT_NAME}_fcl_mesh
 #    ${PROJECT_NAME}_library
@@ -280,7 +298,8 @@ target_link_libraries(${PROJECT_NAME}_node
 # )
 
 # add_dependencies(${PROJECT_NAME}_trajectory ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-add_dependencies(${PROJECT_NAME}_node ${catkin_EXPORTED_TARGETS})
+add_dependencies(planning_realtime_node ${catkin_EXPORTED_TARGETS})
+add_dependencies(planning_offline_node ${catkin_EXPORTED_TARGETS})
 
 
 #############

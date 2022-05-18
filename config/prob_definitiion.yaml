@@ -28,9 +28,9 @@ timeout: 0.2
 # env_mesh: "env-scene-ltu-experiment-hole-inclined"
 # env_mesh: "env-scene-ltu-experiment-corridor-narrow-narrow"
 # env_mesh: "env-scene-ltu-experiment-tunnel2"
-# env_mesh: "env-scene-ltu-experiment-small-hole"
+env_mesh: "env-scene-ltu-experiment-small-hole"
 # env_mesh: "env-scene-ltu-experiment-hole-wide"
-env_mesh: "env-scene-ltu-experiment"
+# env_mesh: "env-scene-ltu-experiment"
 
 #Planning
 val_check_resolution: 0.08
