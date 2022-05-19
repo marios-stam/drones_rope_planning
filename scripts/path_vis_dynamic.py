@@ -243,6 +243,8 @@ def main():
     env_mesh = rospy.get_param("/planning/env_mesh")
     rb, robPub, env, envPub = load_meshes(robot_mesh, env_mesh)
 
+    # wait for the original one not the saved one
+    # or wait for signal that it has been save first
     data = load_saved_path(filename='path.txt')
 
     # generate dynamic path msg
@@ -256,11 +258,11 @@ def main():
 
     dynamic_path_pub = rospy.Publisher('dynamicRigiBodyPath', rigid_body_dynamic_path, queue_size=10)
 
-    print("Waiting for connections to the  /dynamicRigiBodyPath topic...")
-    while dynamic_path_pub.get_num_connections() == 0:
-        if rospy.is_shutdown():
-            sys.exit()
-        rospy.sleep(0.1)
+    # print("Waiting for connections to the  /dynamicRigiBodyPath topic...")
+    # while dynamic_path_pub.get_num_connections() == 0:
+    #     if rospy.is_shutdown():
+    #         sys.exit()
+    #     rospy.sleep(0.1)
 
     print("Publishing dynamic path...")
     dynamic_path_pub.publish(dynamic_path)
@@ -294,7 +296,7 @@ def main():
 
         envPub.publish(env)
         # trajPub.publish(path)
-        trajPub.publish(dynamic_path.Path)
+        # trajPub.publish(dynamic_path.Path)
 
         rate.sleep()
 

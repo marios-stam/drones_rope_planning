@@ -134,7 +134,6 @@ include_directories(
 file(GLOB ompl_example_2d_sources
     src/ompl_example_2d.cpp
     src/fcl_mesh.cpp
-    src/fcl_checker.cpp
     src/stlloader.cpp
 
     src/catenaries/catenary.cpp
@@ -150,13 +149,12 @@ file(GLOB ompl_example_2d_sources
     #fcl_checkers
     src/fcl_checker_base.cpp
     src/fcl_checker_realtime.cpp
-
+    src/fcl_checker_offline.cpp
 )
 
 file(GLOB ompl_example_2d_headers
     include/ompl_example_2d/ompl_example_2d.hpp
     include/ompl_example_2d/fcl_mesh.hpp
-    include/ompl_example_2d/fcl_checker.hpp
     
     include/ompl_example_2d/stlloader.hpp
     include/ompl_example_2d/problem_params.hpp
@@ -176,6 +174,7 @@ file(GLOB ompl_example_2d_headers
     #fcl_checkers
     include/fcl_checker_base.hpp
     include/fcl_checker_realtime.hpp
+    include/fcl_checker_offline.hpp
 
 
 ) 
@@ -232,15 +231,6 @@ add_executable(
   ${catkin_LIBRARIES}
 )
 
-# add_executable(
-#   ${PROJECT_NAME}_fcl_mesh
-#   src/fcl_mesh.cpp
-# )
-
-# add_executable(
-#   ${PROJECT_NAME}_fcl_checker
-#   src/fcl_checker.cpp
-# )
 
 add_dependencies(planning_realtime_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(planning_realtime_node

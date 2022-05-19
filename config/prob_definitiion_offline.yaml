@@ -1,0 +1,78 @@
+visualization: True #TODO:icluse this option in launch file
+rope_length: 1.5
+
+planning_type: "static" # static,moving_obstacles
+
+#real time planning settings
+real_time_settings: {
+    planning_frequency: 18, #Hz
+    setting_new_start: True, #When reach goal reset position to initial start
+    replan_only_if_not_valid: True, # only replans if the current plan is not valid
+    fix_invalid_start_dist: 0.2,
+    fix_invalid_goal_dist: 0.1,
+    distance_to_goal_resetting: 0.5, #if it is 0 it will not reset at all
+    replanning_interval: 200000.0, #msec
+
+    siplifying_path: "fast", #full,fast,none
+
+    # time_allocation: { velocity: 7.0, acceleration: 8 },
+    # time_allocation: { velocity: 5.0, acceleration: 4 }, #kinda working
+    time_allocation: { velocity: 6.0, acceleration: 8 },
+  }
+
+#======================================
+calculate_new_path: True
+timeout: 0.2
+
+env_mesh: "env-scene-ltu-experiment-corridor-narrow-easy"
+# env_mesh: "env-scene-ltu-experiment-hole-inclined"
+# env_mesh: "env-scene-ltu-experiment-corridor-narrow-narrow"
+# env_mesh: "env-scene-ltu-experiment-tunnel2"
+# env_mesh: "env-scene-ltu-experiment-small-hole"
+# env_mesh: "env-scene-ltu-experiment-hole-wide"
+# env_mesh: "env-scene-ltu-experiment"
+
+#Planning
+val_check_resolution: 0.045
+range: 1.0
+use_mesh_improvement: True
+goal_type: "simple" #simple,samplable,symmetrical,multiple_goals
+
+use_ground_collision_check: False
+
+#values:None, ob.PathLengthOptimizationObjective,balanced,obstacle_clearance
+optimal_objective: { class: "None", threshold: 3 }
+
+safety_distances: {
+    #horizontal and vertical distance offset for drones
+    drones_offsets: { horizontal: 0.05, vertical: 0.05 },
+
+    #horizontal and vertical distance offset for lowest point of catenary
+    lowest_point: 0.0,
+  }
+
+thickness: 0.2
+
+# start and goal
+start: { x: +0.0, y: 2.0, z: 0.75 }
+goal: { x: +0.5, y: 5.25, z: 0.75 }
+
+# Bounds of states
+# All ANGLES are in DEGREES
+bounds: {
+    #x, y , z, yaw , drones_distance(% of L) , drones_angle
+    low: [-1.5, 0.5, 0.3, -180.0, 0.3, -60.0],
+    high: [1.5, 6.0, 2.0, 180.0, 0.95, 60.0],
+  }
+
+#planner algorithm
+# planner_algorithm: "RRTstar"
+# planner_algorithm: "RRTConnect"
+planner_algorithm: "RRT"
+# planner_algorithm: "InformedRRTstar"
+# planner_algorithm: "PRM"
+# planner_algorithm: "LBKPIECE"
+# planner_algorithm: "KPIECE"
+
+simplify_path: True
+path_interpolation_points: 30

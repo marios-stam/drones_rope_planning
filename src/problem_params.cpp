@@ -74,7 +74,10 @@ namespace problem_params
 
         ros::param::get("/planning/thickness", pdef.thickness);
 
-        pdef.obstacles_config = realtime_obstacles::load_cylinders_definition(nh);
+        if (pdef.planning_type == PlanningType::MOVING_OBSTACLES)
+        {
+            pdef.obstacles_config = realtime_obstacles::load_cylinders_definition(nh);
+        }
 
         ros::param::get("/planning/real_time_settings/setting_new_start", pdef.realtime_settings.setting_new_start);
         ros::param::get("/planning/real_time_settings/replan_only_if_not_valid", pdef.realtime_settings.replan_only_if_not_valid);
@@ -172,13 +175,17 @@ namespace problem_params
 
         printf("\tCYLINDER OBSTACLES CONFIG\n");
 
-        for (int i = 0; i < params.obstacles_config.size(); i++)
+        if (params.planning_type == PlanningType::MOVING_OBSTACLES)
         {
-            auto c = params.obstacles_config[i];
-            printf("\t\tradius: %f height: %f pos : %f %f %f \n", c.radius, c.height, c.pos[0], c.pos[1], c.pos[2]);
-        }
-        printf("===========================================================================================\n");
+            for (int i = 0; i < params.obstacles_config.size(); i++)
+            {
+                auto c = params.obstacles_config[i];
+                printf("\t\tradius: %f height: %f pos : %f %f %f \n", c.radius, c.height, c.pos[0], c.pos[1], c.pos[2]);
+            }
+            printf("===========================================================================================\n");
 
-        printf("\n\n");
+            printf("\n\n");
+        }
     }
+
 }; // namespace problem_params

@@ -29,20 +29,23 @@ namespace ompl_rope_planning
         else if (prob_prms.planning_type == problem_params::PlanningType::STATIC)
         {
             // TODO: make fcl_checker inherit from fcl_checker_base
-            // and load environment here
+            // load environment here
 
-            // try
-            // {
-            //     std::string env_mesh = "/home/marios/thesis_ws/src/drones_rope_planning/resources/stl/" + prob_params.env_filename + ".stl";
-            //     checker.loadEnvironment(env_mesh);
-            // }
-            // catch (std::exception &e)
-            // {
-            //     // moving obstacles
-            //     std::cout << "Using environment mesh from drones_path_planning" << std::endl;
-            //     std::string env_mesh = "/home/marios/thesis_ws/src/drone_path_planning/resources/stl/" + prob_params.env_filename + ".stl";
-            //     checker.loadEnvironment(env_mesh);
-            // }
+            printf("Planning offline with static obstacles\n");
+            checker = new fcl_checking_offline::checker();
+
+            try
+            {
+                std::string env_mesh = "/home/marios/thesis_ws/src/drones_rope_planning/resources/stl/" + prob_params.env_filename + ".stl";
+                checker->as<fcl_checking_offline::checker>()->loadEnvironment(env_mesh);
+            }
+            catch (std::exception &e)
+            {
+                // moving obstacles
+                std::cout << "Using environment mesh from drones_path_planning" << std::endl;
+                std::string env_mesh = "/home/marios/thesis_ws/src/drone_path_planning/resources/stl/" + prob_params.env_filename + ".stl";
+                checker->as<fcl_checking_offline::checker>()->loadEnvironment(env_mesh);
+            }
         }
         else
         {
@@ -623,7 +626,7 @@ namespace ompl_rope_planning
                        max_times[3]);
             }
 
-            // save_path(pth);
+            save_path(pth);
 
             path_ = pth;
 

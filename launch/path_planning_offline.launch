@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<launch>
+
+    <group ns="planning" >
+		<rosparam command="load" file="$(find drones_rope_planning)/config/prob_definitiion_offline.yaml" />
+	</group>
+
+	<!-- ========================== VISUALIZATION ========================== -->
+
+    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find drones_rope_planning)/launch/test.rviz" output="log"/>
+
+    <include file="$(find drone_path_planning)/launch/dronesVisual.launch">
+	  <!-- all vars that included.launch requires must be set -->
+	  <!-- <arg name="hoge" value="fuga" /> -->
+	</include>
+
+	<node name="path_vis" pkg="drones_rope_planning" type="path_vis_dynamic.py" output="screen"/>
+
+	<!-- ============================= PLANNING ============================= -->
+    <node pkg="drones_rope_planning" name="drones_rope_planning_node" type="planning_offline_node" output="screen" />
+    
+
+
+</launch>
