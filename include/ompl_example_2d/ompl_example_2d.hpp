@@ -140,8 +140,8 @@ namespace ompl_rope_planning
 
         ompl::geometric::PathGeometric *path_ = nullptr;
 
-        // custom_mesh::CustomMesh *custom_robot_mesh;
-        custom_mesh_robust::CustomMesh *custom_robot_mesh;
+        custom_mesh::CustomMesh *custom_robot_mesh;
+        // custom_mesh_robust::CustomMesh *custom_robot_mesh;
 
         int dim;
 

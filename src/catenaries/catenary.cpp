@@ -209,7 +209,7 @@ namespace catenaries
         output: std::vector<math_utils::Line2D> The 2 lines that bound the catenary curve (left and right)
         */
 
-        float dx = 0.08;
+        float dx = 0.1;
         Eigen::Matrix2Xf xy = getCurvePoints(prob_constants, dx);
 
         Eigen::Vector2f vert_point(lowest(0), lowest(1));

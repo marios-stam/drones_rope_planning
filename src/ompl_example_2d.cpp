@@ -1,5 +1,8 @@
 #include "../include/ompl_example_2d/ompl_example_2d.hpp"
 
+//  █▀▄▀█ ▄▀█ █▀█ █ █▀█ █▀   █▀ ▀█▀ ▄▀█ █▀▄▀█ ▄▀█ ▀█▀ █▀█ █▀█ █▀█ █░█ █░░ █▀█ █
+//  █░▀░█ █▀█ █▀▄ █ █▄█ ▄█   ▄█ ░█░ █▀█ █░▀░█ █▀█ ░█░ █▄█ █▀▀ █▄█ █▄█ █▄▄ █▄█ ▄█
+
 using namespace std;
 using namespace ros;
 
@@ -54,8 +57,8 @@ namespace ompl_rope_planning
 
         L = prob_params.L;
 
-        // custom_robot_mesh = new custom_mesh::CustomMesh(L, prob_params.safety_offsets, prob_params.thickness);
-        custom_robot_mesh = new custom_mesh_robust::CustomMesh(L, prob_params.safety_offsets, prob_params.thickness);
+        custom_robot_mesh = new custom_mesh::CustomMesh(L, prob_params.safety_offsets, prob_params.thickness);
+        // custom_robot_mesh = new custom_mesh_robust::CustomMesh(L, prob_params.safety_offsets, prob_params.thickness);
 
         checker->update_robot(custom_robot_mesh->get_fcl_mesh());
 
@@ -562,6 +565,7 @@ namespace ompl_rope_planning
 
         printf("Solving...\n");
         ob::PlannerStatus solved;
+
         do
         {
             // If planner is not reset,it is allowed  to continue work for more time on an unsolved problem
@@ -576,6 +580,7 @@ namespace ompl_rope_planning
         } while (solved != ob::PlannerStatus::EXACT_SOLUTION);
 
         auto dt1 = ros::Time::now() - t1;
+
         dts_to_msec[1] = dt1.toSec() * 1000;
 
         sum_times[1] += dts_to_msec[1];
@@ -614,7 +619,7 @@ namespace ompl_rope_planning
             sum_times[0] += dts_to_msec[0];
             max_times[0] = std::max(max_times[0], dts_to_msec[0]);
 
-            bool print_times = false;
+            bool print_times = true;
             if (print_times)
             {
                 printf("\t-plan->solve()  time->	 Current: %4f \tAverage : %4f msec \t max:%4f\n ", dts_to_msec[0], sum_times[0] / times_called,
