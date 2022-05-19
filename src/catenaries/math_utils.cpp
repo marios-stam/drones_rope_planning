@@ -185,4 +185,91 @@ namespace math_utils
 
         return transformed_point_3d;
     }
+
+    // Line2D
+    Line2D::Line2D(Eigen::Vector2f p1, Eigen::Vector2f p2)
+    {
+        /*
+        Initializes the line.
+
+        Parameters
+        ----------
+        p1 : array,Vector2
+            First point of the line.
+        p2 : array,Vector2
+            Second point of the line.
+        */
+
+        this->p1 = p1;
+        this->p2 = p2;
+
+        // calculate line parameters
+        auto dy = p2(1) - p1(1);
+        auto dx = p2(0) - p1(0);
+
+        a = dy / dx;
+        b = p1(1) - a * p1(0);
+    }
+
+    Line2D::~Line2D() {}
+
+    bool Line2D::isPointLeft(Eigen::Vector2f p)
+    {
+        /*
+        Checks if a point is left of the line.
+
+        Parameters
+        ----------
+        p : array,Vector2
+            Point to be checked.
+        Returns
+        -------
+        output : bool
+            True if the point is left of the line.
+        */
+
+        return ((p2[0] - p1[0]) * (p[1] - p1[1]) - (p2[1] - p1[1]) * (p[0] - p1[0])) >= 0;
+    }
+
+    Eigen::Vector2f Line2D::intersection(Line2D line)
+    {
+        /*
+        Calculates the intersection point of the line and the parameter line.
+
+        Returns
+        -------
+        output : array,Vector2
+            Intersection point.
+        */
+
+        // calculate intersection point
+        auto a1 = this->a;
+        auto b1 = this->b;
+        auto a2 = line.a;
+        auto b2 = line.b;
+
+        auto x = (b2 - b1) / (a1 - a2);
+        auto y = a1 * x + b1;
+
+        return Eigen::Vector2f(x, y);
+    }
+
+    Eigen::Vector2f Line2D::evaluate(double x_coord)
+    {
+        /*
+        Evaluates the y coordinate of line at the given x coordinate.
+
+        Parameters
+        ----------
+        x_coord : float
+            x coordinate.
+        Returns
+        -------
+        output : array,Vector2
+            Point on the line.
+        */
+
+        return Eigen::Vector2f(x_coord, a * x_coord + b);
+    }
+
 } // namespace math_utils

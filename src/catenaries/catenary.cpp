@@ -1,6 +1,5 @@
 
 #include "../../include/catenaries/catenary.hpp"
-#include "../../include/catenaries/math_utils.hpp"
 
 #define e 2.7182818284590452353602874713527
 namespace catenaries
@@ -192,4 +191,122 @@ namespace catenaries
         // std::cout << "end: " << end(0) << " " << end(1) << " " << end(2) << std::endl;
         return getCatenaryCurve3D_optimized_lowest_cat_point(start, end, L);
     }
+
+    std::vector<math_utils::Line2D> findBoundingLines(problem_constants prob_constants, Eigen::Vector3f lowest, float safety_hor_distance)
+    {
+        /*
+        Finds the bounding lines of the catenary curve
+
+        Parameters
+        ----------
+        prob_constants: constants of the catenary curve
+        lowest: lowest point of the catenary curve
+
+        safety_hor_distance: horizontal distance from the lowest point to the end of the catenary curve
+
+        Returns
+        -------
+        output: std::vector<math_utils::Line2D> The 2 lines that bound the catenary curve (left and right)
+        */
+
+        float dx = 0.08;
+        Eigen::Matrix2Xf xy = getCurvePoints(prob_constants, dx);
+
+        Eigen::Vector2f vert_point(lowest(0), lowest(2));
+
+        Eigen::Vector2f safety_start(xy.col(0)[0] - safety_hor_distance, xy.col(0)[1]);
+        Eigen::Vector2f safety_end(xy.col(xy.cols() - 1)[0] + safety_hor_distance, xy.col(xy.cols() - 1)[1]);
+
+        // Right line
+        math_utils::Line2D *right_line;
+        do
+        {
+            vert_point[1] -= 0.1;
+            right_line = new math_utils::Line2D(vert_point, safety_end);
+
+        } while (all_points_left_of_line(xy, *right_line) == false);
+
+        // Left line
+        math_utils::Line2D *left_line;
+        do
+        {
+            vert_point[1] -= 0.1;
+            left_line = new math_utils::Line2D(vert_point, safety_start);
+
+        } while (all_points_right_of_line(xy, *left_line) == false);
+
+        // Output
+        std::vector<math_utils::Line2D> output;
+        output.push_back(*left_line);
+        output.push_back(*right_line);
+
+        return output;
+    }
+
+    bool all_points_left_of_line(Eigen::Matrix2f points, math_utils::Line2D line)
+    {
+        for (int i = 0; i < points.cols(); i++)
+        {
+            if (!line.isPointLeft(points.col(i)))
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    bool all_points_right_of_line(Eigen::Matrix2f points, math_utils::Line2D line)
+    {
+        for (int i = 0; i < points.cols(); i++)
+        {
+            if (line.isPointLeft(points.col(i)))
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    Eigen::Matrix2Xf getCurvePoints(problem_constants constants, float dx)
+    {
+        /*
+        Finds the points of the catenary curve given a dx
+        Parameters
+        ----------
+        constants: constants of the catenary curve
+        dx: step size
+
+        Returns
+        -------
+        output: Eigen::Matrix2Xf The points of the catenary curve
+        */
+
+        float x1 = constants.x1;
+        float x2 = constants.x2;
+        float a = constants.a;
+        float b = constants.b;
+        float c = constants.c;
+        float inverse = constants.inverse;
+
+        float x = x1;
+
+        const int length = (x2 - x1) / dx + 1;
+
+        Eigen::Matrix2Xf xy;
+        xy.resize(2, length);
+
+        for (int i = 0; x < x2 - dx; i++)
+        {
+            xy(0, i) = x;
+            xy(1, i) = a * cosh((x - b) / a) + c;
+
+            x += dx;
+        }
+
+        xy(0, length - 1) = x2;
+        xy(1, length - 1) = a * cosh((x2 - b) / a) + c;
+
+        return xy;
+    }
+
 } // namespace catenaries

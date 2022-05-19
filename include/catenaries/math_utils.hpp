@@ -38,4 +38,24 @@ namespace math_utils
     };
 
     Eigen::Matrix4f getTransformationMatrix(Eigen::Vector3f rotation, Eigen::Vector3f translation);
+
+    class Line2D
+    {
+        // Line of type y = a*x + b
+    public:
+        Line2D(Eigen::Vector2f p1, Eigen::Vector2f p2);
+
+        virtual ~Line2D();
+
+        bool isPointLeft(Eigen::Vector2f p);
+
+        Eigen::Vector2f intersection(Line2D line);
+
+        Eigen::Vector2f evaluate(double x_coord);
+
+    private:
+        Eigen::Vector2f p1, p2;
+        float a, b;
+    };
+
 } // namespace math_utils
