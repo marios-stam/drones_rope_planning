@@ -55,10 +55,12 @@
 
 // Custom classes
 #include "../custom_mesh.hpp"
+#include "../custom_mesh_robust.hpp"
+
 #include "custom_goals.hpp"
 #include "custom_objectives.hpp"
-#include "fcl_checker_realtime.hpp"
 #include "fcl_checker_offline.hpp"
+#include "fcl_checker_realtime.hpp"
 
 #include "optim_objectives.hpp"
 #include "problem_params.hpp"
@@ -138,7 +140,8 @@ namespace ompl_rope_planning
 
         ompl::geometric::PathGeometric *path_ = nullptr;
 
-        custom_mesh::CustomMesh *custom_robot_mesh;
+        // custom_mesh::CustomMesh *custom_robot_mesh;
+        custom_mesh_robust::CustomMesh *custom_robot_mesh;
 
         int dim;
 

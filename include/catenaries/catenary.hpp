@@ -31,12 +31,11 @@ namespace catenaries
 
     Eigen::Vector3f lowest_point_optimized(Eigen::Vector3f start, Eigen::Vector3f end, float L);
 
-    std::vector<math_utils::Line2D> findBoundingLines(problem_constants prob_constants, Eigen::Vector3f lowest, float safety_hor_distance);
+    std::vector<math_utils::Line2D> findBoundingLines(problem_constants prob_constants, Eigen::Vector2f lowest, float safety_hor_distance);
 
     Eigen::Matrix2Xf getCurvePoints(problem_constants constants, float dx);
 
-    bool all_points_left_of_line(Eigen::Matrix2f points, math_utils::Line2D line);
-
-    bool all_points_right_of_line(Eigen::Matrix2f points, math_utils::Line2D line);
+    bool all_points_left_of_line(Eigen::Matrix2Xf points, math_utils::Line2D line);
+    bool all_points_right_of_line(Eigen::Matrix2Xf points, math_utils::Line2D line);
 
 }

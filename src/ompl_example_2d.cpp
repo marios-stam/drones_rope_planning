@@ -54,7 +54,9 @@ namespace ompl_rope_planning
 
         L = prob_params.L;
 
-        custom_robot_mesh = new custom_mesh::CustomMesh(L, prob_params.safety_offsets, prob_params.thickness);
+        // custom_robot_mesh = new custom_mesh::CustomMesh(L, prob_params.safety_offsets, prob_params.thickness);
+        custom_robot_mesh = new custom_mesh_robust::CustomMesh(L, prob_params.safety_offsets, prob_params.thickness);
+
         checker->update_robot(custom_robot_mesh->get_fcl_mesh());
 
         dim = 6;
@@ -81,8 +83,8 @@ namespace ompl_rope_planning
         // ob::OptimizationObjectivePtr obj(new custom_objectives::RopeRelaxedObjective(si, prob_params.L));
         // pdef->setOptimizationObjective(obj);
 
-        printf("Setting optimization objective...\n");
-        pdef->setOptimizationObjective(getBalancedObjective(si, checker, custom_robot_mesh));
+        // printf("Setting optimization objective...\n");
+        // pdef->setOptimizationObjective(getBalancedObjective(si, checker, custom_robot_mesh));
 
         // set own heuristic
         // auto obj = custom_objectives::custom_heuristic(si);
@@ -558,6 +560,7 @@ namespace ompl_rope_planning
         // attempt to solve the problem within one second of planning time
         auto t1 = ros::Time::now();
 
+        printf("Solving...\n");
         ob::PlannerStatus solved;
         do
         {
@@ -659,7 +662,7 @@ namespace ompl_rope_planning
 
         auto t0 = ros::Time::now();
 
-        // update dynamic robot meshh
+        // update dynamic robot mesh
         custom_robot_mesh->update_mesh(drones_dis, drones_angle);
 
         checker->update_robot(custom_robot_mesh->get_fcl_mesh());

@@ -192,7 +192,7 @@ namespace catenaries
         return getCatenaryCurve3D_optimized_lowest_cat_point(start, end, L);
     }
 
-    std::vector<math_utils::Line2D> findBoundingLines(problem_constants prob_constants, Eigen::Vector3f lowest, float safety_hor_distance)
+    std::vector<math_utils::Line2D> findBoundingLines(problem_constants prob_constants, Eigen::Vector2f lowest, float safety_hor_distance)
     {
         /*
         Finds the bounding lines of the catenary curve
@@ -212,7 +212,7 @@ namespace catenaries
         float dx = 0.08;
         Eigen::Matrix2Xf xy = getCurvePoints(prob_constants, dx);
 
-        Eigen::Vector2f vert_point(lowest(0), lowest(2));
+        Eigen::Vector2f vert_point(lowest(0), lowest(1));
 
         Eigen::Vector2f safety_start(xy.col(0)[0] - safety_hor_distance, xy.col(0)[1]);
         Eigen::Vector2f safety_end(xy.col(xy.cols() - 1)[0] + safety_hor_distance, xy.col(xy.cols() - 1)[1]);
@@ -243,7 +243,7 @@ namespace catenaries
         return output;
     }
 
-    bool all_points_left_of_line(Eigen::Matrix2f points, math_utils::Line2D line)
+    bool all_points_left_of_line(Eigen::Matrix2Xf points, math_utils::Line2D line)
     {
         for (int i = 0; i < points.cols(); i++)
         {
@@ -255,7 +255,7 @@ namespace catenaries
         return true;
     }
 
-    bool all_points_right_of_line(Eigen::Matrix2f points, math_utils::Line2D line)
+    bool all_points_right_of_line(Eigen::Matrix2Xf points, math_utils::Line2D line)
     {
         for (int i = 0; i < points.cols(); i++)
         {
