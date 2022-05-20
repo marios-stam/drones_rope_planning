@@ -22,7 +22,7 @@ real_time_settings: {
 
 #======================================
 calculate_new_path: True
-timeout: 0.2
+timeout: 2
 
 # env_mesh: "env-scene-ltu-experiment-corridor-narrow-easy"
 # env_mesh: "env-scene-ltu-experiment-hole-inclined"

@@ -22,6 +22,7 @@
 #include <geometry_msgs/PoseStamped.h>
 #include <nav_msgs/OccupancyGrid.h>
 #include <nav_msgs/Path.h>
+#include <std_msgs/String.h>
 
 // custom services
 #include <drones_rope_planning/CylinderObstacleData.h>
@@ -42,6 +43,8 @@ int main(int argc, char **argv)
     nav_msgs::Path drone_path1, drone_path2;
     ros::Publisher drone_path1_pub = nodeHandle.advertise<nav_msgs::Path>("/drone1Path", 1);
     ros::Publisher drone_path2_pub = nodeHandle.advertise<nav_msgs::Path>("/drone2Path", 1);
+
+    ros::Publisher finished_planning_pub = nodeHandle.advertise<std_msgs::String>("/finished_planning", 1);
 
     // sleep
     ros::Duration(2.0).sleep();
@@ -66,6 +69,10 @@ int main(int argc, char **argv)
     printf("Publishing paths!\n");
     drone_path1_pub.publish(drone_path1);
     drone_path2_pub.publish(drone_path2);
+
+    std_msgs::String msg;
+    msg.data = "finished";
+    finished_planning_pub.publish(msg);
 
     printf("Done!\n");
     // exit ros node

@@ -582,6 +582,7 @@ namespace ompl_rope_planning
         auto dt1 = ros::Time::now() - t1;
 
         dts_to_msec[1] = dt1.toSec() * 1000;
+        printf("Solved in %f ms\n", dts_to_msec[1]);
 
         sum_times[1] += dts_to_msec[1];
         max_times[1] = std::max(max_times[1], dts_to_msec[1]);
@@ -619,7 +620,7 @@ namespace ompl_rope_planning
             sum_times[0] += dts_to_msec[0];
             max_times[0] = std::max(max_times[0], dts_to_msec[0]);
 
-            bool print_times = true;
+            bool print_times = false;
             if (print_times)
             {
                 printf("\t-plan->solve()  time->	 Current: %4f \tAverage : %4f msec \t max:%4f\n ", dts_to_msec[0], sum_times[0] / times_called,
@@ -701,7 +702,7 @@ namespace ompl_rope_planning
         total_time += dt.toSec() * 1000; // sum msecs
         counter++;
 
-        if ((counter % 200) == 0)
+        if ((counter % 2000) == 0)
         {
             // std::cout << "\r"; // print at the same line (update effect)
 

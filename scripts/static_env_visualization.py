@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 # print working directory
-from importlib.resources import path
 import sys
-from typing import Tuple
 from drone_path_planning.msg import rigid_body_dynamic_path
 from geometry_msgs.msg import TransformStamped, Quaternion
 import math
@@ -213,11 +211,7 @@ def load_parameters(use_parameters_from_ros):
         safety_distances, start, goal, bounds, planner_algorithm, timeout
 
 
-def load_meshes(robot_mesh, env_mesh):
-    # robot marker initialization
-    mesh = "package://drones_rope_planning/resources/collada/{}.dae".format(robot_mesh)
-    rb = MeshMarker(id=0, mesh_path=mesh)
-    robPub = rospy.Publisher('rb_robot',  Marker, queue_size=10)
+def load_env_mesh(env_mesh):
 
     # Environment marker initialization
     mesh = "package://drones_rope_planning/resources/collada/{}.dae".format(env_mesh)
@@ -226,140 +220,23 @@ def load_meshes(robot_mesh, env_mesh):
     env.updatePose([0, 0, 0], [0, 0, 0, 1])
     envPub = rospy.Publisher('rb_environment',  Marker, queue_size=10)
 
-    robot_mesh += ".stl"
     env_mesh += ".stl"
 
-    print("robot_mesh_name:", robot_mesh)
     print("env_mesh_name:", env_mesh)
 
-    return rb, robPub, env, envPub
-
-
-planning_finished = False
-
-
-def finished_planning_callback(msg):
-    print("finished_planning_callback")
-    global planning_finished
-    planning_finished = True
-
-
-def dynamic_transform(path, inverse=False) -> Tuple[Path, Path, Path]:
-    buffer_core = tf2_ros.BufferCore(rospy.Duration(10.0))
-
-    # Create Paths
-    path1 = Path()
-    path1.header.frame_id = "world"
-    path1.header.stamp = rospy.get_rostime()
-
-    path2 = Path()
-    path2.header.frame_id = "world"
-    path2.header.stamp = rospy.get_rostime()
-
-    # Create temp poses
-    drone_pose = PoseStamped()
-    drone_pose.header.frame_id = 'rb_path'
-    drone_pose.pose.position = Point(1, 0, 1)
-    drone_pose.pose.orientation = Quaternion(0, 0, 0, 1)
-
-    drone_pose2 = PoseStamped()
-    drone_pose2.header.frame_id = 'rb_path'
-    drone_pose2.pose.position = Point(-1, 0, 1)
-    drone_pose2.pose.orientation = Quaternion(0, 0, 0, 1)
-
-    for i, rb_pose in enumerate(path.Path.poses):
-        # ts2 is the transform from world to rb_path
-        ts2 = TransformStamped()
-        ts2.header.stamp = rospy.Time(0)
-        ts2.header.frame_id = 'world'
-        ts2.child_frame_id = 'rb_path'
-        ts2.transform.translation = rb_pose.pose.position
-        ts2.transform.rotation = rb_pose.pose.orientation
-
-        # buffer_core.set_transform(ts2, "default_authority")
-
-        # Get drones positions from the distance and angle
-        # print("Getting drones formation distance: %.2f angle %.2f deg ..." %
-        #       (path.drones_distances[i], np.rad2deg(path.drones_angles[i])))
-
-        p0, p1 = Custom_robot_mesh.drones_formation_2_triangle_points(
-            None, path.drones_distances[i], path.drones_angles[i])
-
-        # print("p0:", p0)
-        # print("p1:", p1)
-
-        drone_pose.pose.position = Point(p0[0], 0, p0[1])
-        drone_pose2.pose.position = Point(p1[0], 0, p1[1])
-
-        # Calculate the transform of each drone from the rb_path frame to the world frame
-        pose_transformed = tf2_geometry_msgs.do_transform_pose(drone_pose, ts2)
-        path1.poses.append(pose_transformed)
-
-        pose_transformed2 = tf2_geometry_msgs.do_transform_pose(drone_pose2, ts2)
-        path2.poses.append(pose_transformed2)
-
-    return path1, path2, path.Path
+    return env, envPub
 
 
 def main():
     # 0: use parameters from file, 1: use parameters from ros
 
-    # ==================================== Subscribers ===================================
-    finished_planning_sub = rospy.Subscriber("/finished_planning", String, finished_planning_callback)
+    # load ros parameter
+    env_mesh = rospy.get_param("/planning/env_mesh")
+    env, envPub = load_env_mesh(env_mesh)
 
-    # ==================================== Publishers ====================================
-    rb_path_pub = rospy.Publisher('rigiBodyPath',  Path, queue_size=10)
-
-    # TODO: wait for the original one not the saved one
-    # or wait for signal that it has been save first
-    print("Waiting for planning to be finished ...")
-    while not planning_finished:
-        rospy.sleep(0.1)
-
-    print("PLANNING FINISHED !!!")
-    data = load_saved_path(filename='path.txt')
-
-    # generate dynamic path msg
-    # path = getPath(data)
-    dynamic_path = generate_dynamic_path_msg(data)
-    print("Loaded and generated dynamic path")
-
-    path1, path2, rb_path = dynamic_transform(dynamic_path)
-
-    # transform
-    br = tf.TransformBroadcaster()
-
-    i = 0
-    rate = rospy.Rate(10.0)  # hz
+    rate = rospy.Rate(2.0)  # hz
     while not rospy.is_shutdown():
-        if i == len(rb_path.poses)-1:
-            i = 0
-        else:
-            i += 1
-
-         # Rigid Body Path
-        rb_path_pub.publish(rb_path)
-
-        # Rigid Body Transform
-        pos = (rb_path.poses[i].pose.position.x, rb_path.poses[i].pose.position.y, rb_path.poses[i].pose.position.z)
-        rot = (rb_path.poses[i].pose.orientation.x, rb_path.poses[i].pose.orientation.y,
-               rb_path.poses[i].pose.orientation.z, rb_path.poses[i].pose.orientation.w)
-
-        br.sendTransform(pos, rot, rospy.Time.now(), "rigid_body", "world")
-
-        # Drones
-        pos = (path1.poses[i].pose.position.x, path1.poses[i].pose.position.y, path1.poses[i].pose.position.z)
-        rot = (path1.poses[i].pose.orientation.x, path1.poses[i].pose.orientation.y,
-               path1.poses[i].pose.orientation.z, path1.poses[i].pose.orientation.w)
-
-        br.sendTransform(pos, rot, rospy.Time.now(), "drone1", "world")
-
-        pos = (path2.poses[i].pose.position.x, path2.poses[i].pose.position.y, path2.poses[i].pose.position.z)
-        rot = (path2.poses[i].pose.orientation.x, path2.poses[i].pose.orientation.y,
-               path2.poses[i].pose.orientation.z, path2.poses[i].pose.orientation.w)
-
-        br.sendTransform(pos, rot, rospy.Time.now(), "drone2", "world")
-
+        envPub.publish(env)
         rate.sleep()
 
 

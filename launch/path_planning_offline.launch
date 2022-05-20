@@ -7,14 +7,15 @@
 
 	<!-- ========================== VISUALIZATION ========================== -->
 
-    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find drones_rope_planning)/launch/test.rviz" output="log"/>
+    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find drones_rope_planning)/launch/test.rviz" />
 
-    <include file="$(find drone_path_planning)/launch/dronesVisual.launch">
+    <!-- <include file="$(find drone_path_planning)/launch/dronesVisual.launch"> -->
 	  <!-- all vars that included.launch requires must be set -->
 	  <!-- <arg name="hoge" value="fuga" /> -->
-	</include>
+	<!-- </include> -->
 
-	<node name="path_vis" pkg="drones_rope_planning" type="path_vis_dynamic.py" output="screen"/>
+	<node name="paths_vis" pkg="drones_rope_planning" type="path_vis_dynamic.py" output="screen"/>
+	<node name="env_vis" pkg="drones_rope_planning" type="static_env_visualization.py" />
 
 	<!-- ============================= PLANNING ============================= -->
     <node pkg="drones_rope_planning" name="drones_rope_planning_node" type="planning_offline_node" output="screen" />
