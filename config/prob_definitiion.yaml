@@ -45,7 +45,7 @@ optimal_objective: { class: "None", threshold: 3 }
 
 safety_distances: {
     #horizontal and vertical distance offset for drones
-    drones_offsets: { horizontal: 0.22, vertical: 0.05 },
+    drones_offsets: { horizontal: 0.15, vertical: 0.1 },
 
     #horizontal and vertical distance offset for lowest point of catenary
     lowest_point: 0.0,
@@ -61,8 +61,8 @@ goal: { x: +0.0, y: 6, z: 0.75 }
 # All ANGLES are in DEGREES
 bounds: {
     #x, y , z, yaw , drones_distance(% of L) , drones_angle
-    low: [-1.5, 0.5, 0.3, -180.0, 0.5, -45.0],
-    high: [1.5, 6.5, 2.0, 180.0, 0.7, 45.0],
+    low: [-1.5, 0.5, 0.3, -180.0, 0.6, -50.0],
+    high: [1.5, 6.5, 2.0, 180.0, 0.85, 50.0],
   }
 
 #planner algorithm

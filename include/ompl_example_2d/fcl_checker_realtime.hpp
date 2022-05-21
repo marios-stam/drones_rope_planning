@@ -53,6 +53,8 @@ namespace fcl_checking_realtime
 
         Eigen::Vector3f get_position(int id);
 
+        Eigen::Vector4f get_rotation(int id);
+
     private:
         realtime_obstacles::Cylinders *env;
     };

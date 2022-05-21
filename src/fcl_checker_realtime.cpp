@@ -69,7 +69,7 @@ namespace fcl_checking_realtime
     int checker::get_id_of_obstacle_nearest(Eigen::Vector3f pos)
     {
         Eigen::MatrixX3f tfs = env->get_cylinders_transforms();
-        unsigned int nearest_id = 0;
+        unsigned int nearest_id = -1; // set to -1 to indicate no obstacle found
 
         float min_dist = std::numeric_limits<float>::max();
 
@@ -86,12 +86,23 @@ namespace fcl_checking_realtime
             }
         }
 
+        if (nearest_id == -1)
+        {
+            printf("No obstacle found\n");
+        }
+        else
+        {
+            printf("Nearest obstacle id: %d\n", nearest_id);
+        }
+
         return nearest_id;
     }
 
     Eigen::Vector3f checker::get_velocity(int id) { return env->get_cylinder_velocity(id); }
 
     Eigen::Vector3f checker::get_position(int id) { return env->get_cylinder_position(id); }
+
+    Eigen::Vector4f checker::get_rotation(int id) { return env->get_cylinder_rotation(id); }
 
     void checker::update_obstacles_config(drones_rope_planning::PlanningRequest::Request req)
     {

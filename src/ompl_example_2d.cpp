@@ -57,8 +57,8 @@ namespace ompl_rope_planning
 
         L = prob_params.L;
 
-        custom_robot_mesh = new custom_mesh::CustomMesh(L, prob_params.safety_offsets, prob_params.thickness);
-        // custom_robot_mesh = new custom_mesh_robust::CustomMesh(L, prob_params.safety_offsets, prob_params.thickness);
+        // custom_robot_mesh = new custom_mesh::CustomMesh(L, prob_params.safety_offsets, prob_params.thickness);
+        custom_robot_mesh = new custom_mesh_robust::CustomMesh(L, prob_params.safety_offsets, prob_params.thickness);
 
         checker->update_robot(custom_robot_mesh->get_fcl_mesh());
 
@@ -530,6 +530,7 @@ namespace ompl_rope_planning
         // check if start is valid
         if (!si->isValid(pdef->getStartState(0)))
         {
+            int x;
             throw std::runtime_error("Start state is invalid");
         }
 
@@ -563,6 +564,16 @@ namespace ompl_rope_planning
         // attempt to solve the problem within one second of planning time
         auto t1 = ros::Time::now();
 
+        printf("Checking if start is valid before planning...\n");
+        // check if start is valid
+        for (int i = 0; i < pdef->getStartStateCount(); i++)
+        {
+            if (!si->isValid(pdef->getStartState(i)))
+            {
+                throw std::runtime_error("Start state with index: " + std::to_string(i) + " is invalid");
+            }
+        }
+
         printf("Solving...\n");
         ob::PlannerStatus solved;
 
@@ -574,9 +585,20 @@ namespace ompl_rope_planning
 
             // create termination condition
             ob::PlannerTerminationCondition ptc(ob::timedPlannerTerminationCondition(prob_params.timeout));
-
             // printf("Solving!\n");
             solved = planner_->solve(ptc);
+
+            int x;
+            if (solved == ob::PlannerStatus::INVALID_START)
+            {
+                scanf("%d", &x);
+                throw std::runtime_error("Start state is invalid");
+            }
+            else if (solved == ob::PlannerStatus::INVALID_GOAL)
+            {
+                scanf("%d", &x);
+                throw std::runtime_error("Goal state is invalid");
+            }
         } while (solved != ob::PlannerStatus::EXACT_SOLUTION);
 
         auto dt1 = ros::Time::now() - t1;

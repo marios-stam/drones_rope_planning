@@ -21,7 +21,15 @@ from nav_msgs.msg import Path, Odometry
 def service_client():
     rospy.wait_for_service(planning_service_name)
     try:
-        print("Calling service...")
+        # print("Calling service...")
+        # print("start:", start)
+        # print("goal:", goal)
+        # print("obstacles:", conf)
+
+        if start == goal:
+            # print("start and goal are the same")
+            # return
+            pass
         ompl_realtime_srv = rospy.ServiceProxy(planning_service_name, PlanningRequest)
         resp1 = ompl_realtime_srv(conf, start, goal)
 
@@ -83,8 +91,13 @@ def callback_demo(odom: Odometry, i: int):
 
     # set position and orientation to config
     conf[i].pos = [odom.pose.pose.position.x,    odom.pose.pose.position.y, odom.pose.pose.position.z]
-    # conf[i].quat = [odom.pose.pose.orientation.x, odom.pose.pose.orientation.y, odom.pose.pose.orientation.z, odom.pose.pose.orientation.w]
-    conf[i].quat = [0, 0, 0, 1]
+
+    if (odom.child_frame_id == "stik/stik"):
+        q = [0, 0, 0, 1]
+    else:
+        q = [odom.pose.pose.orientation.x, odom.pose.pose.orientation.y, odom.pose.pose.orientation.z, odom.pose.pose.orientation.w]
+
+    conf[i].quat = q
 
     # velocities and angular velocities
     conf[i].vel = [odom.twist.twist.linear.x, odom.twist.twist.linear.y, odom.twist.twist.linear.z]
@@ -111,7 +124,7 @@ def callback_sim(odom: Odometry, i: int):
     conf[i].vel = velocities[i]
     # conf[i].angVel=[0,0,0] TODO: not implemented yet
 
-    print(("Received odom for cyl: {} with pos: {}".format(i, conf[i].pos)))
+    # print(("Received odom for cyl: {} with pos: {}".format(i, conf[i].pos)))
     times[i][0] = curr_t
 
 
@@ -135,6 +148,7 @@ if __name__ == "__main__":
     if (using_simulation):
         # The configuration is in simulation mode
         callback = callback_sim
+        # callback = callback_demo
     else:
         # The configuration is in demo mode
         callback = callback_demo
@@ -165,13 +179,13 @@ if __name__ == "__main__":
     rate = rospy.Rate(planning_freq)
     while not rospy.is_shutdown():
         t0 = rospy.get_time()
-        print("======================================================")
+        # print("======================================================")
         # rospy.loginfo("Calling planning")
-        print("Calling planning")
+        # print("Calling planning")
         service_client()
         dt = rospy.get_time()-t0
         total_time += dt
         times_service_called += 1
-        print("Average time of calling service: ", total_time/times_service_called, "sec")
+        # print("Average time of calling service: ", total_time/times_service_called, "sec")
 
         rate.sleep()

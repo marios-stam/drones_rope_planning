@@ -107,8 +107,11 @@ def generate_obstacles_markers(obstacles_config):
 def callback(odom: Odometry, id: int):
 
     pos = [odom.pose.pose.position.x, odom.pose.pose.position.y, odom.pose.pose.position.z]
-    # q = [odom.pose.pose.orientation.x, odom.pose.pose.orientation.y, odom.pose.pose.orientation.z, odom.pose.pose.orientation.w]
-    q = [0, 0, 0, 1]
+
+    if (odom.child_frame_id == "stik/stik"):
+        q = [0, 0, 0, 1]
+    else:
+        q = [odom.pose.pose.orientation.x, odom.pose.pose.orientation.y, odom.pose.pose.orientation.z, odom.pose.pose.orientation.w]
 
     print("Received id {} with pos:{}".format(id, pos))
     cyls_marker_array.update(id, 0.1, 0.1, pos, q)
@@ -135,8 +138,8 @@ if __name__ == "__main__":
     rate = rospy.Rate(f)
     while not rospy.is_shutdown():
         env_markers_pub.publish(cyls_marker_array)
-        print("Published markers array")
-        print(cyls_marker_array)
+        # print("Published markers array")
+        # print(cyls_marker_array)
         rate.sleep()
 
     rospy.spin()

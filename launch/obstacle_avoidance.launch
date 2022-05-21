@@ -56,7 +56,7 @@
 		<node name="cf_controller" pkg="drones_control" type="hummingbird3_class.py"    args="$(arg cf_leader_name) 
 			$(arg cf_1_x) $(arg cf_1_y) $(arg cf_1_z)" />
 	
-		<node name="leader_interface" pkg="execution" type="leader_traj_executor_position_controller_realtime.py"   args="$(arg cf_leader_name)"   />
+		<node name="leader_interface" pkg="execution" type="leader_traj_executor_position_controller_realtime.py"   args="$(arg cf_leader_name)"/>
 
 	</group>
 

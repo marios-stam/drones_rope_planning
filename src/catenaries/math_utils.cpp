@@ -272,4 +272,60 @@ namespace math_utils
         return Eigen::Vector2f(x_coord, a * x_coord + b);
     }
 
+    Plane3D::Plane3D(Eigen::Vector3f point, Eigen::Vector3f normal)
+    {
+        /*
+        Initializes the plane.
+
+        Parameters
+        ----------
+        point : array,Vector3
+            Point on the plane.
+        normal : array,Vector3
+            Normal vector of the plane.
+        */
+
+        this->point = point;
+        this->normal = normal;
+
+        // calculate plane parameters
+        a = normal(0);
+        b = normal(1);
+        c = normal(2);
+        d = -(a * point(0) + b * point(1) + c * point(2));
+    }
+
+    Plane3D::~Plane3D(){};
+
+    int Plane3D::getSideOfPoint(Eigen::Vector3f point)
+    {
+        /*
+        Calculates the side of the plane for the given point.
+
+        Parameters
+        ----------
+        point : array,Vector3
+            Point on the plane.
+        Returns
+        -------
+        output : int
+            1 if the point is on the positive side of the plane, -1 if the point is on the negative side of the plane, 0 if the point is on the plane.
+        */
+
+        float result = a * point(0) + b * point(1) + c * point(2) + d;
+
+        if (result > 0)
+        {
+            return 1;
+        }
+        else if (result < 0)
+        {
+            return -1;
+        }
+        else
+        {
+            return 0;
+        }
+    }
+
 } // namespace math_utils

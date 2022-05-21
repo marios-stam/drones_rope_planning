@@ -208,4 +208,12 @@ namespace realtime_obstacles
 
     Eigen::Vector3f Cylinders::get_cylinder_position(int id) { return collision_objects[id]->getTranslation(); }
 
+    Eigen::Vector4f Cylinders::get_cylinder_rotation(int id)
+    {
+        auto q = collision_objects[id]->getQuatRotation();
+        Eigen::Vector4f q_vec;
+        q_vec << q.x(), q.y(), q.z(), q.w();
+        return q_vec;
+    }
+
 } // namespace realtime_obstacles

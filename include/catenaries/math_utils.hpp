@@ -58,4 +58,26 @@ namespace math_utils
         float a, b;
     };
 
+    class Plane3D
+    {
+        // Plane of type ax + by + cz + d = 0
+    public:
+        /*
+         * @param normal_vector: normal vector of the plane
+         * @param point: point on the plane
+         */
+
+        Plane3D(Eigen::Vector3f point, Eigen::Vector3f normal);
+
+        virtual ~Plane3D();
+
+        int getSideOfPoint(Eigen::Vector3f point);
+
+    private:
+        Eigen::Vector3f normal;
+        Eigen::Vector3f point;
+
+        float a, b, c, d;
+    };
+
 } // namespace math_utils

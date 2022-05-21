@@ -55,8 +55,18 @@ namespace custom_mesh_robust
         auto left_line = lines[1];
 
         V_2D.intersection = right_line.intersection(left_line);
+
+        // Safety offsets
         V_2D.left_safety = V_2D.left_drone - Eigen::Vector2f(safe_drones_horiz_offset, 0);
         V_2D.right_safety = V_2D.right_drone + Eigen::Vector2f(safe_drones_horiz_offset, 0);
+        V_2D.intersection = V_2D.intersection - Eigen::Vector2f(0, safe_drones_vert_offset);
+
+        // printf("V_2D.left_safety: %f %f\n", V_2D.left_safety[0], V_2D.left_safety[1]);
+        // printf("V_2D.left_drone: %f %f\n", V_2D.left_drone[0], V_2D.left_drone[1]);
+        // printf("V_2D.lower2D: %f %f\n", V_2D.lower2D[0], V_2D.lower2D[1]);
+        // printf("V_2D.right_drone: %f %f\n", V_2D.right_drone[0], V_2D.right_drone[1]);
+        // printf("V_2D.right_safety: %f %f\n", V_2D.right_safety[0], V_2D.right_safety[1]);
+        // printf("V_2D.intersection: %f %f\n", V_2D.intersection[0], V_2D.intersection[1]);
 
         // The 6 2D points are the following: (front,back)              1___2         4__5
         //  1. left_safety     (0,1)                                     \   \        /  /

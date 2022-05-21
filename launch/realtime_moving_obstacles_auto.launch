@@ -1,5 +1,6 @@
 <?xml version="1.0"?>
 <launch>
+	<!-- <include file="$(find ros_viconstream)/launch/vicon.launch"/> -->
 
 	<!-- ========================== ROS PARAMETERS ========================= -->
 	<group ns="planning" >
@@ -13,34 +14,32 @@
 	<param name="is_simulation"  value="1" />
 
 	<!-- ========================== VISUALIZATION ========================== -->
-  	<node name="rviz" pkg="rviz" type="rviz" args="-d $(find drones_rope_planning)/launch/test.rviz" />
+  	<node name="rviz" pkg="rviz" type="rviz" args="-d $(find drones_rope_planning)/launch/test.rviz"/>
 
     <!-- <node name="drones_vis_on_rb" pkg="drone_path_planning" type="drones_vis.py" /> -->
 
-    <node name="drones_vis_on_rb" pkg="execution" type="leader_traj_executor_position_controller_realtime_sim.py"  output="screen"  />
+    <node name="drones_vis_on_rb" pkg="execution" type="leader_traj_executor_position_controller_realtime_sim.py"/>
 
   	<!-- <node name="droneMarkerVis" pkg="3Dvisualization" type="droneMarkerVisMarios.py"  /> -->
 
-	<node name="realtime_obstacles_vis" pkg="drones_rope_planning" type="realtime_obstacles_viz.py"    />
+	<node name="realtime_obstacles_vis" pkg="drones_rope_planning" type="realtime_obstacles_viz.py"/>
 	
-	<node name="trajectory_vis" pkg="execution" type="traj_visualization.py"   />	
+	<!-- <node name="trajectory_vis" pkg="execution" type="traj_visualization.py"   />	 -->
 
 	<!-- ============================= PLANNING ============================= -->
-	<node name="drones_rope_planning_node" pkg="drones_rope_planning"  type="drones_rope_planning_node"   />
+	<node name="drones_rope_planning_node" pkg="drones_rope_planning"  type="planning_realtime_node" output="screen"  />
 	
 
 	<!-- ========================== POLS GENERATION ========================== -->
-	<node name="drones_pols_generator" pkg="drones_rope_planning" type="traj_generation_node"/>
+	<node name="drones_pols_generator" pkg="drones_rope_planning" type="traj_generation_node" />
 
 	<!-- <node name="pols_generator" pkg="drone_path_planning" type="drones_pols_generator_realtime.py" output="screen"/> -->
-
-
 
 	<!-- ======================= CATENARY CALCULATION ======================== -->
 	<!-- <node name="catenaries_listener" pkg="catenaries" type="catenaries_listener.py" /> -->
 
 	<!-- ======================== OBSTACLES INTERFACE ======================== -->
-    <node name="realtime_interface" pkg="drones_rope_planning"  type="realtime_interface.py"  />
+    <node name="realtime_interface" pkg="drones_rope_planning"  type="realtime_interface.py" />
 		
     <!-- <node name="moving_obstacles_pub" pkg="drones_rope_planning"  type="moving_obstacles_pub.py"  /> -->
 

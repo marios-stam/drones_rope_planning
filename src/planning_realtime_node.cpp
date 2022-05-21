@@ -11,6 +11,8 @@
 #include "../include/ompl_example_2d/ompl_example_2d.hpp"
 
 #include "../include/catenaries/catenary.hpp"
+#include "../include/catenaries/math_utils.hpp"
+
 #include "../include/custom_mesh.hpp"
 
 #include "../include/moving_obstacles.hpp"
@@ -135,6 +137,16 @@ void set_new_start(bool &reset_start_state_to_initial)
             planner->setGoal(new_goal);
             reset_goal_to_initial = !reset_goal_to_initial;
         }
+
+        // limit values in the range of the limits
+        for (int i = 0; i < 6; i++)
+        {
+            if (new_start[i] < planner->prob_params.bounds["low"][i])
+                new_start[i] = planner->prob_params.bounds["low"][i];
+
+            else if (new_start[i] > planner->prob_params.bounds["high"][i])
+                new_start[i] = planner->prob_params.bounds["high"][i];
+        }
     }
     catch (tf::TransformException &ex)
     {
@@ -242,7 +254,7 @@ int get_state_closer_to_current_drone_position(og::PathGeometric *path)
 bool planning_service(drones_rope_planning::PlanningRequest::Request &req, drones_rope_planning::PlanningRequest::Response &res)
 {
     printf("===============================================================\n");
-
+    // printf("Planning request received\n");
     // STATS
     const auto times_num = 6;
     static float sum_times[times_num] = {0, 0, 0, 0, 0};
@@ -261,6 +273,7 @@ bool planning_service(drones_rope_planning::PlanningRequest::Request &req, drone
     int non_valid_state_id;
     static auto time_of_replanning = ros::Time::now();
 
+    // printf("Updating obstacles config...\n");
     // getting and updating cylinders transforms
     planner->checker->as<fcl_checking_realtime::checker>()->update_obstacles_config(req);
 
@@ -268,6 +281,7 @@ bool planning_service(drones_rope_planning::PlanningRequest::Request &req, drone
 
     bool reset_start_state_to_initial = false;
 
+    printf("Setting new start\n");
     set_new_start(reset_start_state_to_initial);
 
     auto t2 = ros::Time::now();
@@ -288,7 +302,7 @@ bool planning_service(drones_rope_planning::PlanningRequest::Request &req, drone
     if (formation_close_to_invalid_state || !new_start_valid)
     {
         // ROS_ERROR("Non valid state id: %d", non_valid_state_id);
-        // ROS_ERROR("Manual resetting of start state");
+        ROS_ERROR("Manual resetting of start state");
         // set new valid start manually beacuse fixing of ompl results to collision with the obstacle
 
         // curent position of drones os already calculated from the set_new_start function
@@ -299,11 +313,32 @@ bool planning_service(drones_rope_planning::PlanningRequest::Request &req, drone
         int obs_id = planner->checker->as<fcl_checking_realtime::checker>()->get_id_of_obstacle_nearest(start_pos);
         auto obs_pos = planner->checker->as<fcl_checking_realtime::checker>()->get_position(obs_id);
         auto obs_vel = planner->checker->as<fcl_checking_realtime::checker>()->get_velocity(obs_id);
+        auto obs_rot = planner->checker->as<fcl_checking_realtime::checker>()->get_rotation(obs_id);
 
         printf("obs_vel=%f, %f, %f\n", obs_vel[0], obs_vel[1], obs_vel[2]);
-        // calculate the perpandcular vector to the velocity of the obstacle
-        Eigen::Vector3f vel_perp(-obs_vel[0], obs_vel[1], 0);
 
+        // calculate the perpandcular vector to the velocity of the obstacle
+        // Eigen::Vector3f vel_perp(-obs_vel[0], obs_vel[1], 0);
+
+        // get vector aligned to cylinder axis
+
+        tf::Quaternion cyl_rotation; // cylinder's rotation from mocap
+        cyl_rotation.setX(obs_rot[0]);
+        cyl_rotation.setY(obs_rot[1]);
+        cyl_rotation.setZ(obs_rot[2]);
+        cyl_rotation.setW(obs_rot[3]);
+
+        tf::Vector3 vector_aligned(0, 0, 1); // unit vector along the cylinder axis when no rotation
+        tf::Vector3 cyl_axis = tf::quatRotate(cyl_rotation, vector_aligned);
+        printf("Obstacle with id:%d", obs_id);
+        printf("cyl_rotation=%f, %f, %f, %f\n", cyl_rotation.getX(), cyl_rotation.getY(), cyl_rotation.getZ(), cyl_rotation.getW());
+        printf("cyl_axis=%f, %f, %f\n", cyl_axis.getX(), cyl_axis.getY(), cyl_axis.getZ());
+
+        // get cross product of the cylinder axis and the velocity vector
+        Eigen::Vector3f vel_perp =
+            Eigen::Vector3f(cyl_axis.x(), cyl_axis.y(), cyl_axis.z()).cross(Eigen::Vector3f(obs_vel[0], obs_vel[1], obs_vel[2]));
+
+        /*
         // check if goal is in the half plane of the perpandicular vector
         Eigen::Vector3f goal_pos(req.goal_pos[0], req.goal_pos[1], req.goal_pos[2]);
         Eigen::Vector3f goal_to_obs = goal_pos - obs_pos;
@@ -315,11 +350,22 @@ bool planning_service(drones_rope_planning::PlanningRequest::Request &req, drone
             vel_perp = -vel_perp;
 
         Eigen::Vector3f dstart_pos(vel_perp[0], vel_perp[1], 0);
+        */
+
+        auto goal_state = planner->getGoalState();
+        Eigen::Vector3f goal_pos(goal_state[0], goal_state[1], goal_state[2]);
+        math_utils::Plane3D plane(obs_pos, vel_perp);
+        bool dstart_correct_direction = plane.getSideOfPoint(start_pos) == plane.getSideOfPoint(goal_pos);
+        if (!dstart_correct_direction)
+            vel_perp = -vel_perp;
+
+        Eigen::Vector3f dstart_pos = vel_perp;
 
         dstart_pos.normalize();
         dstart_pos *= planner->prob_params.realtime_settings.fix_invalid_start_dist;
 
         printf("Robot_start: %f %f %f\n", start_pos.x(), start_pos.y(), start_pos.z());
+        printf("Robot_goal: %f %f %f\n", goal_pos.x(), goal_pos.y(), goal_pos.z());
         printf("Obstacle pos: %f %f %f\n", obs_pos.x(), obs_pos.y(), obs_pos.z());
         printf("Dstart: %f %f %f\n", dstart_pos.x(), dstart_pos.y(), dstart_pos.z());
 
@@ -335,7 +381,14 @@ bool planning_service(drones_rope_planning::PlanningRequest::Request &req, drone
 
             planner->setStart(new_pos);
             times_tried_to_fix++;
-        } while (!planner->isStateValidSimple(planner->getStartState()) && times_tried_to_fix < 4);
+
+            if (times_tried_to_fix > 10)
+            {
+                ROS_ERROR("Could not fix invalid start state");
+                break;
+            }
+
+        } while (!planner->isStateValidSimple(planner->getStartState()));
         // debug messages
         // ROS_ERROR("Manual start state set to: %f, %f, %f", new_pos[0], new_pos[1], new_pos[2]);
     }

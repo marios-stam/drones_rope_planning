@@ -56,6 +56,8 @@ namespace realtime_obstacles
 
         Eigen::Vector3f get_cylinder_position(int id);
 
+        Eigen::Vector4f get_cylinder_rotation(int id);
+
     private:
         void resize_matrices(int obs_number);
 
