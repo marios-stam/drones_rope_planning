@@ -19,8 +19,6 @@ namespace problem_params
         ros::param::get("/planning/rope_length", pdef.L);
         ros::param::get("/planning/env_mesh", pdef.env_filename);
         printf("Environment filename: %s\n", pdef.env_filename.c_str());
-        ros::param::get("/planning/start", pdef.start_pos);
-        ros::param::get("/planning/goal", pdef.goal_pos);
 
         XmlRpc::XmlRpcValue bounds;
         ros::param::get("/planning/bounds", bounds);
@@ -41,6 +39,52 @@ namespace problem_params
         pdef.bounds["high"][3] = ((double)high_bounds[3]) * M_PI / 180.0; // convert to radians
         pdef.bounds["high"][4] = ((double)high_bounds[4]) * pdef.L;
         pdef.bounds["high"][5] = ((double)high_bounds[5]) * M_PI / 180.0; // convert to radians
+
+        ros::param::get("/planning/start", pdef.start);
+        ros::param::get("/planning/goal", pdef.goal);
+
+        // converions of start and goal
+        pdef.start["yaw"] *= M_PI / 180.0;
+        pdef.start["drones_dist"] *= pdef.L;
+        pdef.start["drones_angle"] *= M_PI / 180.0;
+
+        pdef.goal["yaw"] *= M_PI / 180.0;
+        pdef.goal["drones_dist"] *= pdef.L;
+        pdef.goal["drones_angle"] *= M_PI / 180.0;
+
+        printf("start drones_dist: %f , %f , %f\n", pdef.start["drones_dist"], pdef.bounds["low"][4], pdef.bounds["high"][4]);
+
+        printf("Loaded start and goal\n");
+        // check if start and goal are within bounds
+        bool start_out_of_bounds = (pdef.start["x"] <= pdef.bounds["low"][0] || pdef.start["x"] >= pdef.bounds["high"][0]) ||
+                                   (pdef.start["y"] <= pdef.bounds["low"][1] || pdef.start["y"] >= pdef.bounds["high"][1]) ||
+                                   (pdef.start["z"] <= pdef.bounds["low"][2] || pdef.start["z"] >= pdef.bounds["high"][2]) ||
+                                   (pdef.start["yaw"] <= pdef.bounds["low"][3] || pdef.start["yaw"] >= pdef.bounds["high"][3]) ||
+                                   (pdef.start["drones_dist"] <= pdef.bounds["low"][4] || pdef.start["drones_dist"] >= pdef.bounds["high"][4]);
+        // (pdef.start["drones_angle"] <= pdef.bounds["low"][5] || pdef.start["drones_angle"] >= pdef.bounds["high"][5]);
+
+        if (start_out_of_bounds)
+        {
+            ROS_ERROR("Start is out of bounds");
+            throw std::runtime_error("Start is out of bounds");
+            exit(1);
+        }
+
+        bool goal_out_of_bounds = (pdef.goal["x"] <= pdef.bounds["low"][0] || pdef.goal["x"] >= pdef.bounds["high"][0]) ||
+                                  (pdef.goal["y"] <= pdef.bounds["low"][1] || pdef.goal["y"] >= pdef.bounds["high"][1]) ||
+                                  (pdef.goal["z"] <= pdef.bounds["low"][2] || pdef.goal["z"] >= pdef.bounds["high"][2]) ||
+                                  (pdef.goal["yaw"] <= pdef.bounds["low"][3] || pdef.goal["yaw"] >= pdef.bounds["high"][3]) ||
+                                  (pdef.goal["drones_dist"] <= pdef.bounds["low"][4] || pdef.goal["drones_dist"] >= pdef.bounds["high"][4]) ||
+                                  (pdef.goal["drones_angle"] <= pdef.bounds["low"][5] || pdef.goal["drones_angle"] >= pdef.bounds["high"][5]);
+
+        if (goal_out_of_bounds)
+        {
+            ROS_ERROR("Goal is out of bounds");
+            throw std::runtime_error("Goal is out of bounds");
+            exit(1);
+        }
+
+        printf("Out of bounds check ended\n");
 
         ros::param::get("/planning/planner_algorithm", pdef.planner_algorithm);
 
@@ -96,6 +140,8 @@ namespace problem_params
         ros::param::get("/planning/real_time_settings/time_allocation/velocity", pdef.realtime_settings.time_alloc.velocity);
         ros::param::get("/planning/real_time_settings/time_allocation/acceleration", pdef.realtime_settings.time_alloc.acceleration);
 
+        ros::param::get("/planning/V_robust/dx", pdef.v_robust.dx);
+        ros::param::get("/planning/V_robust/dy", pdef.v_robust.dy);
         return pdef;
     }
 
@@ -126,8 +172,12 @@ namespace problem_params
         printf("\tTimeout: %f\n", params.timeout);
         printf("\tRope length: %f\n", params.L);
         printf("\tEnvironment filename: %s\n", params.env_filename.c_str());
-        printf("\tStart position: %f, %f, %f, \n", params.start_pos["x"], params.start_pos["y"], params.start_pos["z"]);
-        printf("\tGoal position: %f, %f, %f, \n", params.goal_pos["x"], params.goal_pos["y"], params.goal_pos["z"]);
+        printf("\tStart state: %f, %f, %f, %f, %f, %f, \n", params.start["x"], params.start["y"], params.start["z"], params.start["yaw"],
+               params.start["drones_dist"], params.start["drones_angle"]);
+
+        printf("\tGoal state: %f, %f, %f, %f, %f, %f, \n", params.goal["x"], params.goal["y"], params.goal["z"], params.goal["yaw"],
+               params.goal["drones_dist"], params.goal["drones_angle"]);
+
         printf("\tBounds:\n");
         printf("\t\tlow: %f, %f, %f, %f, %f, %f\n", params.bounds["low"][0], params.bounds["low"][1], params.bounds["low"][2],
                params.bounds["low"][3], params.bounds["low"][4], params.bounds["low"][5]);
@@ -170,6 +220,10 @@ namespace problem_params
         printf("\t\t\tVertical: %f\n", params.safety_offsets.drones_vertical);
 
         printf("\t\tLowest point: %f\n", params.safety_offsets.lowest_point);
+
+        printf("\t\t V robust steps:\n");
+        printf("\t\t\tHorizontal: %f\n", params.v_robust.dx);
+        printf("\t\t\tVertical: %f\n", params.v_robust.dy);
 
         printf("\tThickness: %f\n", params.thickness);
 
