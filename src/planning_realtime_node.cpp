@@ -111,41 +111,40 @@ void set_new_start(bool &reset_start_state_to_initial)
             printf("Start and goal are too close\n");
             reset_start_state_to_initial = true;
 
-            // new_start[0] = planner->prob_params.start_pos["x"];
-            // new_start[1] = planner->prob_params.start_pos["y"];
-            // new_start[2] = planner->prob_params.start_pos["z"];
-
             float new_goal[6];
             if (reset_goal_to_initial)
             {
                 // Formation is now at the initial start and set the goal to the initial goal
-                new_goal[0] = planner->prob_params.goal_pos["x"];
-                new_goal[1] = planner->prob_params.goal_pos["y"];
-                new_goal[2] = planner->prob_params.goal_pos["z"];
+                new_goal[0] = planner->prob_params.goal["x"];
+                new_goal[1] = planner->prob_params.goal["y"];
+                new_goal[2] = planner->prob_params.goal["z"];
+                new_goal[3] = planner->prob_params.goal["yaw"];
+                new_goal[4] = planner->prob_params.goal["drones_distance"];
+                new_goal[5] = planner->prob_params.goal["drones_angle"];
             }
             else
             {
                 // Formation is now at the initial goal and set the goal to the initial start
-                new_goal[0] = planner->prob_params.start_pos["x"];
-                new_goal[1] = planner->prob_params.start_pos["y"];
-                new_goal[2] = planner->prob_params.start_pos["z"];
+                new_goal[0] = planner->prob_params.start["x"];
+                new_goal[1] = planner->prob_params.start["y"];
+                new_goal[2] = planner->prob_params.start["z"];
+                new_goal[3] = planner->prob_params.start["yaw"];
+                new_goal[4] = planner->prob_params.start["drones_distance"];
+                new_goal[5] = planner->prob_params.start["drones_angle"];
             }
-            new_goal[3] = 0.0;
-            new_goal[4] = planner->prob_params.L * 0.5;
-            new_goal[5] = 0.0;
 
             planner->setGoal(new_goal);
             reset_goal_to_initial = !reset_goal_to_initial;
         }
 
-        // limit values in the range of the limits
+        // limit start  in the range of the limits
         for (int i = 0; i < 6; i++)
         {
-            if (new_start[i] < planner->prob_params.bounds["low"][i])
-                new_start[i] = planner->prob_params.bounds["low"][i];
+            if (new_start[i] <= planner->prob_params.bounds["low"][i])
+                new_start[i] = planner->prob_params.bounds["low"][i] + 0.01;
 
-            else if (new_start[i] > planner->prob_params.bounds["high"][i])
-                new_start[i] = planner->prob_params.bounds["high"][i];
+            else if (new_start[i] >= planner->prob_params.bounds["high"][i])
+                new_start[i] = planner->prob_params.bounds["high"][i] - 0.01;
         }
     }
     catch (tf::TransformException &ex)
@@ -241,8 +240,6 @@ int get_state_closer_to_current_drone_position(og::PathGeometric *path)
         }
     }
 
-    // ROS_ERROR("Closer state distance: %f", min_dist);
-
     if (min_dist > 0.8) // TODO:Make that a ROS param
     {
         return -1;
@@ -267,6 +264,8 @@ bool planning_service(drones_rope_planning::PlanningRequest::Request &req, drone
 
     auto t0 = ros::Time::now();
     auto t1 = ros::Time::now();
+    // clearing Start
+    planner->pdef->clearStartStates();
 
     // All variables used in the planning process
     nav_msgs::Path drone_path1, drone_path2;
@@ -302,15 +301,17 @@ bool planning_service(drones_rope_planning::PlanningRequest::Request &req, drone
     if (formation_close_to_invalid_state || !new_start_valid)
     {
         // ROS_ERROR("Non valid state id: %d", non_valid_state_id);
-        ROS_ERROR("Manual resetting of start state");
-        // set new valid start manually beacuse fixing of ompl results to collision with the obstacle
+        ROS_INFO("Manual resetting of start state");
+        // set new valid start manually  beacuse fixing of ompl results to collision with the obstacle
 
         // curent position of drones os already calculated from the set_new_start function
         std::vector<float> start = planner->getStartState();
         Eigen ::Vector3f start_pos(start[0], start[1], start[2]);
 
         // get problematic obstacle velocity
+        printf("Getting problematic obstacle velocity\n");
         int obs_id = planner->checker->as<fcl_checking_realtime::checker>()->get_id_of_obstacle_nearest(start_pos);
+        printf("Obstacle id: %d\n", obs_id);
         auto obs_pos = planner->checker->as<fcl_checking_realtime::checker>()->get_position(obs_id);
         auto obs_vel = planner->checker->as<fcl_checking_realtime::checker>()->get_velocity(obs_id);
         auto obs_rot = planner->checker->as<fcl_checking_realtime::checker>()->get_rotation(obs_id);
@@ -356,10 +357,12 @@ bool planning_service(drones_rope_planning::PlanningRequest::Request &req, drone
         Eigen::Vector3f goal_pos(goal_state[0], goal_state[1], goal_state[2]);
         math_utils::Plane3D plane(obs_pos, vel_perp);
         bool dstart_correct_direction = plane.getSideOfPoint(start_pos) == plane.getSideOfPoint(goal_pos);
+
+        // if (dstart_correct_direction) // TODO: try the above line
         if (!dstart_correct_direction)
             vel_perp = -vel_perp;
 
-        Eigen::Vector3f dstart_pos = vel_perp;
+        Eigen::Vector3f dstart_pos = -vel_perp;
 
         dstart_pos.normalize();
         dstart_pos *= planner->prob_params.realtime_settings.fix_invalid_start_dist;
@@ -384,7 +387,7 @@ bool planning_service(drones_rope_planning::PlanningRequest::Request &req, drone
 
             if (times_tried_to_fix > 10)
             {
-                ROS_ERROR("Could not fix invalid start state");
+                ROS_WARN("Could not fix invalid start state");
                 break;
             }
 
@@ -396,7 +399,7 @@ bool planning_service(drones_rope_planning::PlanningRequest::Request &req, drone
     // printf("Previous path valid: %d\n", prev_path_is_valid);
 
     if (!prev_path_is_valid)
-        ROS_ERROR("Previous path not valid");
+        ROS_INFO("Previous path not valid");
 
     bool should_replan = reset_start_state_to_initial || !prev_path_is_valid;
 
@@ -442,6 +445,11 @@ bool planning_service(drones_rope_planning::PlanningRequest::Request &req, drone
 
                 // printf("Path valididity before keeping after: %d\n", planner->getPath()->check());
                 planner->getPath()->keepAfter(state_to_keep_after);
+
+                if (planner->getPath()->getStateCount() < 3)
+                {
+                    planner->getPath()->interpolate(4);
+                }
                 // printf("Path valididity before interpolating: %d\n", planner->getPath()->check());
 
                 // planner->interpolate_path(planner->getPath());
@@ -476,7 +484,7 @@ bool planning_service(drones_rope_planning::PlanningRequest::Request &req, drone
     }
     catch (ompl::Exception &e)
     {
-        printf("%s", e.what());
+        ROS_ERROR("%s", e.what());
         return false;
     }
     auto dt3 = ros::Time::now() - t3;
@@ -555,9 +563,13 @@ int main(int argc, char **argv)
 
     printf("Setting start and goal\n");
     float L = prob_prms.L;
-    float goal[6] = {prob_prms.goal_pos["x"], prob_prms.goal_pos["y"], prob_prms.goal_pos["z"], 0.0, L * 0.5, 0.0};
+    float goal[6] = {
+        prob_prms.goal["x"],           prob_prms.goal["y"], prob_prms.goal["z"], prob_prms.goal["yaw"], L * prob_prms.goal["drones_dist"],
+        prob_prms.goal["drones_angle"]};
 
-    float start[6] = {prob_prms.start_pos["x"], prob_prms.start_pos["y"], prob_prms.start_pos["z"], 0.0, L * 0.5, 0.0};
+    float start[6] = {
+        prob_prms.start["x"],           prob_prms.start["y"], prob_prms.start["z"], prob_prms.start["yaw"], L * prob_prms.start["drones_dist"],
+        prob_prms.start["drones_angle"]};
 
     // Manually setting first drones odometry to start position of formations
     drone1_tf->pose.pose.position.x = start[0] + 0.2; // not sure if sign is correct

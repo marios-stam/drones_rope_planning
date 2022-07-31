@@ -22,14 +22,20 @@ real_time_settings: {
 
 #======================================
 calculate_new_path: True
-timeout: 2
+timeout: 20.0
 
 # env_mesh: "env-scene-ltu-experiment-corridor-narrow-easy"
-# env_mesh: "env-scene-ltu-experiment-hole-inclined"
-env_mesh: "env-scene-ltu-experiment-corridor-narrow-narrow"
+env_mesh: "env-scene-ltu-experiment-hole-inclined"
+# env_mesh: "env-scene-ltu-experiment-corridor-narrow-narrow"
+# env_mesh: "env-scene-ltu-experiment-tunnel"
 # env_mesh: "env-scene-ltu-experiment-tunnel2"
 # env_mesh: "env-scene-ltu-experiment-small-hole"
-# env_mesh: "env-scene-ltu-experiment-hole-wide"
+# env_mesh: "boxes"
+# env_mesh: "boxes_mlkia"
+# env_mesh: "boxes_mlkia2"
+# env_mesh: "boxes_narrow"
+# env_mesh: "env-scene-ltu-experiment-tunnel_easy"
+# env_mesh: "env-scene-ltu-experiment-hole-wide" #Throws free(): invalid pointer
 # env_mesh: "env-scene-ltu-experiment"
 
 #Planning
@@ -39,31 +45,37 @@ range: 1.0
 use_mesh_improvement: True
 goal_type: "simple" #simple,samplable,symmetrical,multiple_goals
 
-use_ground_collision_check: False
+use_ground_collision_check: True
 
 #values:None, ob.PathLengthOptimizationObjective,balanced,obstacle_clearance
 optimal_objective: { class: "None", threshold: 3 }
 
 safety_distances: {
     #horizontal and vertical distance offset for drones
-    drones_offsets: { horizontal: 0.1, vertical: 0.05 },
+    drones_offsets: { horizontal: 0.05, vertical: 0.0 },
 
     #horizontal and vertical distance offset for lowest point of catenary
     lowest_point: 0.0,
   }
 
-thickness: 0.2
+V_robust: {
+    #Robustness steps
+    dx: 0.2,
+    dy: 0.05,
+  }
+
+thickness: 0.15
 
 # start and goal
-start: { x: +0.0, y: 2.0, z: 0.75 }
-goal: { x: +0.5, y: 5.25, z: 0.75 }
+start: { x: 2, y: 4, z: 1.0 } #TODO: Add yaw
+goal: { x: -1, y: 4, z: 1.0 } #TODO: Add yaw
 
 # Bounds of states
 # All ANGLES are in DEGREES
 bounds: {
     #x, y , z, yaw , drones_distance(% of L) , drones_angle
-    low: [-1.5, 0.5, 0.3, -180.0, 0.3, -60.0],
-    high: [1.5, 6.0, 2.0, 180.0, 0.95, 60.0],
+    low: [-1.5, 3.0, 0.3, -180.0, 0.45, -60.0],
+    high: [1.5, 5.0, 2.0, 180.0, 0.95, 60.0],
   }
 
 #planner algorithm

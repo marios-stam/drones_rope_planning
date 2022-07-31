@@ -4,5 +4,5 @@ cylinders_number: 2
 cylinders:
   [
     { radius: 0.8, height: 1.5, odom_name: "long_stick" },
-    { radius: 0.8, height: 2.0, odom_name: "stik" },
+    { radius: 0.8, height: 3.0, odom_name: "stik" },
   ]

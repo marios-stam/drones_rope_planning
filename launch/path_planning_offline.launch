@@ -14,8 +14,11 @@
 	  <!-- <arg name="hoge" value="fuga" /> -->
 	<!-- </include> -->
 
-	<node name="paths_vis" pkg="drones_rope_planning" type="path_vis_dynamic.py" output="screen"/>
+	<node name="paths_vis" pkg="drones_rope_planning" type="path_vis_dynamic.py" />
 	<node name="env_vis" pkg="drones_rope_planning" type="static_env_visualization.py" />
+	
+
+	<node name="pols_generator" pkg="drone_path_planning" type="drones_pols_generator.py" />
 
 	<!-- ============================= PLANNING ============================= -->
     <node pkg="drones_rope_planning" name="drones_rope_planning_node" type="planning_offline_node" output="screen" />

@@ -24,7 +24,7 @@
 
 	<node name="realtime_obstacles_vis" pkg="drones_rope_planning" type="realtime_obstacles_viz.py"/>
 	
-	<!-- <node name="trajectory_vis" pkg="execution" type="traj_visualization.py"   />	 -->
+	<node name="trajectory_vis" pkg="execution" type="traj_visualization.py"   />	
 
 	<!-- ============================= PLANNING ============================= -->
 	<node name="drones_rope_planning_node" pkg="drones_rope_planning"  type="planning_realtime_node" output="screen"  />

@@ -11,18 +11,21 @@ namespace custom_mesh_robust
 {
     using namespace Eigen;
 
-    CustomMesh::CustomMesh(float rope_length, problem_params::SafetyOffsets safety_offsets, float rb_thickness)
+    CustomMesh::CustomMesh(float rope_length, problem_params::SafetyOffsets safety_offsets, float rb_thickness, problem_params::V_robust V_robust)
     {
         L = rope_length;
 
         safe_drones_horiz_offset = safety_offsets.drones_horizontal;
         safe_drones_vert_offset = safety_offsets.drones_vertical;
 
+        V_deltas = V_robust;
+
         safe_lowest_point_distance = safety_offsets.lowest_point;
 
         thickness = rb_thickness;
 
         is_created = false;
+
         get_tris();
     }
 
@@ -49,7 +52,7 @@ namespace custom_mesh_robust
 
         auto prob_consts = catenaries::get_cat_problem_constants(V_2D.left_drone, V_2D.right_drone, L);
 
-        auto lines = catenaries::findBoundingLines(prob_consts, V_2D.lower2D, safe_drones_horiz_offset);
+        auto lines = catenaries::findBoundingLines(prob_consts, V_2D.lower2D, safe_drones_horiz_offset, V_deltas);
 
         auto right_line = lines[0];
         auto left_line = lines[1];
@@ -57,8 +60,8 @@ namespace custom_mesh_robust
         V_2D.intersection = right_line.intersection(left_line);
 
         // Safety offsets
-        V_2D.left_safety = V_2D.left_drone - Eigen::Vector2f(safe_drones_horiz_offset, 0);
-        V_2D.right_safety = V_2D.right_drone + Eigen::Vector2f(safe_drones_horiz_offset, 0);
+        // V_2D.left_safety = V_2D.left_drone - Eigen::Vector2f(safe_drones_horiz_offset, 0);   already done in findBoundingLines
+        // V_2D.right_safety = V_2D.right_drone + Eigen::Vector2f(safe_drones_horiz_offset, 0); already done in findBoundingLines
         V_2D.intersection = V_2D.intersection - Eigen::Vector2f(0, safe_drones_vert_offset);
 
         // printf("V_2D.left_safety: %f %f\n", V_2D.left_safety[0], V_2D.left_safety[1]);

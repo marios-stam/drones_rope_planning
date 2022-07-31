@@ -28,22 +28,22 @@
 
 	<node name="references_vis" pkg="execution" type="visualize_references.py"     />	
 
-	<!-- <node name="trajectory_vis" pkg="execution" type="traj_visualization.py"    />	 -->
+	<node name="trajectory_vis" pkg="execution" type="traj_visualization.py"    />	
 
 
 	<!-- ============================= PLANNING ============================= -->
-	<!-- <node name="drones_rope_planning_node" pkg="drones_rope_planning"  type="drones_rope_planning_node" /> -->
+	<!-- <node name="drones_rope_planning_node" pkg="drones_rope_planning"  type="planning_realtime_node" output="screen"  /> -->
 	
 
 	<!-- ========================== POLS GENERATION ========================== -->
-	<!-- <node name="drones_pols_generator" pkg="drones_rope_planning" type="traj_generation_node" output="screen"   /> -->
+	<!-- <node name="drones_pols_generator" pkg="drones_rope_planning" type="traj_generation_node"    /> -->
 
 	<!-- ======================= CATENARY CALCULATION ======================== -->
 	<!-- <node name="catenaries_listener" pkg="catenaries" type="catenaries_listener.py" /> -->
 
 	<!-- ======================== OBSTACLES INTERFACE ======================== --> 
 	<!-- Only use realtime_interface.py with different args -->
-    <!-- <node name="realtime_interface" pkg="drones_rope_planning"  type="realtime_interface.py"  /> -->
+    <node name="realtime_interface" pkg="drones_rope_planning"  type="realtime_interface.py"  />
 	
 	<!-- Enter the below if you want to open node in separate terminal window -->
 	<!-- launch-prefix="gnome-terminal - -command" -->

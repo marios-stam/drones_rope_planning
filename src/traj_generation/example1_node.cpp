@@ -333,7 +333,7 @@ void publish_path_to_traj(const nav_msgs::Path &wp, int id)
 {
     if (wp.poses.size() <= 2)
     {
-        ROS_WARN("Waypoints number is less than 2.\n");
+        // ROS_WARN("Waypoints number is less than 2.\n");
         return;
     }
 

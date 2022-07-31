@@ -62,6 +62,12 @@ namespace problem_params
         time_allocation time_alloc;
     };
 
+    struct V_robust
+    {
+        float dx;
+        float dy;
+    };
+
     struct ProblemParams
     {
         // planning
@@ -80,11 +86,14 @@ namespace problem_params
         float range;
         bool use_ground_collision_check;
 
-        // robot
-        std::string robot_filename;
         float thickness;
         // safety offsets
         SafetyOffsets safety_offsets;
+
+        V_robust v_robust;
+
+        // robot
+        std::string robot_filename;
 
         // environment
         std::string env_filename;
@@ -92,7 +101,7 @@ namespace problem_params
 
         // start-goal
         int goal_type;
-        std::map<std::string, double> start_pos, goal_pos;
+        std::map<std::string, double> start, goal;
 
         // bounds
         std::map<std::string, std::array<double, 6>> bounds;

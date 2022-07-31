@@ -58,20 +58,42 @@ Visualization Manager:
       Reference Frame: <Fixed Frame>
       Value: true
     - Class: rviz/TF
-      Enabled: false
+      Enabled: true
       Frame Timeout: 15
       Frames:
         All Enabled: false
+        crazyflie8/crazyflie8:
+          Value: true
+        demo_crazyflie11/demo_crazyflie11:
+          Value: true
+        follower_ref:
+          Value: true
+        leader_ref:
+          Value: true
+        stik/stik:
+          Value: true
+        world:
+          Value: true
       Marker Alpha: 1
       Marker Scale: 1
       Name: TF
       Show Arrows: false
       Show Axes: true
-      Show Names: false
+      Show Names: true
       Tree:
-        {}
+        world:
+          crazyflie8/crazyflie8:
+            {}
+          demo_crazyflie11/demo_crazyflie11:
+            {}
+          follower_ref:
+            {}
+          leader_ref:
+            {}
+          stik/stik:
+            {}
       Update Interval: 0
-      Value: false
+      Value: true
     - Alpha: 1
       Autocompute Intensity Bounds: true
       Autocompute Value Bounds:
@@ -105,7 +127,7 @@ Visualization Manager:
       Marker Topic: /planning/dronesMarkers_array
       Name: Drones Markers
       Namespaces:
-        {}
+        cf: true
       Queue Size: 100
       Value: true
     - Alpha: 1
@@ -177,7 +199,7 @@ Visualization Manager:
       Marker Topic: /catenaries_array
       Name: MarkerArray
       Namespaces:
-        {}
+        caten_0: true
       Queue Size: 100
       Value: true
     - Alpha: 1
@@ -233,17 +255,17 @@ Visualization Manager:
       Marker Topic: /planning/env_markers_array
       Name: Env Obstacles
       Namespaces:
-        {}
+        cylinders: true
       Queue Size: 100
       Value: true
     - Class: rviz/MarkerArray
-      Enabled: true
+      Enabled: false
       Marker Topic: /planning/trajectories_viz
       Name: Trajectories
       Namespaces:
         {}
       Queue Size: 100
-      Value: true
+      Value: false
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
@@ -272,7 +294,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 4.204583168029785
+      Distance: 4.034470558166504
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -280,17 +302,17 @@ Visualization Manager:
         Value: false
       Field of View: 0.7853981852531433
       Focal Point:
-        X: 0.04922810569405556
-        Y: 3.940330982208252
-        Z: 0.723749041557312
+        X: -0.32633575797080994
+        Y: 4.826840877532959
+        Z: 0.3687397241592407
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.7797963619232178
+      Pitch: 0.39979684352874756
       Target Frame: <Fixed Frame>
-      Yaw: 4.200366973876953
+      Yaw: 0.5571637153625488
     Saved: ~
 Window Geometry:
   Displays:

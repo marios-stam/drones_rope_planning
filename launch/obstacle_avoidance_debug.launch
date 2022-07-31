@@ -3,14 +3,14 @@
   	<!-- ================================ LEADER-FOLLOWER SETUP ================================ -->
 	
 	<!-- ================================ LEADER ================================ -->
-	<arg name="cf_leader_name" value="crazyflie8" />
+	<arg name="cf_leader_name" value="demo_crazyflie5" />
 	<!-- initial reference -->
 	<arg name="cf_1_x" value="0  " /> 
 	<arg name="cf_1_y" value="4  " />
 	<arg name="cf_1_z" value="0.5" />
 
 	<!-- =============================== FOLLOWER =============================== -->
-	<arg name="cf_follower_name" value="demo_crazyflie11" />
+	<arg name="cf_follower_name" value="demo_crazyflie12" />
 	<!-- initial reference -->
   	<arg name="cf_2_x" value="-1" />
 	<arg name="cf_2_y" value=" 4" />
@@ -42,10 +42,10 @@
 		<rosparam command="load" file="$(find drones_rope_planning)/config/cylinders_obstacles.yaml" />
 	</group>
 	
-	<param name="waypoints_freq" type="double" value="30" />
+	<param name="waypoints_freq" type="double" value="15" />
 
 
-	<param name="new_ref_dist_threshold" type="double" value="0.8" />
+	<param name="new_ref_dist_threshold" type="double" value="0.5" />
 
 	
 	<param name="is_simulation"  value="0"/> 
@@ -57,21 +57,18 @@
 		<!-- <node name="cf_controller" pkg="drones_control" type="hummingbird3_class.py"    args="$(arg cf_leader_name)  -->
 			<!-- $(arg cf_1_x) $(arg cf_1_y) $(arg cf_1_z)" /> -->
 	
-		<!-- <node name="leader_interface" pkg="execution" type="leader_traj_executor_position_controller_realtime.py"   args="$(arg cf_leader_name)"    /> -->
-
+		<node name="leader_interface" pkg="execution" type="leader_traj_executor_position_controller_realtime.py"   args="$(arg cf_leader_name)"  />
 	</group>
 
 	<group ns="cf_follower">
-		<!-- <node name="cf_controller" 	pkg="drones_control" type="hummingbird3_class.py"   args="$(arg cf_follower_name)  
-			$(arg cf_2_x) $(arg cf_2_y) $(arg cf_2_z) " /> -->
+		<!-- <node name="cf_controller" 	pkg="drones_control" type="hummingbird3_class.py"   args="$(arg cf_follower_name)   -->
+			<!-- $(arg cf_2_x) $(arg cf_2_y) $(arg cf_2_z) " />  -->
   		
-    	<!-- <node name="follower_interface" pkg="execution" type="follower_traj_executor_position_controller_realtime.py" args="$(arg cf_follower_name) $(arg cf_leader_name) "    /> -->
+    	<node name="follower_interface" pkg="execution" type="follower_traj_executor_position_controller_realtime.py" args="$(arg cf_follower_name) $(arg cf_leader_name) "     />
 	</group> 
 	
 
-	<node name="catenaries_listener"    pkg="catenaries" type="catenaries_listener.py"  args="1"    />  	<!-- TODO:add rope length as param -->
-
-
+	<node name="catenaries_listener" pkg="catenaries" type="catenaries_listener.py"  args="1"/> <!-- TODO:add rope length as param -->
 
 	<!-- ================================== PLANNING STUFFF ================================== -->
 	<group ns="planning" >

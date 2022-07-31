@@ -40,7 +40,7 @@ namespace custom_mesh_robust
     class CustomMesh
     {
     public:
-        CustomMesh(float rope_length, problem_params::SafetyOffsets safety_offsets, float rb_thickness);
+        CustomMesh(float rope_length, problem_params::SafetyOffsets safety_offsets, float rb_thickness, problem_params::V_robust V_robust);
 
         ~CustomMesh();
 
@@ -85,6 +85,8 @@ namespace custom_mesh_robust
         bool is_created;
 
         float thickness;
+
+        problem_params::V_robust V_deltas;
     };
 
 }; // namespace custom_mesh

@@ -31,7 +31,7 @@
 	
 
 	<!-- ============================= PLANNING ============================= -->
-	<node name="drones_rope_planning_node" pkg="drones_rope_planning"  type="planning_realtime_node"  output="screen"  />
+	<node name="drones_rope_planning_node" pkg="drones_rope_planning"  type="planning_realtime_node"    />
 	
 
 	<!-- ========================== POLS GENERATION ========================== -->

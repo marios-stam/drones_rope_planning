@@ -57,8 +57,14 @@ int main(int argc, char **argv)
 
     printf("Setting start and goal\n");
     float L = prob_prms.L;
-    float start[6] = {prob_prms.start_pos["x"], prob_prms.start_pos["y"], prob_prms.start_pos["z"], 0.0, L * 0.5, 0.0};
-    float goal[6] = {prob_prms.goal_pos["x"], prob_prms.goal_pos["y"], prob_prms.goal_pos["z"], 0.0, L * 0.5, 0.0};
+    float start[6] = {
+        prob_prms.start["x"],           prob_prms.start["y"], prob_prms.start["z"], prob_prms.start["yaw"], prob_prms.start["drones_distance"],
+        prob_prms.start["drones_angle"]};
+
+    float goal[6] = {
+        prob_prms.goal["x"],           prob_prms.goal["y"], prob_prms.goal["z"], prob_prms.goal["yaw"], prob_prms.goal["drones_distance"],
+        prob_prms.goal["drones_angle"]};
+
     planner.setStartGoal(start, goal);
 
     printf("Planning...\n");

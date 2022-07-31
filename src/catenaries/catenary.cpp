@@ -192,7 +192,8 @@ namespace catenaries
         return getCatenaryCurve3D_optimized_lowest_cat_point(start, end, L);
     }
 
-    std::vector<math_utils::Line2D> findBoundingLines(problem_constants prob_constants, Eigen::Vector2f lowest, float safety_hor_distance)
+    std::vector<math_utils::Line2D> findBoundingLines(problem_constants prob_constants, Eigen::Vector2f lowest, float safety_hor_distance,
+                                                      problem_params::V_robust V_deltas)
     {
         /*
         Finds the bounding lines of the catenary curve
@@ -209,7 +210,11 @@ namespace catenaries
         output: std::vector<math_utils::Line2D> The 2 lines that bound the catenary curve (left and right)
         */
 
-        float dx = 0.1;
+        float dx = V_deltas.dx;
+        float dy = V_deltas.dy;
+        // printf("dx: %f\n", dx);
+        // printf("dy: %f\n", dy);
+
         Eigen::Matrix2Xf xy = getCurvePoints(prob_constants, dx);
 
         Eigen::Vector2f vert_point(lowest(0), lowest(1));
@@ -221,7 +226,7 @@ namespace catenaries
         math_utils::Line2D *right_line;
         do
         {
-            vert_point[1] -= 0.1;
+            vert_point[1] -= dy;
             right_line = new math_utils::Line2D(vert_point, safety_end);
 
         } while (all_points_left_of_line(xy, *right_line) == false);
@@ -230,7 +235,7 @@ namespace catenaries
         math_utils::Line2D *left_line;
         do
         {
-            vert_point[1] -= 0.1;
+            vert_point[1] -= dy;
             left_line = new math_utils::Line2D(vert_point, safety_start);
 
         } while (all_points_right_of_line(xy, *left_line) == false);

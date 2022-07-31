@@ -49,6 +49,7 @@ namespace ompl_rope_planning
                 std::string env_mesh = "/home/marios/thesis_ws/src/drone_path_planning/resources/stl/" + prob_params.env_filename + ".stl";
                 checker->as<fcl_checking_offline::checker>()->loadEnvironment(env_mesh);
             }
+            printf("Loaded stl of environment!\n");
         }
         else
         {
@@ -57,10 +58,27 @@ namespace ompl_rope_planning
 
         L = prob_params.L;
 
-        // custom_robot_mesh = new custom_mesh::CustomMesh(L, prob_params.safety_offsets, prob_params.thickness);
-        custom_robot_mesh = new custom_mesh_robust::CustomMesh(L, prob_params.safety_offsets, prob_params.thickness);
+#ifdef USE_CUSTOM_MESH_ROBUST
+        custom_robot_mesh = new custom_mesh_robust::CustomMesh(L, prob_params.safety_offsets, prob_params.thickness, prob_params.v_robust);
+#else
+        custom_robot_mesh = new custom_mesh::CustomMesh(L, prob_params.safety_offsets, prob_params.thickness);
+#endif
 
-        checker->update_robot(custom_robot_mesh->get_fcl_mesh());
+        printf("Instanciated custom mesh!\n");
+        try
+        {
+            printf("Try to update robot mesh\n");
+            // checker->update_robot(custom_robot_mesh->get_fcl_mesh());
+        }
+        catch (const std::exception &e)
+        {
+            printf("Caught exception: %s\n", e.what());
+            std::cerr << e.what() << '\n';
+            int x;
+            std::cin >> x;
+        }
+
+        printf("Updated robot mesh!\n");
 
         dim = 6;
         space = ob::StateSpacePtr(new ob::RealVectorStateSpace(dim));
@@ -327,129 +345,6 @@ namespace ompl_rope_planning
             // }
 
             return pth->check();
-
-            /*
-            // path_simplifier.perturbPath(*pth, 0.2);
-
-            bool isMetric = si->getStateSpace()->isMetricSpace();
-            printf("isMetric: %d\n", isMetric);
-
-            bool atLeastOnce = true;
-            bool tryMore = true, valid = true;
-            unsigned int total_times = 0;
-            while ((ptc == false || atLeastOnce) && tryMore)
-            {
-                // if ((ptc == false || atLeastOnce) && si->getStateSpace()->isMetricSpace())
-                // {
-                //     bool metricTryMore = true;
-                //     unsigned int times = 0;
-                //     do
-                //     {
-                //         bool shortcut = path_simplifier.shortcutPath(*pth); // split path segments, not just vertices
-
-                //         metricTryMore = shortcut;
-                //     } while ((ptc == false || atLeastOnce) && ++times <= 4 && metricTryMore);
-
-                //     // smooth the path with BSpline interpolation
-                //     if (ptc == false || atLeastOnce)
-                //         path_simplifier.smoothBSpline(*pth, 3, (*pth).length() / 100.0);
-                // }
-                // // try a randomized step of connecting vertices
-                // if (ptc == false || atLeastOnce)
-                //     tryMore = path_simplifier.reduceVertices(*pth);
-
-                // // try to collapse close-by vertices
-                // if (ptc == false || atLeastOnce)
-                //     path_simplifier.collapseCloseVertices(*pth);
-                printf("total_times:%d \n", total_times++);
-                if (total_times > 3)
-                    break;
-                bool shortcut;
-                shortcut = path_simplifier.shortcutPath(*pth); // split path segments, not just vertices
-                shortcut = path_simplifier.shortcutPath(*pth); // split path segments, not just vertices
-                shortcut = path_simplifier.shortcutPath(*pth); // split path segments, not just vertices
-
-                // path_simplifier.smoothBSpline(*pth, 3, (*pth).length() / 100.0);
-                tryMore = path_simplifier.reduceVertices(*pth);
-
-                path_simplifier.collapseCloseVertices(*pth);
-
-                unsigned int times = 0;
-                while ((ptc == false || atLeastOnce) && tryMore && ++times <= 3)
-                    tryMore = path_simplifier.reduceVertices(*pth);
-            }
-            */
-            /*
-            auto path = *pth;
-            bool atLeastOnce = true;
-            bool tryMore = true, valid = true;
-            while ((ptc == false || atLeastOnce) && tryMore)
-            {
-                // if the space is metric, we can do some additional smoothing
-                if ((ptc == false || atLeastOnce) && si_->getStateSpace()->isMetricSpace())
-                {
-                    bool metricTryMore = true;
-                    unsigned int times = 0;
-                    do
-                    {
-                        bool shortcut = path_simplifier.shortcutPath(path);          // split path segments, not just vertices
-                        bool better_goal = gsr_ ? findBetterGoal(path, ptc) : false; // Try to connect the path to a closer goal
-
-                        metricTryMore = shortcut || better_goal;
-                    } while ((ptc == false || atLeastOnce) && ++times <= 5 && metricTryMore);
-
-                    // smooth the path with BSpline interpolation
-                    if (ptc == false || atLeastOnce)
-                        smoothBSpline(path, 3, path.length() / 100.0);
-
-                    if (ptc == false || atLeastOnce)
-                    {
-                        // we always run this if the metric-space algorithms were run.  In non-metric spaces this does not work.
-                        const std::pair<bool, bool> &p = path.checkAndRepair(magic::MAX_VALID_SAMPLE_ATTEMPTS);
-                        if (!p.second)
-                        {
-                            valid = false;
-                            OMPL_WARN("Solution path may slightly touch on an invalid region of the state space");
-                        }
-                        else if (!p.first)
-                            OMPL_DEBUG("The solution path was slightly touching on an invalid region of the state space, but "
-                                       "it was "
-                                       "successfully fixed.");
-                    }
-                }
-
-                // try a randomized step of connecting vertices
-                if (ptc == false || atLeastOnce)
-                    tryMore = reduceVertices(path);
-
-                // try to collapse close-by vertices
-                if (ptc == false || atLeastOnce)
-                    collapseCloseVertices(path);
-
-                // try to reduce verices some more, if there is any point in doing so
-                unsigned int times = 0;
-                while ((ptc == false || atLeastOnce) && tryMore && ++times <= 5)
-                    tryMore = reduceVertices(path);
-
-                if ((ptc == false || atLeastOnce) && si_->getStateSpace()->isMetricSpace())
-                {
-                    // we always run this if the metric-space algorithms were run.  In non-metric spaces this does not work.
-                    const std::pair<bool, bool> &p = path.checkAndRepair(magic::MAX_VALID_SAMPLE_ATTEMPTS);
-                    if (!p.second)
-                    {
-                        valid = false;
-                        OMPL_WARN("Solution path may slightly touch on an invalid region of the state space");
-                    }
-                    else if (!p.first)
-                        OMPL_DEBUG("The solution path was slightly touching on an invalid region of the state space, but it "
-                                   "was "
-                                   "successfully fixed.");
-                }
-
-                atLeastOnce = false;
-            }
-            return valid || path.check();
-            */
         }
         else if (prob_params.realtime_settings.simplifying_path == problem_params::SimplifyingPath::FULL)
         {
@@ -518,31 +413,33 @@ namespace ompl_rope_planning
         auto t4 = ros::Time::now();
         static int times_fixed = 0;
 
+        printf("Fixinng invalid states...\n");
         // run it ony for a couple of times beacuse it crhashes otherwise TODO: fix it
         if (times_fixed < 10)
         {
+            printf("times_fixed: %d\n", times_fixed);
             bool res = pdef->fixInvalidInputStates(prob_params.realtime_settings.fix_invalid_start_dist,
                                                    prob_params.realtime_settings.fix_invalid_goal_dist, 20);
             if (res)
                 times_fixed++;
         }
 
-        // check if start is valid
-        if (!si->isValid(pdef->getStartState(0)))
-        {
-            int x;
-            throw std::runtime_error("Start state is invalid");
-        }
+        // // check if start is valid
+        // if (!si->isValid(pdef->getStartState(0)))
+        // {
+        //     throw std::runtime_error("Start state is invalid while checking if start is valid");
+        // }
 
         pdef->clearSolutionPaths();
 
+        printf("Getting planner \n");
         planner_ = getPlanner(prob_params.planner_algorithm, prob_params.range);
 
         // printf("Setting  problem definition...\n");
-        planner_->setProblemDefinition(pdef);
-
+        // planner_->setProblemDefinition(pdef);
+        //
         // printf("Setting  planner up...\n");
-        planner_->setup();
+        // planner_->setup();
 
         // check if having a start
         if (pdef->getStartStateCount() == 0 || pdef->getGoal() == nullptr)
@@ -568,15 +465,52 @@ namespace ompl_rope_planning
         // check if start is valid
         for (int i = 0; i < pdef->getStartStateCount(); i++)
         {
+            if (!si->satisfiesBounds(pdef->getStartState(i)))
+            {
+                ROS_INFO("Start state with index: %d is not within bounds", i);
+
+                // print state
+                std::cout << "Start state: " << std::endl;
+                for (int j = 0; j < 6; j++)
+                {
+                    std::cout << pdef->getStartState(i)->as<ob::RealVectorStateSpace::StateType>()->values[j] << " ";
+                }
+                std::cout << std::endl;
+
+                // fix invalid start
+                fixInvalidStartBounds();
+                // planner_->clear();
+                // planner_->setProblemDefinition(pdef);
+                // planner_->setup();
+
+                std::cout << "Start state: " << std::endl;
+                for (int j = 0; j < 6; j++)
+                {
+                    std::cout << pdef->getStartState(i)->as<ob::RealVectorStateSpace::StateType>()->values[j] << " ";
+                }
+                std::cout << std::endl;
+            }
+
             if (!si->isValid(pdef->getStartState(i)))
             {
                 throw std::runtime_error("Start state with index: " + std::to_string(i) + " is invalid");
             }
         }
 
+        // check if goal is valid
+        printf("Checking if goal is valid before planning...\n");
+        // if (!si->satisfiesBounds(pdef->getGoal()->as<ob::GoalState>()->getState()))
+
+        fixInvalidGoalBounds();
+
+        // Set problem definition and setup after fixing invalid start and goal
+        planner_->setProblemDefinition(pdef);
+        planner_->setup();
+        printf("Problem definition set\n");
+
         printf("Solving...\n");
         ob::PlannerStatus solved;
-
+        auto tt0 = ros::Time::now();
         do
         {
             // If planner is not reset,it is allowed  to continue work for more time on an unsolved problem
@@ -588,17 +522,32 @@ namespace ompl_rope_planning
             // printf("Solving!\n");
             solved = planner_->solve(ptc);
 
+            // time check
+            auto dt1 = ros::Time::now() - t1;
+            dts_to_msec[1] = dt1.toSec() * 1000;
+            if (dts_to_msec[1] > 60 * 1000)
+                throw std::runtime_error("Planning time is too long");
+
             int x;
             if (solved == ob::PlannerStatus::INVALID_START)
             {
-                scanf("%d", &x);
-                throw std::runtime_error("Start state is invalid");
+                throw std::runtime_error("Tried sloving and Start state is invalid");
             }
             else if (solved == ob::PlannerStatus::INVALID_GOAL)
             {
-                scanf("%d", &x);
-                throw std::runtime_error("Goal state is invalid");
+                throw std::runtime_error("Tried sloving and Goal state is invalid");
             }
+
+            if (prob_params.planning_type == problem_params::PlanningType::MOVING_OBSTACLES)
+            {
+                auto dt2 = ros::Time::now() - tt0;
+                auto dt2_msec = dt2.toSec() * 1000;
+                if (dt2_msec > 2 * 1000)
+                {
+                    throw std::runtime_error("Planning time is too long");
+                }
+            }
+
         } while (solved != ob::PlannerStatus::EXACT_SOLUTION);
 
         auto dt1 = ros::Time::now() - t1;
@@ -657,7 +606,8 @@ namespace ompl_rope_planning
                        max_times[3]);
             }
 
-            save_path(pth);
+            if (prob_params.planning_type == problem_params::PlanningType::STATIC)
+                save_path(pth);
 
             path_ = pth;
 
@@ -942,4 +892,51 @@ namespace ompl_rope_planning
     void planner::setPath(ompl::geometric::PathGeometric *path) { path_ = new ompl::geometric::PathGeometric(*path); }
 
     ompl::base::SpaceInformationPtr planner::getSpaceInformation() { return si; }
+
+    void planner::fixInvalidStartBounds()
+    {
+        // limit values in the range of the limits
+        for (int i = 0; i < 6; i++)
+        {
+            std::cout << "State value: " << start_state_[i] << " Bounds:" << prob_params.bounds["low"][i] << " " << prob_params.bounds["high"][i]
+                      << std::endl;
+
+            if (start_state_[i] <= prob_params.bounds["low"][i])
+                start_state_[i] = prob_params.bounds["low"][i] + 0.01; // small offset in order to be inside the bounds
+
+            else if (start_state_[i] >= prob_params.bounds["high"][i])
+                start_state_[i] = prob_params.bounds["high"][i] - 0.01; // small offset in order to be inside the bounds
+        }
+
+        // set the start state
+        setStart(start_state_.data());
+    }
+
+    void planner::fixInvalidGoalBounds()
+    {
+        // limit values in the range of the limits
+        for (int i = 0; i < 6; i++)
+        {
+            std::cout << "State value: " << goal_state_[i] << " Bounds:" << prob_params.bounds["low"][i] << " " << prob_params.bounds["high"][i]
+                      << std::endl;
+
+            if (goal_state_[i] <= prob_params.bounds["low"][i])
+            {
+                goal_state_[i] = prob_params.bounds["low"][i] + 0.01; // small offset in order to be inside the bounds
+                printf("Goal state %d is out of bounds, setting to %f\n", i, goal_state_[i]);
+            }
+            else if (goal_state_[i] >= prob_params.bounds["high"][i])
+            {
+                goal_state_[i] = prob_params.bounds["high"][i] - 0.01; // small offset in order to be inside the bounds
+                printf("Goal state %d is out of bounds, setting to %f\n", i, goal_state_[i]);
+            }
+
+            std::cout << "State value: " << goal_state_[i] << " Bounds:" << prob_params.bounds["low"][i] << " " << prob_params.bounds["high"][i]
+                      << std::endl;
+        }
+
+        // set the goal state
+        setGoal(goal_state_.data());
+    }
+
 } // namespace drones_rope_planning

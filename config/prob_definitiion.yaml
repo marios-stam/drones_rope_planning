@@ -1,5 +1,5 @@
 visualization: True #TODO:icluse this option in launch file
-rope_length: 1.2
+rope_length: 1.5
 
 planning_type: "moving_obstacles" # static,moving_obstacles
 
@@ -8,10 +8,10 @@ real_time_settings: {
     planning_frequency: 18, #Hz
     setting_new_start: True, #When reach goal reset position to initial start
     replan_only_if_not_valid: True, # only replans if the current plan is not valid
-    fix_invalid_start_dist: 0.2,
-    fix_invalid_goal_dist: 0.1,
+    fix_invalid_start_dist: 2.0,
+    fix_invalid_goal_dist: 1.5,
     distance_to_goal_resetting: 0.5, #if it is 0 it will not reset at all
-    replanning_interval: 200000.0, #msec
+    replanning_interval: 8000.0, #msec
 
     siplifying_path: "fast", #full,fast,none
 
@@ -45,24 +45,27 @@ optimal_objective: { class: "None", threshold: 3 }
 
 safety_distances: {
     #horizontal and vertical distance offset for drones
-    drones_offsets: { horizontal: 0.15, vertical: 0.1 },
+    drones_offsets: { horizontal: 0.2, vertical: 0.1 },
 
     #horizontal and vertical distance offset for lowest point of catenary
-    lowest_point: 0.0,
+    lowest_point: 0.2,
   }
 
 thickness: 0.2
 
 # start and goal
-start: { x: +0.0, y: 2.0, z: 0.75 }
-goal: { x: +0.0, y: 6, z: 0.75 }
+#x, y , z, yaw , drones_distance(% of L) , drones_angle(degrees)
+start:
+  { x: +0.0, y: 2.5, z: 1.2, yaw: 0.0, drones_dist: 0.51, drones_angle: 0.0 }
+goal:
+  { x: +0.0, y: 6.0, z: 1.2, yaw: 0.0, drones_dist: 0.51, drones_angle: 0.0 }
 
 # Bounds of states
 # All ANGLES are in DEGREES
 bounds: {
     #x, y , z, yaw , drones_distance(% of L) , drones_angle
-    low: [-1.5, 0.5, 0.3, -180.0, 0.6, -50.0],
-    high: [1.5, 6.5, 2.0, 180.0, 0.85, 50.0],
+    low: [-1.5, 0.5, 0.8, -179.0, 0.45, -60.0],
+    high: [1.5, 6.5, 1.8, 179.0, 0.95, 60.0],
   }
 
 #planner algorithm

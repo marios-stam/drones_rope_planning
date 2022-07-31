@@ -1,4 +1,7 @@
 #pragma once
+
+// #define USE_CUSTOM_MESH_ROBUST
+
 #include "ros/ros.h"
 #include <geometry_msgs/Pose.h>
 #include <geometry_msgs/PoseStamped.h>
@@ -125,6 +128,10 @@ namespace ompl_rope_planning
 
         void setPath(ompl::geometric::PathGeometric *path);
 
+        void fixInvalidStartBounds(void);
+
+        void fixInvalidGoalBounds(void);
+
     private:
         // rope_length
         float L;
@@ -140,8 +147,11 @@ namespace ompl_rope_planning
 
         ompl::geometric::PathGeometric *path_ = nullptr;
 
-        // custom_mesh::CustomMesh *custom_robot_mesh;
+#ifdef USE_CUSTOM_MESH_ROBUST
         custom_mesh_robust::CustomMesh *custom_robot_mesh;
+#else
+        custom_mesh::CustomMesh *custom_robot_mesh;
+#endif
 
         int dim;
 

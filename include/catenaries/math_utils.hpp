@@ -63,8 +63,8 @@ namespace math_utils
         // Plane of type ax + by + cz + d = 0
     public:
         /*
-         * @param normal_vector: normal vector of the plane
          * @param point: point on the plane
+         * @param normal_vector: normal vector of the plane
          */
 
         Plane3D(Eigen::Vector3f point, Eigen::Vector3f normal);

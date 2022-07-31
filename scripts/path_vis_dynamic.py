@@ -347,18 +347,28 @@ def main():
 
         br.sendTransform(pos, rot, rospy.Time.now(), "rigid_body", "world")
 
-        # Drones
-        pos = (path1.poses[i].pose.position.x, path1.poses[i].pose.position.y, path1.poses[i].pose.position.z)
-        rot = (path1.poses[i].pose.orientation.x, path1.poses[i].pose.orientation.y,
-               path1.poses[i].pose.orientation.z, path1.poses[i].pose.orientation.w)
+        # Drones having world as parent
+        # pos = (path1.poses[i].pose.position.x, path1.poses[i].pose.position.y, path1.poses[i].pose.position.z)
+        # rot = (path1.poses[i].pose.orientation.x, path1.poses[i].pose.orientation.y,
+        #        path1.poses[i].pose.orientation.z, path1.poses[i].pose.orientation.w)
 
-        br.sendTransform(pos, rot, rospy.Time.now(), "drone1", "world")
+        # br.sendTransform(pos, rot, rospy.Time.now(), "drone1", "world")
 
-        pos = (path2.poses[i].pose.position.x, path2.poses[i].pose.position.y, path2.poses[i].pose.position.z)
-        rot = (path2.poses[i].pose.orientation.x, path2.poses[i].pose.orientation.y,
-               path2.poses[i].pose.orientation.z, path2.poses[i].pose.orientation.w)
+        # pos = (path2.poses[i].pose.position.x, path2.poses[i].pose.position.y, path2.poses[i].pose.position.z)
+        # rot = (path2.poses[i].pose.orientation.x, path2.poses[i].pose.orientation.y,
+        #        path2.poses[i].pose.orientation.z, path2.poses[i].pose.orientation.w)
 
-        br.sendTransform(pos, rot, rospy.Time.now(), "drone2", "world")
+        # br.sendTransform(pos, rot, rospy.Time.now(), "drone2", "world")
+
+        # Drones having rigid_body as parent
+        p0, p1 = Custom_robot_mesh.drones_formation_2_triangle_points(
+            None, dynamic_path.drones_distances[i], dynamic_path.drones_angles[i])
+        pos1 = (p0[0], 0, p0[1])
+        pos2 = (p1[0], 0, p1[1])
+        rot = (0, 0, 0, 1)
+
+        br.sendTransform(pos1, rot, rospy.Time.now(), "drone1", "rigid_body")
+        br.sendTransform(pos2, rot, rospy.Time.now(), "drone2", "rigid_body")
 
         rate.sleep()
 
